@@ -1,0 +1,355 @@
+{% extends "base/layout.html" %}
+
+{% block title %}My Break Status{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+          <i class="bx bx-coffee me-2"></i>My Break Status
+        </h5>
+        <a href="/" class="btn btn-outline-secondary btn-sm">
+          <i class="bx bx-arrow-back me-1"></i>Back to Dashboard
+        </a>
+      </div>
+      <div class="card-body">
+        
+        <!-- Warning Modal -->
+        {% if warning_break %}
+        <div class="modal fade" id="breakWarningModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="breakWarningModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="breakWarningModalLabel">
+                  <i class="bx bx-error-circle me-2"></i>Break Time Exceeded!
+                </h5>
+              </div>
+              <div class="modal-body">
+                <div class="text-center">
+                  <i class="bx bx-time-five text-danger" style="font-size: 4rem;"></i>
+                  <h4 class="mt-3">Your break time has exceeded the limit!</h4>
+                  <p class="text-muted">
+                    You have been on <strong>{{ warning_break.get_clean_break_type }}</strong> for 
+                    <strong class="text-danger">{{ warning_break.get_duration_minutes }} minutes</strong>, 
+                    which is <strong class="text-danger">{{ warning_break.get_exceeded_minutes }} minutes</strong> 
+                    over the allowed {{ warning_break.get_allowed_duration_minutes }} minutes.
+                  </p>
+                  <div class="alert alert-warning d-flex align-items-center">
+                    <i class="bx bx-info-circle me-2"></i>
+                    <div>
+                      Please end your break immediately and return to work.
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                  <i class="bx bx-time me-1"></i>I'll End Soon
+                </button>
+                <a href="{% url 'accounts:end_break' %}" class="btn btn-danger">
+                  <i class="bx bx-stop-circle me-1"></i>End Break Now
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Current Break Status -->
+        <div class="row mb-4">
+          <div class="col-lg-8">
+            <div class="card {% if warning_break %}border-danger{% endif %}">
+              <div class="card-header {% if warning_break %}bg-danger text-white{% endif %}">
+                <h6 class="card-title mb-0">
+                  {% if current_break %}
+                    <i class="bx bx-time-five me-2"></i>Current Break Status
+                  {% else %}
+                    <i class="bx bx-coffee me-2"></i>No Active Break
+                  {% endif %}
+                </h6>
+              </div>
+              <div class="card-body">
+                {% if current_break %}
+                  <div class="row align-items-center">
+                    <div class="col-md-6">
+                      <div class="break-info">
+                        <h5>{{ current_break.get_clean_break_type }}</h5>
+                        <p class="text-muted mb-2">
+                          Started at: <strong>{{ current_break.start_time|time:"g:i A" }}</strong>
+                        </p>
+                        <div class="progress mb-2" style="height: 25px;">
+                          {% if current_break.is_exceeded %}
+                            <div class="progress-bar bg-danger" role="progressbar" 
+                                 style="width: 100%;" 
+                                 aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+                              <i class="bx bx-error-circle me-1"></i>EXCEEDED
+                            </div>
+                          {% else %}
+                            {% with remaining=current_break.get_remaining_minutes allowed=current_break.get_allowed_duration_minutes %}
+                            {% with progress=allowed|add:"-"|add:remaining %}
+                            <div class="progress-bar {% if progress > 7 %}bg-warning{% else %}bg-success{% endif %}" 
+                                 role="progressbar" 
+                                 style="width: {% widthratio progress allowed 100 %}%;" 
+                                 aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="{{ allowed }}">
+                              {{ current_break.get_duration_minutes }} / {{ allowed }} min
+                            </div>
+                            {% endwith %}
+                            {% endwith %}
+                          {% endif %}
+                        </div>
+                        <div class="d-flex justify-content-between">
+                          <small class="text-muted">
+                            Duration: <strong>{{ current_break.get_duration_minutes }} minutes</strong>
+                          </small>
+                          {% if current_break.is_exceeded %}
+                            <small class="text-danger">
+                              <i class="bx bx-error-circle"></i> Exceeded by {{ current_break.get_exceeded_minutes }} min
+                            </small>
+                          {% else %}
+                            <small class="text-success">
+                              <i class="bx bx-time"></i> {{ current_break.get_remaining_minutes }} min remaining
+                            </small>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-6 text-center">
+                      <div class="break-timer {% if current_break.is_exceeded %}text-danger{% else %}text-primary{% endif %}">
+                        <i class="bx bx-timer" style="font-size: 3rem;"></i>
+                        <h3 class="mt-2">{{ current_break.get_duration_minutes }}<small> min</small></h3>
+                        <p class="mb-0">{{ current_break.get_status_display|safe }}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="mt-3 text-center">
+                    <a href="{% url 'accounts:end_break' %}" class="btn {% if current_break.is_exceeded %}btn-danger{% else %}btn-success{% endif %} btn-lg">
+                      <i class="bx bx-stop-circle me-2"></i>End Break
+                    </a>
+                  </div>
+                {% else %}
+                  <div class="text-center py-4">
+                    <i class="bx bx-coffee text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3">No Active Break</h4>
+                    <p class="text-muted">You are not currently on a break.</p>
+                    {% if today_attendance and today_attendance.is_present and not today_attendance.end_time %}
+                      <div class="mt-3">
+                        <div class="dropdown">
+                          <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bx bx-coffee me-2"></i>Start Break
+                          </button>
+                          <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'accounts:start_break' 'tea_morning' %}">
+                              <i class="bx bx-coffee text-warning me-2"></i>Morning Tea (15 min)
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:start_break' 'lunch' %}">
+                              <i class="bx bx-restaurant text-success me-2"></i>Lunch Break (30 min)
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:start_break' 'tea_afternoon' %}">
+                              <i class="bx bx-coffee text-warning me-2"></i>Afternoon Tea (15 min)
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:start_break' 'other' %}">
+                              <i class="bx bx-time text-muted me-2"></i>Other Break (10 min)
+                            </a></li>
+                          </ul>
+                        </div>
+                      </div>
+                    {% else %}
+                      <div class="alert alert-info">
+                        <i class="bx bx-info-circle me-2"></i>
+                        You need to be checked in to start a break.
+                      </div>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-lg-4">
+            <div class="card">
+              <div class="card-header">
+                <h6 class="card-title mb-0">
+                  <i class="bx bx-info-circle me-2"></i>Break Guidelines
+                </h6>
+              </div>
+              <div class="card-body">
+                <div class="break-guidelines">
+                  <div class="guideline-item mb-3">
+                    <div class="d-flex align-items-center">
+                      <i class="bx bx-coffee text-warning me-2"></i>
+                      <div>
+                        <strong>Morning Tea</strong>
+                        <div class="small text-muted">15 minutes maximum</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="guideline-item mb-3">
+                    <div class="d-flex align-items-center">
+                      <i class="bx bx-restaurant text-success me-2"></i>
+                      <div>
+                        <strong>Lunch Break</strong>
+                        <div class="small text-muted">30 minutes maximum</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="guideline-item mb-3">
+                    <div class="d-flex align-items-center">
+                      <i class="bx bx-coffee text-warning me-2"></i>
+                      <div>
+                        <strong>Afternoon Tea</strong>
+                        <div class="small text-muted">15 minutes maximum</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="guideline-item">
+                    <div class="d-flex align-items-center">
+                      <i class="bx bx-time text-muted me-2"></i>
+                      <div>
+                        <strong>Other Break</strong>
+                        <div class="small text-muted">10 minutes maximum</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="alert alert-warning mt-3">
+                  <i class="bx bx-error-circle me-2"></i>
+                  <small>
+                    <strong>Note:</strong> Exceeding break time limits will be reported to management.
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Today's Break History -->
+        {% if today_breaks %}
+        <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h6 class="card-title mb-0">
+                  <i class="bx bx-history me-2"></i>Today's Break History
+                </h6>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>Break Type</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for break in today_breaks %}
+                      <tr class="{% if break.is_exceeded %}table-danger{% endif %}">
+                        <td>
+                          <span class="badge bg-label-{{ break.break_type }}">
+                            {{ break.get_clean_break_type }}
+                          </span>
+                        </td>
+                        <td>{{ break.start_time|time:"g:i A" }}</td>
+                        <td>
+                          {% if break.end_time %}
+                            {{ break.end_time|time:"g:i A" }}
+                          {% else %}
+                            <span class="text-primary">In Progress</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          <span class="{% if break.is_exceeded %}text-danger{% else %}text-success{% endif %}">
+                            {{ break.get_duration_minutes }} min
+                            {% if break.is_exceeded %}
+                              <i class="bx bx-error-circle"></i>
+                            {% endif %}
+                          </span>
+                        </td>
+                        <td>
+                          {{ break.get_status_display|safe }}
+                        </td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Show warning modal if break is exceeded
+{% if warning_break %}
+document.addEventListener('DOMContentLoaded', function() {
+    var warningModal = new bootstrap.Modal(document.getElementById('breakWarningModal'));
+    warningModal.show();
+});
+{% endif %}
+
+// Auto-refresh every 30 seconds if on break
+{% if current_break %}
+setInterval(() => {
+    location.reload();
+}, 30000);
+{% endif %}
+</script>
+
+<style>
+.break-timer {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.guideline-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.guideline-item:last-child {
+    border-bottom: none;
+}
+
+.badge.bg-label-tea_morning {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #856404;
+}
+
+.badge.bg-label-lunch {
+    background-color: rgba(23, 162, 184, 0.2);
+    color: #0c5460;
+}
+
+.badge.bg-label-tea_afternoon {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #856404;
+}
+
+.badge.bg-label-other {
+    background-color: rgba(108, 117, 125, 0.2);
+    color: #383d41;
+}
+
+.table-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+</style>
+
+{% endblock %}

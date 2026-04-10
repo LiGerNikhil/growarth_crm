@@ -1,0 +1,374 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Delete Leads - Lead Management{% endblock %}
+
+{% block content %}
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="confirmDeleteModalLabel">
+          <i class="bx bx-error-circle me-2"></i>Confirm Permanent Deletion
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center py-3">
+          <i class="bx bx-trash-alt fs-1 text-danger mb-3"></i>
+          <h6 class="mb-2">Are you sure you want to permanently delete leads?</h6>
+          <p class="text-muted mb-2">
+            You are about to delete <strong id="selectedCount">0</strong> lead(s) permanently.
+          </p>
+          <div class="alert alert-danger py-2">
+            <i class="bx bx-error-circle me-1"></i>
+            <strong>Warning:</strong> This action cannot be undone and all lead data will be lost forever.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bx bx-x me-1"></i>Cancel
+        </button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+          <i class="bx bx-trash me-1"></i>Delete Permanently
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function confirmLeadDeletion() {
+    const checkboxes = document.querySelectorAll('.lead-checkbox:checked');
+    const selectedCount = checkboxes.length;
+
+    if (selectedCount === 0) {
+        alert('Please select at least one lead to delete.');
+        return false;
+    }
+
+    // Show modal instead of browser confirm
+    showDeleteModal(selectedCount);
+    return false; // Prevent form submission until modal confirms
+}
+
+function showDeleteModal(count) {
+    // Update modal content with count
+    document.querySelector('#confirmDeleteModal .modal-body').innerHTML = `
+        <div class="text-center py-3">
+            <i class="bx bx-trash-alt fs-1 text-danger mb-3"></i>
+            <h6 class="mb-2">Are you sure you want to permanently delete leads?</h6>
+            <p class="text-muted mb-2">
+                You are about to delete <strong>${count}</strong> lead(s) permanently.
+            </p>
+            <div class="alert alert-danger py-2">
+                <i class="bx bx-error-circle me-1"></i>
+                <strong>Warning:</strong> This action cannot be undone and all lead data will be lost forever.
+            </div>
+        </div>
+    `;
+
+    // Set up confirm button
+    document.getElementById('confirmDeleteBtn').onclick = function() {
+        document.getElementById('deleteForm').submit();
+        bootstrap.Modal.getInstance(document.getElementById('confirmDeleteModal')).hide();
+    };
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+    modal.show();
+}
+</script>
+
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+          <i class="bx bx-trash me-2"></i>Delete Leads Permanently
+        </h5>
+        <a href="{% url 'accounts:lead_list' %}" class="btn btn-outline-secondary">
+          <i class="bx bx-arrow-left me-1"></i>Back to Leads
+        </a>
+      </div>
+      <div class="card-body">
+        <form method="post" id="deleteForm">
+          {% csrf_token %}
+          <input type="hidden" name="delete" value="1">
+          
+          <!-- Warning Section -->
+          <div class="alert alert-danger mb-4">
+            <div class="d-flex align-items-center">
+              <i class="bx bx-error-circle fs-4 me-3"></i>
+              <div>
+                <h6 class="alert-heading mb-1">⚠️ Permanent Action</h6>
+                <p class="mb-0">This action cannot be undone. Deleted leads will be permanently removed from the system.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filter Options -->
+          <div class="row mb-4">
+            <div class="col-md-4">
+              <label for="status_filter" class="form-label">
+                <i class="bx bx-filter me-1"></i>Filter by Status
+              </label>
+              <select name="status_filter" id="status_filter" class="form-select">
+                <option value="">All Status</option>
+                {% for status_value, status_label in lead_status_choices %}
+                  <option value="{{ status_value }}">{{ status_label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label for="assignment_filter" class="form-label">
+                <i class="bx bx-user me-1"></i>Filter by Assignment
+              </label>
+              <select name="assignment_filter" id="assignment_filter" class="form-select">
+                <option value="">All Leads</option>
+                <option value="assigned">Assigned Leads</option>
+                <option value="unassigned">Unassigned Leads</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <button type="submit" name="filter" class="btn btn-primary mt-4">
+                <i class="bx bx-search me-1"></i>Filter Leads
+              </button>
+            </div>
+          </div>
+
+          <!-- Leads Display -->
+          {% if filtered_leads %}
+            <div class="mb-4">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <label class="form-label mb-0">
+                  <i class="bx bx-list-ul me-1"></i>Select Leads to Delete
+                  <span class="badge bg-danger ms-2" id="selected-count">{{ filtered_leads|length }} leads found</span>
+                </label>
+                <div>
+                  <button type="button" class="btn btn-sm btn-outline-danger" onclick="selectAll()">
+                    Select All
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll()">
+                    Deselect All
+                  </button>
+                </div>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead class="table-light">
+                    <tr>
+                      <th width="50">
+                        <input type="checkbox" id="select-all-checkbox" onchange="toggleAll()">
+                      </th>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Phone</th>
+                      <th>Company</th>
+                      <th>Status</th>
+                      <th>Assigned To</th>
+                      <th>Created</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for lead in filtered_leads %}
+                      <tr>
+                        <td>
+                          <input type="checkbox" name="lead_ids" value="{{ lead.id }}" class="lead-checkbox" onchange="updateSelectedCount()">
+                        </td>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar avatar-sm bg-label-primary rounded-circle me-2">
+                              <span>{{ lead.first_name.0 }}{{ lead.last_name.0 }}</span>
+                            </div>
+                            <div>
+                              <div class="fw-medium">{{ lead.get_full_name }}</div>
+                              {% if lead.position %}
+                                <small class="text-muted">{{ lead.position }}</small>
+                              {% endif %}
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span class="text-muted">{{ lead.email|default:"-" }}</span>
+                        </td>
+                        <td>
+                          <span class="text-muted">{{ lead.phone|default:"-" }}</span>
+                        </td>
+                        <td>
+                          <span class="text-muted">{{ lead.company|default:"-" }}</span>
+                        </td>
+                        <td>
+                          {% if lead.status == 'new' %}
+                            <span class="badge bg-label-success">New</span>
+                          {% elif lead.status == 'contacted' %}
+                            <span class="badge bg-label-info">Contacted</span>
+                          {% elif lead.status == 'interested' %}
+                            <span class="badge bg-label-warning">Interested</span>
+                          {% elif lead.status == 'not_interested' %}
+                            <span class="badge bg-label-danger">Not Interested</span>
+                          {% elif lead.status == 'not_eligible' %}
+                            <span class="badge bg-label-dark">Not Eligible</span>
+                          {% elif lead.status == 'follow_up' %}
+                            <span class="badge bg-label-secondary">Follow Up</span>
+                          {% elif lead.status == 'converted' %}
+                            <span class="badge bg-label-primary">Converted</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if lead.assigned_to %}
+                            <div class="d-flex align-items-center">
+                              <div class="avatar avatar-xs bg-label-secondary rounded-circle me-2">
+                                <span>{{ lead.assigned_to.first_name.0 }}{{ lead.assigned_to.last_name.0 }}</span>
+                              </div>
+                              <span class="text-muted">{{ lead.assigned_to.get_full_name }}</span>
+                            </div>
+                          {% else %}
+                            <span class="badge bg-light text-dark">Unassigned</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          <div>
+                            <div>{{ lead.created_at|date:"M d, Y" }}</div>
+                            <small class="text-muted">{{ lead.created_at|time:"g:i A" }}</small>
+                          </div>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-flex justify-content-between">
+              <div>
+                <small class="text-muted">Showing {{ filtered_leads|length }} leads</small>
+              </div>
+              <button type="submit" name="delete" class="btn btn-danger" onclick="return confirmLeadDeletion()">
+                <i class="bx bx-trash me-2"></i>Delete Selected Leads Permanently
+              </button>
+            </div>
+          {% else %}
+            <div class="text-center py-5">
+              <i class="bx bx-search fs-1 text-muted mb-3"></i>
+              <h6 class="mb-2">No Leads Found</h6>
+              <p class="text-muted">
+                {% if request.GET.status or request.GET.assignment %}
+                  No leads found matching your filter criteria. Try adjusting your filters.
+                {% else %}
+                  No leads exist in the system yet. Upload an Excel file to create leads.
+                {% endif %}
+              </p>
+              {% if not request.GET.status and not request.GET.assignment %}
+                <a href="{% url 'accounts:excel_upload' %}" class="btn btn-primary">
+                  <i class="bx bx-upload me-1"></i>Upload Excel File
+                </a>
+              {% endif %}
+            </div>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+}
+
+.avatar-sm {
+  width: 2rem;
+  height: 2rem;
+  font-size: 0.875rem;
+}
+
+.avatar-xs {
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 0.75rem;
+}
+
+.bg-label-primary {
+  background-color: #e7e7ff !important;
+  color: #696cff !important;
+}
+
+.bg-label-secondary {
+  background-color: #f5f5f9 !important;
+  color: #82868b !important;
+}
+
+.bg-label-success {
+  background-color: #e8fadf !important;
+  color: #71dd37 !important;
+}
+
+.bg-label-warning {
+  background-color: #fff4de !important;
+  color: #ffab00 !important;
+}
+
+.bg-label-danger {
+  background-color: #ffdede !important;
+  color: #ff3e1d !important;
+}
+
+.bg-label-info {
+  background-color: #d7f5ff !important;
+  color: #03c3ec !important;
+}
+</style>
+
+<script>
+function updateSelectedCount() {
+    const checkboxes = document.querySelectorAll('.lead-checkbox:checked');
+    const count = checkboxes.length;
+    document.getElementById('selected-count').textContent = count + ' selected';
+    
+    // Update select all checkbox
+    const allCheckboxes = document.querySelectorAll('.lead-checkbox');
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    selectAllCheckbox.checked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
+}
+
+function toggleAll() {
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    const checkboxes = document.querySelectorAll('.lead-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+    
+    updateSelectedCount();
+}
+
+function selectAll() {
+    const checkboxes = document.querySelectorAll('.lead-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    updateSelectedCount();
+}
+
+function deselectAll() {
+    const checkboxes = document.querySelectorAll('.lead-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    updateSelectedCount();
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    updateSelectedCount();
+});
+</script>
+{% endblock %}

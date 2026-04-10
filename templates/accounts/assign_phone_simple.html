@@ -1,0 +1,167 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Assign Phone Number - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold">
+        <i class="bx bx-phone text-primary me-2"></i>Assign Phone Number
+      </h4>
+      <p class="text-muted mb-0">Select an employee and assign a phone number</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'accounts:phone_assignment_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bx bx-arrow-back me-1"></i>Back to Phone Assignments
+      </a>
+    </div>
+  </div>
+
+  <!-- Assignment Form -->
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <form method="post">
+            {% csrf_token %}
+
+            <!-- Employee Selection -->
+            <div class="mb-3">
+              <label for="employee-select" class="form-label fw-semibold">
+                <i class="bx bx-user me-1"></i>Select Employee <span class="text-danger">*</span>
+              </label>
+              <div class="d-flex gap-2 flex-wrap">
+                <select class="form-select flex-grow-1" id="employee-select" name="employee" required>
+                  <option value="">Choose an employee...</option>
+                  {% for employee in employees %}
+                    <option value="{{ employee.id }}">
+                      {{ employee.get_full_name }} ({{ employee.employee_id|default:"ID Pending" }})
+                    </option>
+                  {% endfor %}
+                </select>
+                <button type="button" id="view-profile-btn" class="btn btn-info" disabled style="min-width: 80px;">
+                  <i class="bx bx-eye me-1"></i>View Profile
+                </button>
+                <button type="button" id="edit-profile-btn" class="btn btn-warning" disabled style="min-width: 80px;">
+                  <i class="bx bx-edit me-1"></i>Edit Profile
+                </button>
+              </div>
+              <div class="form-text mt-2">Select an employee to view or edit their profile</div>
+            </div>
+
+            <!-- Phone Number -->
+            <div class="mb-3">
+              <label for="phone-input" class="form-label fw-semibold">
+                <i class="bx bx-phone me-1"></i>Phone Number <span class="text-danger">*</span>
+              </label>
+              <input type="tel"
+                     class="form-control"
+                     id="phone-input"
+                     name="phone_number"
+                     placeholder="Enter phone number (e.g., +91 9876543210)"
+                     required>
+              <div class="form-text">Enter the complete phone number including country code</div>
+            </div>
+
+            <!-- Phone Type -->
+            <div class="mb-3">
+              <label for="phone-type" class="form-label fw-semibold">
+                <i class="bx bx-tag me-1"></i>Phone Type
+              </label>
+              <select class="form-select" id="phone-type" name="phone_type">
+                {% for value, label in phone_types %}
+                  <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Notes -->
+            <div class="mb-4">
+              <label for="notes-input" class="form-label fw-semibold">
+                <i class="bx bx-note me-1"></i>Notes (Optional)
+              </label>
+              <textarea class="form-control"
+                        id="notes-input"
+                        name="notes"
+                        rows="3"
+                        placeholder="Add any additional notes about this phone assignment"></textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bx bx-plus me-2"></i>Assign Phone Number
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Quick Tips -->
+      <div class="card border-0 shadow-sm mt-4">
+        <div class="card-body">
+          <h6 class="card-title fw-semibold">
+            <i class="bx bx-info-circle text-info me-2"></i>Quick Tips
+          </h6>
+          <ul class="mb-0 small text-muted">
+            <li>Phone numbers must be unique across all employees</li>
+            <li>Use the complete phone number including country code (+91)</li>
+            <li>Phone type helps categorize the number (Primary, Secondary, Official)</li>
+            <li>Assigned phones will appear in the employee's profile</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Enable/disable profile buttons based on employee selection
+document.getElementById('employee-select').addEventListener('change', function() {
+    const selectedEmployeeId = this.value;
+    const viewBtn = document.getElementById('view-profile-btn');
+    const editBtn = document.getElementById('edit-profile-btn');
+    
+    console.log('Employee selected:', selectedEmployeeId); // Debug log
+    
+    if (selectedEmployeeId && selectedEmployeeId !== '') {
+        viewBtn.disabled = false;
+        editBtn.disabled = false;
+        
+        // Set click handlers with proper URLs
+        viewBtn.onclick = function(e) {
+            e.preventDefault();
+            const viewUrl = `/accounts/${selectedEmployeeId}/`;
+            console.log('Opening view URL:', viewUrl); // Debug log
+            window.open(viewUrl, '_blank');
+        };
+        
+        editBtn.onclick = function(e) {
+            e.preventDefault();
+            const editUrl = `/accounts/${selectedEmployeeId}/update/`;
+            console.log('Opening edit URL:', editUrl); // Debug log
+            window.open(editUrl, '_blank');
+        };
+    } else {
+        viewBtn.disabled = true;
+        editBtn.disabled = true;
+        viewBtn.onclick = null;
+        editBtn.onclick = null;
+        console.log('No employee selected, buttons disabled'); // Debug log
+    }
+});
+
+// Auto-format phone number input
+document.getElementById('phone-input').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.startsWith('91') && value.length > 2) {
+        value = '+' + value.substring(0, 2) + ' ' + value.substring(2);
+    } else if (value.length > 10) {
+        value = value.substring(0, 10);
+    }
+    e.target.value = value;
+});
+</script>
+{% endblock %}

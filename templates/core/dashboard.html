@@ -1,0 +1,2279 @@
+{% extends "base/layout.html" %}
+
+{% block title %}{{ employee.get_full_name }}'s Dashboard{% endblock %}
+
+{% block content %}
+<!-- Break Counter Popup -->
+{% if show_break_popup and active_break %}
+<div id="break-popup" class="break-popup active">
+  <div class="break-popup-header">
+    <div class="break-info">
+      <i class="bx bx-coffee me-2"></i>
+      <span class="break-type">{{ active_break.get_break_type_display }}</span>
+      <span class="break-status">Active</span>
+    </div>
+    <div class="break-controls">
+      <button class="btn-minimize" onclick="minimizeBreakPopup()">
+        <i class="bx bx-minus"></i>
+      </button>
+      <button class="btn-close-popup" onclick="closeBreakPopup()">
+        <i class="bx bx-x"></i>
+      </button>
+    </div>
+  </div>
+  <div class="break-popup-body">
+    <div class="break-timer">
+      <div class="timer-display">
+        <span id="break-hours">00</span>:<span id="break-minutes">00</span>:<span id="break-seconds">00</span>
+      </div>
+      <div class="timer-label">Time Elapsed</div>
+    </div>
+    <div class="break-details">
+      <div class="detail-item">
+        <span class="detail-label">Started:</span>
+        <span class="detail-value" id="break-start-time" data-start-time="{{ active_break.start_time|date:'c' }}">{{ active_break.start_time|date:"H:i:s" }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Duration Limit:</span>
+        <span class="detail-value">{{ active_break.get_allowed_duration_minutes }} minutes</span>
+      </div>
+    </div>
+    <div class="break-actions">
+      <a href="{% url 'accounts:end_break' %}" class="btn btn-success btn-sm">
+        <i class="bx bx-check me-1"></i>End Break
+      </a>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Quick Actions Section - Top -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card bg-gradient-primary text-white">
+      <div class="card-header bg-gradient-primary border-0">
+        <h5 class="card-title mb-0">
+          <i class="bx bx-bolt-circle me-2"></i>Quick Actions
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          {% if employee.role == 'admin' or employee.role == 'superadmin' %}
+            <!-- Admin Quick Actions -->
+            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+              <a href="{% url 'accounts:staff_management' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-users fs-4"></i>
+                </div>
+                <h6 class="mb-0">Staff Management</h6>
+              </a>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+              <a href="{% url 'accounts:break_management_dashboard' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-coffee fs-4"></i>
+                </div>
+                <h6 class="mb-0">Break Management</h6>
+              </a>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+              <a href="{% url 'accounts:leave_list' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-calendar-check fs-4"></i>
+                </div>
+                <h6 class="mb-0">Leave Management</h6>
+              </a>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+              <a href="{% url 'accounts:phone_assignment_list' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-phone fs-4"></i>
+                </div>
+                <h6 class="mb-0">Phone Assignment</h6>
+              </a>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+              <a href="{% url 'accounts:mis_dashboard' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-chart-line fs-4"></i>
+                </div>
+                <h6 class="mb-0">MIS Reports</h6>
+              </a>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+              <a href="{% url 'accounts:lead_list' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-target-lock fs-4"></i>
+                </div>
+                <h6 class="mb-0">Leads</h6>
+              </a>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+              <a href="{% url 'accounts:lead_assignment_dashboard' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-user-voice fs-4"></i>
+                </div>
+                <h6 class="mb-0">Lead Assignment</h6>
+              </a>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+              <a href="{% url 'accounts:excel_upload' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-upload fs-4"></i>
+                </div>
+                <h6 class="mb-0">Upload Data</h6>
+              </a>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+              <a href="{% url 'accounts:lead_activity_logs' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-history fs-4"></i>
+                </div>
+                <h6 class="mb-0">Lead Activity</h6>
+              </a>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+              <a href="{% url 'accounts:ticket_list' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-support fs-4"></i>
+                </div>
+                <h6 class="mb-0">Support Tickets</h6>
+              </a>
+            </div>
+          {% elif is_hr %}
+            <!-- HR Quick Actions -->
+            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+              <a href="{% url 'accounts:staff_management' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-user-plus fs-4"></i>
+                </div>
+                <h6 class="mb-0">Employee Management</h6>
+              </a>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+              <a href="{% url 'accounts:staff_create' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-user-plus fs-4"></i>
+                </div>
+                <h6 class="mb-0">Create Employee</h6>
+              </a>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+              <a href="{% url 'accounts:leave_list' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-calendar-check fs-4"></i>
+                </div>
+                <h6 class="mb-0">Leave Management</h6>
+              </a>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+              <a href="{% url 'accounts:break_management_dashboard' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-coffee fs-4"></i>
+                </div>
+                <h6 class="mb-0">Break Management</h6>
+              </a>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+              <a href="{% url 'accounts:ticket_list' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-support fs-4"></i>
+                </div>
+                <h6 class="mb-0">Support Tickets</h6>
+              </a>
+            </div>
+          {% elif employee.role == 'manager' %}
+            <!-- Manager Quick Actions -->
+            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+              <a href="{% url 'accounts:mis_dashboard' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-chart-line fs-4"></i>
+                </div>
+                <h6 class="mb-0">MIS Reports</h6>
+              </a>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+              <a href="{% url 'accounts:login_statistics_dashboard' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-log-in-circle fs-4"></i>
+                </div>
+                <h6 class="mb-0">Login Statistics</h6>
+              </a>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+              <a href="{% url 'accounts:attendance_admin' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-time-five fs-4"></i>
+                </div>
+                <h6 class="mb-0">Attendance</h6>
+              </a>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+              <a href="{% url 'accounts:leave_list' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-calendar-check fs-4"></i>
+                </div>
+                <h6 class="mb-0">Leave Management</h6>
+              </a>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+              <a href="{% url 'accounts:lead_assignment_dashboard' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-user-voice fs-4"></i>
+                </div>
+                <h6 class="mb-0">Lead Assignment</h6>
+              </a>
+            </div>
+            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-3">
+              <a href="{% url 'accounts:ticket_list' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-support fs-4"></i>
+                </div>
+                <h6 class="mb-0">Support Tickets</h6>
+              </a>
+            </div>
+          {% else %}
+            <!-- Employee Quick Actions -->
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-12 mb-3">
+              <a href="{% url 'accounts:employee_organization' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-group fs-4"></i>
+                </div>
+                <h6 class="mb-0">Organization</h6>
+              </a>
+            </div>
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-12 mb-3">
+              <a href="{% url 'accounts:my_leads' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-user-voice fs-4"></i>
+                </div>
+                <h6 class="mb-0">My Leads</h6>
+              </a>
+            </div>
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-12 mb-3">
+              <a href="{% url 'accounts:my_forwarded_leads' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-send fs-4"></i>
+                </div>
+                <h6 class="mb-0">Google Leads</h6>
+              </a>
+            </div>
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-12 mb-3">
+              <a href="{% url 'accounts:my_attendance_stats' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-chart fs-4"></i>
+                </div>
+                <h6 class="mb-0">My Attendance</h6>
+              </a>
+            </div>
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-12 mb-3">
+              <a href="{% url 'accounts:my_break_status' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-coffee fs-4"></i>
+                </div>
+                <h6 class="mb-0">My Break Status</h6>
+              </a>
+            </div>
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-12 mb-3">
+              <a href="{% url 'accounts:apply_leave' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-calendar fs-4"></i>
+                </div>
+                <h6 class="mb-0">Request Leave</h6>
+              </a>
+            </div>
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-12 mb-3">
+              <a href="{% url 'accounts:my_leaves' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-list-check fs-4"></i>
+                </div>
+                <h6 class="mb-0">My Leave History</h6>
+              </a>
+            </div>
+            {% if employee.is_team_leader or employee.is_manager %}
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-12 mb-3">
+              <a href="{% url 'accounts:mis_dashboard' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-chart-line fs-4"></i>
+                </div>
+                <h6 class="mb-0">MIS Reports</h6>
+              </a>
+            </div>
+            {% endif %}
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-12 mb-3">
+              <a href="{% url 'accounts:emi_calculator' %}" class="quick-action-card">
+                <div class="quick-action-icon">
+                  <i class="bx bx-calculator fs-4"></i>
+                </div>
+                <h6 class="mb-0">EMI Calculator</h6>
+              </a>
+            </div>
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-12 mb-3">
+              {% if employee.is_currently_working %}
+                {% if employee.is_currently_on_break %}
+                  <a href="{% url 'accounts:end_break' %}" class="quick-action-card">
+                    <div class="quick-action-icon">
+                      <i class="bx bx-pause-circle fs-4"></i>
+                    </div>
+                    <h6 class="mb-0">End Break</h6>
+                  </a>
+                {% else %}
+                  <div class="quick-action-card" onclick="toggleBreakOptions()">
+                    <div class="quick-action-icon">
+                      <i class="bx bx-coffee fs-4"></i>
+                    </div>
+                    <h6 class="mb-0">Take Break</h6>
+                  </div>
+                {% endif %}
+              {% else %}
+                <a href="{% url 'accounts:start_work' %}" class="quick-action-card">
+                  <div class="quick-action-icon">
+                    <i class="bx bx-play-circle fs-4"></i>
+                  </div>
+                  <h6 class="mb-0">Start Work</h6>
+                </a>
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Break Options (Hidden by default - Only for Employees) -->
+{% if employee.role != 'admin' and employee.role != 'superadmin' %}
+<div id="breakOptions" class="row mb-4" style="display: none;">
+  <div class="col-12">
+    <div class="card bg-gradient-primary text-white">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-lg-3 col-md-6 mb-3">
+            <a href="{% url 'accounts:start_break' 'tea_morning' %}" class="quick-action-card break-option-card">
+              <div class="card-body text-center">
+                <div class="quick-action-icon bg-white bg-opacity-20 text-white rounded-circle mx-auto mb-2">
+                  <i class="bx bx-coffee-togo fs-4"></i>
+                </div>
+                <h6 class="mb-0 text-white">Morning Tea</h6>
+                <small class="text-white-50">15 minutes</small>
+              </div>
+            </a>
+          </div>
+          <div class="col-lg-3 col-md-6 mb-3">
+            <a href="{% url 'accounts:start_break' 'lunch' %}" class="quick-action-card break-option-card">
+              <div class="card-body text-center">
+                <div class="quick-action-icon bg-white bg-opacity-20 text-white rounded-circle mx-auto mb-2">
+                  <i class="bx bx-restaurant fs-4"></i>
+                </div>
+                <h6 class="mb-0 text-white">Lunch Break</h6>
+                <small class="text-white-50">30 minutes</small>
+              </div>
+            </a>
+          </div>
+          <div class="col-lg-3 col-md-6 mb-3">
+            <a href="{% url 'accounts:start_break' 'tea_afternoon' %}" class="quick-action-card break-option-card">
+              <div class="card-body text-center">
+                <div class="quick-action-icon bg-white bg-opacity-20 text-white rounded-circle mx-auto mb-2">
+                  <i class="bx bx-coffee-togo fs-4"></i>
+                </div>
+                <h6 class="mb-0 text-white">Afternoon Tea</h6>
+                <small class="text-white-50">15 minutes</small>
+              </div>
+            </a>
+          </div>
+          <div class="col-lg-3 col-md-6 mb-3">
+            <a href="{% url 'accounts:start_break' 'other' %}" class="quick-action-card break-option-card">
+              <div class="card-body text-center">
+                <div class="quick-action-icon bg-white bg-opacity-20 text-white rounded-circle mx-auto mb-2">
+                  <i class="bx bx-time-five fs-4"></i>
+                </div>
+                <h6 class="mb-0 text-white">Other Break</h6>
+                <small class="text-white-50">10 minutes</small>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="row">
+  <!-- Welcome Card with Digital Clock -->
+  <div class="col-lg-4 col-md-6">
+    <div class="card h-100" style="min-height: 400px;">
+      <div class="card-body">
+        <div class="text-center">
+          <!-- User Welcome Info -->
+          <div class="user-welcome mb-3">
+            <h5 class="card-title mb-1">Welcome, {{ employee.first_name }}!</h5>
+            <p class="text-muted mb-0">{{ employee.get_role_display }} • {{ employee.get_department_display }}</p>
+          </div>
+          
+          <!-- Digital Clock -->
+          <div class="digital-clock">
+            <div class="clock-display">
+              <div class="time-part" id="hours">00</div>
+              <div class="time-separator">:</div>
+              <div class="time-part" id="minutes">00</div>
+              <div class="time-separator">:</div>
+              <div class="time-part" id="seconds">00</div>
+              <div class="time-period" id="period">AM</div>
+            </div>
+            <div class="date-display">
+              <div class="date-day" id="day">Monday</div>
+              <div class="date-full" id="date">January 1, 2024</div>
+            </div>
+            <div class="timezone-info">
+              <i class="bx bx-map-pin me-1"></i>
+              <span>Mumbai/Delhi Time</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Today's Status Card -->
+  <div class="col-lg-4 col-md-6">
+    <div class="card h-100" style="min-height: 400px;">
+      <div class="card-body d-flex flex-column justify-content-center position-relative">
+        
+        <div class="row align-items-center flex-grow-1">
+          <div class="col-md-6">
+            <!-- Left: Status -->
+            <div class="text-center">
+              <h5 class="card-title mb-3">Today's Status</h5>
+              <div class="status-badge mb-2">
+                {% if attendance_stats.today %}
+                  {% if attendance_stats.today.is_present and attendance_stats.today.start_time %}
+                    <span class="badge bg-success fs-5 p-3 rounded-pill">Present</span>
+                  {% elif attendance_stats.today.start_time %}
+                    <span class="badge bg-success fs-5 p-3 rounded-pill">Present</span>
+                  {% else %}
+                    <span class="badge bg-secondary fs-5 p-3 rounded-pill">Absent</span>
+                  {% endif %}
+                {% else %}
+                  <span class="badge bg-warning fs-5 p-3 rounded-pill">Not Marked</span>
+                {% endif %}
+              </div>
+              <p class="text-muted mb-1">
+                {% if attendance_stats.today.start_time %}
+                  Started: {{ attendance_stats.today.start_time|time:"g:i A" }}
+                {% endif %}
+              </p>
+              <small class="text-muted">{{ today|date:"l, F d, Y" }}</small>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <!-- Right: Quick Action -->
+            {% if not attendance_stats.today %}
+              <div class="text-center">
+                <a href="{% url 'accounts:start_work' %}" class="btn btn-primary btn-lg rounded-pill shadow-sm d-inline-flex align-items-center">
+                  <i class="bx bx-play-circle fs-2 me-2"></i>
+                  Start Work
+                </a>
+              </div>
+            {% elif attendance_stats.today.end_time %}
+              <div class="text-center checked-out-indicator d-flex flex-column align-items-center justify-content-center">
+                <i class="bx bx-check-circle fs-3 text-info"></i>
+                <small class="text-muted lh-1 mt-1">Work Ended</small>
+                <div class="mt-1">
+                  <small class="text-info fw-bold">{{ attendance_stats.today.end_time|time:"H:i:s" }}</small>
+                </div>
+                <div class="mt-1">
+                  <small class="text-muted">{{ attendance_stats.today.end_time|date:"M d, Y" }}</small>
+                </div>
+              </div>
+            {% else %}
+              <div class="text-center">
+                <a href="{% url 'accounts:end_work' %}" class="btn btn-danger btn-lg rounded-pill shadow-sm d-inline-flex align-items-center">
+                  <i class="bx bx-stop-circle fs-2 me-2"></i>
+                  End Work
+                </a>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+        
+        <!-- Bottom: Shift Info -->
+        <div class="mt-3 pt-3 border-top text-center">
+          <small class="text-muted">Shift: General (09:30 AM - 06:30 PM)</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Stats Card -->
+  <div class="col-lg-4 col-md-12">
+    <div class="card h-100" style="min-height: 400px;">
+      <div class="card-body d-flex flex-column justify-content-center position-relative">
+        
+        <div class="text-center mb-3">
+          <h5 class="card-title">This Month</h5>
+        </div>
+        
+        <div class="row g-3 flex-grow-1">
+          <!-- Days -->
+          <div class="col-4">
+            <div class="text-center">
+              <div class="circular-progress">
+                <svg class="progress-circle" width="80" height="80">
+                  <circle class="progress-bg" cx="40" cy="40" r="35"></circle>
+                  <circle class="progress-bar" cx="40" cy="40" r="35" style="stroke-dasharray: {% widthratio attendance_stats.this_month 30 219.911485751 %} 219.911485751;"></circle>
+                </svg>
+                <div class="progress-text">
+                  <div class="progress-value">{{ attendance_stats.this_month }}</div>
+                  <div class="progress-label">Days</div>
+                </div>
+              </div>
+              <small class="text-success mt-1 d-block">+5% vs last month</small>
+            </div>
+          </div>
+          
+          <!-- Phones -->
+          <div class="col-4">
+            <div class="text-center">
+              <div class="stat-circle">
+                <div class="stat-value">{{ assigned_phones }}</div>
+                <div class="stat-label">Phones</div>
+              </div>
+              <small class="text-muted d-block">Avg: 5 calls/day</small>
+              <small class="text-success mt-1 d-block">+2 vs last month</small>
+            </div>
+          </div>
+          
+          <!-- Pending -->
+          <div class="col-4">
+            <div class="text-center">
+              <div class="stat-circle {% if leave_stats.pending > 0 %}warning{% endif %}">
+                <div class="stat-value">{{ leave_stats.pending }}</div>
+                <div class="stat-label">Pending</div>
+              </div>
+              <small class="text-muted d-block">Leave Requests</small>
+              <small class="text-warning mt-1 d-block">-1 vs last month</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Personal Stats Row -->
+<div class="row mt-4">
+  <!-- Attendance Stats -->
+  <div class="col-lg-4 col-md-6 mb-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="text-center">
+          <div class="avatar bg-info text-white rounded-circle p-3 mb-3 mx-auto">
+            <i class="bx bx-time fs-3"></i>
+          </div>
+          <h5 class="card-title">Attendance</h5>
+          <div class="stats-grid">
+            <a href="{% url 'accounts:my_attendance_stats' %}" class="text-decoration-none">
+              <div class="stat-item">
+                <div class="stat-number">{{ attendance_stats.this_week }}</div>
+                <div class="stat-label">This Week</div>
+              </div>
+            </a>
+            <a href="{% url 'accounts:my_attendance_stats' %}" class="text-decoration-none">
+              <div class="stat-item">
+                <div class="stat-number">{{ attendance_stats.this_month }}</div>
+                <div class="stat-label">This Month</div>
+              </div>
+            </a>
+            <a href="{% url 'accounts:my_attendance_stats' %}" class="text-decoration-none">
+              <div class="stat-item">
+                <div class="stat-number">{{ attendance_stats.total_days }}</div>
+                <div class="stat-label">Total Days</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leave Stats -->
+  <div class="col-lg-4 col-md-6 mb-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="text-center">
+          <div class="avatar bg-warning text-white rounded-circle p-3 mb-3 mx-auto">
+            <i class="bx bx-calendar fs-3"></i>
+          </div>
+          <h5 class="card-title">Leave Status</h5>
+          <div class="stats-grid">
+            <a href="{% url 'accounts:my_leaves' %}" class="text-decoration-none">
+              <div class="stat-item">
+                <div class="stat-number text-warning">{{ leave_stats.pending }}</div>
+                <div class="stat-label">Pending</div>
+              </div>
+            </a>
+            <a href="{% url 'accounts:my_leaves' %}" class="text-decoration-none">
+              <div class="stat-item">
+                <div class="stat-number text-success">{{ leave_stats.approved }}</div>
+                <div class="stat-label">Approved</div>
+              </div>
+            </a>
+            <a href="{% url 'accounts:my_leaves' %}" class="text-decoration-none">
+              <div class="stat-item">
+                <div class="stat-number text-danger">{{ leave_stats.rejected }}</div>
+                <div class="stat-label">Rejected</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phone Assignment -->
+  <div class="col-lg-4 col-md-6 mb-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="text-center">
+          <div class="avatar bg-success text-white rounded-circle p-3 mb-3 mx-auto">
+            <i class="bx bx-phone fs-3"></i>
+          </div>
+          <h5 class="card-title">Phone Assignment</h5>
+          <div class="phone-display">
+            <div class="phone-number">
+              {% if employee.phone_numbers.all %}
+                {% for phone in employee.phone_numbers.all|slice:":1" %}
+                  <div class="fw-bold">{{ phone.phone_number }}</div>
+                  <small class="text-muted">{{ phone.get_phone_type_display }}</small>
+                {% endfor %}
+                {% if employee.phone_numbers.all.count > 1 %}
+                  <small class="text-info">+{{ employee.phone_numbers.all.count|add:"-1" }} more</small>
+                {% endif %}
+              {% else %}
+                <div class="text-muted">No phone assigned</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Lead Stats Row for Admin/Superadmin -->
+{% if employee.role == 'admin' or employee.role == 'superadmin' %}
+<div class="row mt-4">
+  <!-- Lead Management Stats -->
+  <div class="col-lg-4 col-md-6 mb-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="text-center">
+          <div class="avatar bg-primary text-white rounded-circle p-3 mb-3 mx-auto">
+            <i class="bx bx-user-voice fs-3"></i>
+          </div>
+          <h5 class="card-title">Lead Management</h5>
+          <div class="stats-grid">
+            <a href="{% url 'accounts:leads_by_status' 'new' %}" class="text-decoration-none">
+              <div class="stat-item">
+                <div class="stat-number">{{ status_counts.new|default:0 }}</div>
+                <div class="stat-label">New Leads</div>
+              </div>
+            </a>
+            <a href="{% url 'accounts:leads_by_status' 'contacted' %}" class="text-decoration-none">
+              <div class="stat-item">
+                <div class="stat-number">{{ status_counts.contacted|default:0 }}</div>
+                <div class="stat-label">Contacted</div>
+              </div>
+            </a>
+            <a href="{% url 'accounts:leads_by_status' 'converted' %}" class="text-decoration-none">
+              <div class="stat-item">
+                <div class="stat-number">{{ status_counts.converted|default:0 }}</div>
+                <div class="stat-label">Converted</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Leads Activity -->
+  <div class="col-lg-8 col-md-12 mb-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5 class="card-title mb-0">
+          <i class="bx bx-activity me-2"></i>Recent Lead Activities
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Lead</th>
+                <th>Action</th>
+                <th>Status</th>
+                <th>Employee</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for activity in recent_activities|slice:":5" %}
+              <tr>
+                <td>{{ activity.lead.get_full_name }}</td>
+                <td>{{ activity.get_action_type_display }}</td>
+                <td>
+                  {% if activity.lead.status == 'new' %}
+                    <span class="badge bg-success">New</span>
+                  {% elif activity.lead.status == 'contacted' %}
+                    <span class="badge bg-info">Contacted</span>
+                  {% elif activity.lead.status == 'converted' %}
+                    <span class="badge bg-primary">Converted</span>
+                  {% endif %}
+                </td>
+                <td>{{ activity.user.get_full_name }}</td>
+                <td>{{ activity.created_at|timesince }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="text-center mt-3">
+          <a href="{% url 'accounts:lead_list' %}" class="btn btn-primary">View All Leads</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- HR Management Sections -->
+{% if is_hr %}
+<div class="row mt-4">
+  <!-- Recent Employees -->
+  <div class="col-lg-6 mb-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">
+          <i class="bx bx-users me-2"></i>Recent Employees
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for emp in employees_list|slice:":5" %}
+              <tr>
+                <td>{{ emp.full_name }}</td>
+                <td>
+                  {% if emp.role == 'hr' %}
+                    <span class="badge bg-info">HR</span>
+                  {% elif emp.role == 'admin' %}
+                    <span class="badge bg-primary">Admin</span>
+                  {% elif emp.role == 'superadmin' %}
+                    <span class="badge bg-dark">SuperAdmin</span>
+                  {% elif emp.role == 'manager' %}
+                    <span class="badge bg-warning">Manager</span>
+                  {% elif emp.role == 'team_leader' %}
+                    <span class="badge bg-success">Team Leader</span>
+                  {% else %}
+                    <span class="badge bg-secondary">Employee</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if emp.employment_status == 'active' %}
+                    <span class="badge bg-success">Active</span>
+                  {% else %}
+                    <span class="badge bg-secondary">{{ emp.get_employment_status_display }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{% url 'accounts:staff_detail' emp.pk %}" class="btn btn-sm btn-outline-primary">
+                    <i class="bx bx-eye"></i>
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="text-center mt-3">
+          <a href="{% url 'accounts:staff_management' %}" class="btn btn-primary">View All Employees</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Leave Requests -->
+  <div class="col-lg-6 mb-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">
+          <i class="bx bx-calendar-check me-2"></i>Recent Leave Requests
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for leave in leave_list|slice:":5" %}
+              <tr>
+                <td>{{ leave.employee.full_name }}</td>
+                <td>{{ leave.get_leave_type_display }}</td>
+                <td>
+                  {% if leave.status == 'pending' %}
+                    <span class="badge bg-warning">Pending</span>
+                  {% elif leave.status == 'approved' %}
+                    <span class="badge bg-success">Approved</span>
+                  {% else %}
+                    <span class="badge bg-danger">Rejected</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{% url 'accounts:leave_details' leave.pk %}" class="btn btn-sm btn-outline-primary">
+                    <i class="bx bx-eye"></i>
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="text-center mt-3">
+          <a href="{% url 'accounts:leave_list' %}" class="btn btn-primary">View All Leaves</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mt-4">
+  <!-- Recent Attendance -->
+  <div class="col-lg-6 mb-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">
+          <i class="bx bx-time-five me-2"></i>Recent Attendance
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for attendance in attendance_list|slice:":5" %}
+              <tr>
+                <td>{{ attendance.employee.full_name }}</td>
+                <td>{{ attendance.date|date:"M d, Y" }}</td>
+                <td>
+                  {% if attendance.is_present %}
+                    <span class="badge bg-success">Present</span>
+                  {% else %}
+                    <span class="badge bg-danger">Absent</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="text-center mt-3">
+          <a href="{% url 'accounts:attendance_admin' %}" class="btn btn-primary">View All Attendance</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Breaks -->
+  <div class="col-lg-6 mb-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">
+          <i class="bx bx-coffee me-2"></i>Recent Breaks
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>Type</th>
+                <th>Duration</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for break in break_list|slice:":5" %}
+              <tr>
+                <td>{{ break.employee.full_name }}</td>
+                <td>{{ break.get_break_type_display }}</td>
+                <td>
+                  <span class="text-muted">{{ break.get_duration_display|default:"Active" }}</span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="text-center mt-3">
+          <a href="{% url 'accounts:break_management_dashboard' %}" class="btn btn-primary">View All Breaks</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<style>
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.stats-badges {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.stat-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  border: 1px solid #dee2e6;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  min-width: 70px;
+}
+
+.stat-badge:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border-color: #007bff;
+  background: linear-gradient(135deg, #f8f9ff 0%, #e6f3ff 100%);
+}
+
+.stat-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #007bff;
+  margin-bottom: 0.25rem;
+}
+
+.stat-badge:hover .stat-value {
+  color: #0056b3;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 1rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.stat-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #f8f9ff 0%, #e6f3ff 100%);
+  border-color: #007bff;
+}
+
+.stat-number {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #5e72e4;
+  transition: color 0.3s ease;
+}
+
+.stat-item:hover .stat-number {
+  color: #007bff;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #8898aa;
+  text-transform: uppercase;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .stats-badges {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .stat-badge {
+    min-width: 80px;
+    padding: 0.5rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .stat-item {
+    padding: 0.75rem;
+  }
+  
+  .stat-number {
+    font-size: 1.25rem;
+  }
+  
+  .stat-value {
+    font-size: 1rem;
+  }
+}
+
+/* Professional Card Styling */
+.card {
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-bottom: 1px solid #dee2e6;
+  border-radius: 15px 15px 0 0 !important;
+  font-weight: 600;
+}
+
+.stats-grid .stat-item {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border: 1px solid #e9ecef;
+}
+
+.stats-grid .stat-item:hover {
+  background: linear-gradient(135deg, #e6f3ff 0%, #cce7ff 100%);
+  border-color: #007bff;
+  transform: translateY(-3px);
+}
+
+/* Enhanced responsiveness */
+@media (max-width: 768px) {
+  .card {
+    margin-bottom: 1rem;
+  }
+  
+  .stats-badges, .stats-grid {
+    gap: 0.5rem;
+  }
+  
+  .stat-badge, .stat-item {
+    padding: 0.5rem;
+    min-width: 70px;
+  }
+}
+
+.hierarchy-display {
+  position: relative;
+}
+
+.hierarchy-item {
+  position: relative;
+}
+
+.team-members {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.phone-display {
+  margin-top: 1rem;
+}
+
+.phone-number {
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 0.5rem;
+}
+
+/* Digital Clock Styling - Liquid Glass Effect */
+.digital-clock {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(240, 248, 255, 0.8));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 
+    0 8px 32px rgba(31, 38, 135, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.digital-clock::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent,
+    rgba(100, 200, 255, 0.05),
+    transparent
+  );
+  transform: rotate(45deg);
+  animation: liquidFlow 4s ease-in-out infinite;
+}
+
+@keyframes liquidFlow {
+  0%, 100% { 
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    opacity: 0.3;
+  }
+  50% { 
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+    opacity: 0.7;
+  }
+}
+
+.digital-clock::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(255, 255, 255, 0.3) 0%,
+    transparent 50%
+  );
+  pointer-events: none;
+}
+
+.clock-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.time-part {
+  font-size: 2.8rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 10px rgba(37, 99, 235, 0.2);
+  animation: timePulse 3s ease-in-out infinite;
+  min-width: 70px;
+  text-align: center;
+  position: relative;
+}
+
+.time-part::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+.time-separator {
+  font-size: 2.8rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #64748b, #94a3b8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 8px;
+  animation: separatorBlink 1s ease-in-out infinite;
+}
+
+.time-period {
+  font-size: 1.3rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-left: 15px;
+  text-shadow: 0 1px 5px rgba(245, 158, 11, 0.2);
+  animation: periodGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes timePulse {
+  0%, 100% { 
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% { 
+    transform: scale(1.02);
+    filter: brightness(1.1);
+  }
+}
+
+@keyframes separatorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes periodGlow {
+  0% { filter: brightness(1); }
+  100% { filter: brightness(1.2); }
+}
+
+@keyframes glow {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+  100% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.8; }
+}
+
+.date-display {
+  margin-bottom: 15px;
+  position: relative;
+  z-index: 2;
+}
+
+.date-day {
+  font-size: 1.3rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #059669, #10b981);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  animation: dayFloat 4s ease-in-out infinite;
+}
+
+.date-full {
+  font-size: 1.1rem;
+  background: linear-gradient(135deg, #6b7280, #9ca3af);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 500;
+}
+
+@keyframes dayFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+.timezone-info {
+  font-size: 0.9rem;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  font-weight: 500;
+}
+
+.user-welcome {
+  position: relative;
+  z-index: 1;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.1);
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+}
+
+.user-welcome h5 {
+  background: linear-gradient(135deg, #1e293b, #334155);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+
+.user-welcome p {
+  background: linear-gradient(135deg, #64748b, #94a3b8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 400;
+}
+
+/* Responsive Clock */
+@media (max-width: 768px) {
+  .time-part {
+    font-size: 2.2rem;
+    min-width: 50px;
+  }
+  .time-separator {
+    font-size: 2.2rem;
+  }
+  .time-period {
+    font-size: 1.1rem;
+  }
+  .date-day {
+    font-size: 1.1rem;
+  }
+  .date-full {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .time-part {
+    font-size: 1.8rem;
+    min-width: 40px;
+  }
+  .time-separator {
+    font-size: 1.8rem;
+  }
+  .time-period {
+    font-size: 0.95rem;
+  }
+  .date-day {
+    font-size: 0.95rem;
+  }
+  .date-full {
+    font-size: 0.8rem;
+  }
+}
+/* Card Watermark */
+.card-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Status Badge Enhancement */
+.status-badge .badge {
+  font-size: 1.2rem;
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Circular Progress */
+.circular-progress {
+  position: relative;
+  margin: 0 auto;
+  width: 80px;
+  height: 80px;
+}
+
+.progress-circle {
+  transform: rotate(-90deg);
+}
+
+.progress-bg {
+  fill: none;
+  stroke: #e9ecef;
+  stroke-width: 8;
+}
+
+.progress-bar {
+  fill: none;
+  stroke: #007bff;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dasharray 1s ease;
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 1;
+}
+
+.progress-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #495057;
+}
+
+.progress-label {
+  font-size: 0.8rem;
+  color: #6c757d;
+  text-transform: uppercase;
+}
+
+/* Stat Circle */
+.stat-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e9ecef, #f8f9fa);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1;
+}
+
+.stat-circle.warning {
+  background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+  border: 2px solid #ffc107;
+}
+
+.stat-circle .stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #495057;
+}
+
+.stat-circle .stat-label {
+  font-size: 0.8rem;
+  color: #6c757d;
+  text-transform: uppercase;
+}
+
+/* Quick Action Card - Liquid Glass Effect */
+.quick-action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  color: #fff;
+  text-decoration: none;
+  transition: all 0.4s ease;
+  height: 100%;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+  pointer-events: auto;
+  z-index: 1;
+}
+
+.quick-action-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.6s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.quick-action-card:hover::before {
+  left: 100%;
+}
+
+.quick-action-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.quick-action-icon {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  margin-bottom: 8px;
+}
+
+.quick-action-icon i {
+  font-size: 2rem;
+  color: #333;
+}
+
+.quick-action-card h6 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: white !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+/* Responsive adjustments for Quick Actions */
+@media (max-width: 1200px) {
+  .quick-action-card {
+    padding: 0.8rem;
+  }
+  .quick-action-icon {
+    width: 45px;
+    height: 45px;
+  }
+  .quick-action-icon i {
+    font-size: 1.8rem;
+  }
+  .quick-action-card h6 {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .quick-action-card {
+    padding: 0.7rem;
+  }
+  .quick-action-icon {
+    width: 40px;
+    height: 40px;
+  }
+  .quick-action-icon i {
+    font-size: 1.6rem;
+  }
+  .quick-action-card h6 {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .quick-action-card {
+    padding: 0.6rem;
+    margin-bottom: 0.5rem;
+  }
+  .quick-action-icon {
+    width: 35px;
+    height: 35px;
+    margin-bottom: 6px;
+  }
+  .quick-action-icon i {
+    font-size: 1.4rem;
+  }
+  .quick-action-card h6 {
+    font-size: 0.75rem;
+  }
+}
+
+.quick-action-card h6 {
+  font-weight: 600;
+  color: white !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.quick-action-card:hover h6 {
+  color: white !important;
+  transform: translateY(-2px);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.dropdown-trigger {
+  position: relative !important;
+  z-index: 9999 !important;
+}
+
+.dropdown-trigger .dropdown-menu {
+  border-radius: 0.5rem;
+  border: 2px solid #e9ecef;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2) !important;
+  background: white;
+  z-index: 99999 !important;
+  position: absolute !important;
+  margin-top: 0.5rem !important;
+  transform: translateX(0) !important;
+  top: 100% !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: auto !important;
+  min-width: 180px !important;
+  max-width: 250px !important;
+}
+
+/* Ensure dropdown appears above all content */
+.card.bg-gradient-primary {
+  position: relative !important;
+  z-index: 1 !important;
+  overflow: visible !important;
+}
+
+/* Fix for Bootstrap dropdown positioning */
+.dropdown-menu.show {
+  display: block !important;
+  z-index: 99999 !important;
+  position: absolute !important;
+}
+
+/* Prevent content from overlapping */
+.row {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.card {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* Additional fixes for dropdown visibility */
+.card-body {
+  overflow: visible !important;
+}
+
+.quick-action-card {
+  overflow: visible !important;
+}
+
+/* Force dropdown to be on top */
+.dropdown {
+  z-index: 99999 !important;
+}
+
+/* Bootstrap dropdown override */
+.dropdown-menu {
+  z-index: 99999 !important;
+  position: absolute !important;
+  float: none !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
+/* Fix dropdown button styling */
+.dropdown .btn-link {
+  text-decoration: none !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  display: block !important;
+}
+
+.dropdown .btn-link:hover {
+  text-decoration: none !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Responsive Design for Dashboard */
+@media (max-width: 1200px) {
+  .quick-action-card .card-body {
+    padding: 1.25rem 0.75rem;
+  }
+  
+  .quick-action-icon {
+    width: 55px;
+    height: 55px;
+  }
+  
+  .quick-action-card h6 {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .quick-action-card .card-body {
+    padding: 1rem 0.5rem;
+  }
+  
+  .quick-action-icon {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .quick-action-card h6 {
+    font-size: 0.85rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .card-header h5 {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Quick Actions Responsive */
+  .quick-action-card {
+    margin-bottom: 0.75rem;
+  }
+  
+  .quick-action-card .card-body {
+    padding: 1.25rem 0.75rem;
+  }
+  
+  .quick-action-icon {
+    width: 55px;
+    height: 55px;
+    font-size: 1.25rem;
+  }
+  
+  .quick-action-card h6 {
+    font-size: 0.9rem;
+  }
+  
+  /* Break Options Mobile */
+  #breakOptions .col-lg-3 {
+    margin-bottom: 0.75rem;
+  }
+  
+  .break-option-card .card-body {
+    padding: 1rem 0.75rem;
+  }
+  
+  .break-option-card .quick-action-icon {
+    width: 45px;
+    height: 45px;
+    font-size: 1.1rem;
+  }
+  
+  .break-option-card h6 {
+    font-size: 0.85rem;
+  }
+  
+  .break-option-card small {
+    font-size: 0.75rem;
+  }
+  
+  /* Header Responsive */
+  .card-header h5 {
+    font-size: 1rem;
+  }
+  
+  /* Welcome Cards */
+  .avatar {
+    width: 45px !important;
+    height: 45px !important;
+  }
+  
+  .avatar i {
+    font-size: 1.25rem !important;
+  }
+  
+  .card-title h5 {
+    font-size: 1rem;
+  }
+  
+  .card-title p {
+    font-size: 0.85rem;
+  }
+  
+  /* Stats Cards */
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  /* Extra Small Mobile */
+  .quick-action-card {
+    margin-bottom: 0.5rem;
+  }
+  
+  .quick-action-card .card-body {
+    padding: 1rem 0.5rem;
+  }
+  
+  .quick-action-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 1.1rem;
+  }
+  
+  .quick-action-card h6 {
+    font-size: 0.8rem;
+    line-height: 1.2;
+  }
+  
+  /* Break Options for Small Mobile */
+  .break-option-card .card-body {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .break-option-card .quick-action-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  
+  .break-option-card h6 {
+    font-size: 0.8rem;
+  }
+  
+  .break-option-card small {
+    font-size: 0.7rem;
+  }
+  
+  /* Welcome Section */
+  .avatar {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  
+  .avatar i {
+    font-size: 1rem !important;
+  }
+  
+  .card-title h5 {
+    font-size: 0.95rem;
+  }
+  
+  .card-title p {
+    font-size: 0.8rem;
+  }
+  
+  /* Header */
+  .card-header h5 {
+    font-size: 0.95rem;
+  }
+  
+  /* Team Section */
+  .team-member-item .avatar {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 0.7rem !important;
+  }
+  
+  .team-member-item .flex-grow-1 {
+    font-size: 0.85rem;
+  }
+  
+  .badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+  }
+}
+
+/* Landscape Mobile Fixes */
+@media (max-width: 768px) and (orientation: landscape) {
+  .quick-action-card .card-body {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .quick-action-icon {
+    width: 45px;
+    height: 45px;
+    font-size: 1rem;
+  }
+  
+  .quick-action-card h6 {
+    font-size: 0.8rem;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  .quick-action-card {
+    min-height: 80px;
+  }
+  
+  .quick-action-icon {
+    min-width: 50px;
+    min-height: 50px;
+  }
+  
+  .break-option-card {
+    min-height: 70px;
+  }
+}
+
+/* Global z-index fix */
+.dropdown-menu {
+  z-index: 99999 !important;
+}
+
+/* Ensure dropdown is always on top */
+.dropdown.show .dropdown-menu {
+  z-index: 99999 !important;
+  display: block !important;
+  position: absolute !important;
+}
+
+/* Break Options Cards */
+.break-option-card {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+  animation: slideInUp 0.4s ease forwards;
+}
+
+.break-option-card:nth-child(1) { animation-delay: 0.1s; }
+.break-option-card:nth-child(2) { animation-delay: 0.2s; }
+.break-option-card:nth-child(3) { animation-delay: 0.3s; }
+.break-option-card:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Take Break cursor style */
+.quick-action-card[onclick] {
+  cursor: pointer;
+}
+
+.quick-action-card[onclick]:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* Break Counter Popup Styles */
+.break-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 350px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  z-index: 1050;
+  border: 1px solid #e9ecef;
+  overflow: hidden;
+  display: none;
+  animation: slideInCenter 0.3s ease-out;
+}
+
+.break-popup.active {
+  display: block;
+}
+
+.break-popup.minimized .break-popup-body {
+  display: none;
+}
+
+.break-popup-header {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.break-info {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+}
+
+.break-type {
+  font-size: 1.1rem;
+  margin-right: 10px;
+}
+
+.break-status {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.break-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-minimize, .btn-close-popup {
+  background: none;
+  border: none;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-minimize:hover, .btn-close-popup:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.break-popup-body {
+  padding: 20px;
+}
+
+.break-timer {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.timer-display {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #007bff;
+  font-family: 'Courier New', monospace;
+  margin-bottom: 5px;
+}
+
+.timer-label {
+  color: #6c757d;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.break-details {
+  margin-bottom: 20px;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  font-weight: 500;
+  color: #495057;
+}
+
+.detail-value {
+  color: #6c757d;
+  font-weight: 600;
+}
+
+.break-actions {
+  text-align: center;
+}
+
+@keyframes slideInCenter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+</style>
+
+<script>
+function toggleBreakOptions() {
+  const breakOptions = document.getElementById('breakOptions');
+  const takeBreakCard = event.currentTarget;
+  
+  if (breakOptions.style.display === 'none' || breakOptions.style.display === '') {
+    breakOptions.style.display = 'block';
+    takeBreakCard.style.background = 'rgba(255, 255, 255, 0.2)';
+    
+    // Reset animations
+    const cards = breakOptions.querySelectorAll('.break-option-card');
+    cards.forEach((card, index) => {
+      card.style.animation = 'none';
+      setTimeout(() => {
+        card.style.animation = `slideInUp 0.4s ease forwards`;
+        card.style.animationDelay = `${(index + 1) * 0.1}s`;
+      }, 10);
+    });
+  } else {
+    breakOptions.style.display = 'none';
+    takeBreakCard.style.background = 'rgba(255, 255, 255, 0.1)';
+  }
+}
+
+// Close break options when clicking outside
+document.addEventListener('click', function(event) {
+  const breakOptions = document.getElementById('breakOptions');
+  const takeBreakCard = document.querySelector('.quick-action-card[onclick]');
+  
+  if (breakOptions && takeBreakCard && 
+      !breakOptions.contains(event.target) && 
+      !takeBreakCard.contains(event.target) &&
+      breakOptions.style.display === 'block') {
+    breakOptions.style.display = 'none';
+    takeBreakCard.style.background = 'rgba(255, 255, 255, 0.1)';
+  }
+});
+
+// Break Counter Popup Functions
+let breakTimerInterval;
+
+function startBreakTimer(startTime) {
+  function updateTimer() {
+    const now = new Date();
+    const start = new Date(startTime);
+    const elapsed = Math.floor((now - start) / 1000); // seconds elapsed
+    
+    const hours = Math.floor(elapsed / 3600);
+    const minutes = Math.floor((elapsed % 3600) / 60);
+    const seconds = elapsed % 60;
+    
+    document.getElementById('break-hours').textContent = hours.toString().padStart(2, '0');
+    document.getElementById('break-minutes').textContent = minutes.toString().padStart(2, '0');
+    document.getElementById('break-seconds').textContent = seconds.toString().padStart(2, '0');
+  }
+  
+  // Update immediately
+  updateTimer();
+  
+  // Update every second
+  breakTimerInterval = setInterval(updateTimer, 1000);
+}
+
+function minimizeBreakPopup() {
+  const popup = document.getElementById('break-popup');
+  popup.classList.toggle('minimized');
+  
+  const minimizeBtn = popup.querySelector('.btn-minimize i');
+  if (popup.classList.contains('minimized')) {
+    minimizeBtn.className = 'bx bx-plus';
+  } else {
+    minimizeBtn.className = 'bx bx-minus';
+  }
+}
+
+function closeBreakPopup() {
+  const popup = document.getElementById('break-popup');
+  popup.style.display = 'none';
+  
+  // Clear timer interval
+  if (breakTimerInterval) {
+    clearInterval(breakTimerInterval);
+  }
+}
+
+// Digital Clock for Mumbai/Delhi Time (IST - UTC+5:30)
+function updateClock() {
+  const now = new Date();
+  
+  // Convert to IST (UTC+5:30)
+  const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+  const istTime = new Date(now.getTime() + istOffset + (now.getTimezoneOffset() * 60 * 1000));
+  
+  let hours = istTime.getHours();
+  let minutes = istTime.getMinutes();
+  let seconds = istTime.getSeconds();
+  let period = 'AM';
+  
+  // Convert to 12-hour format
+  if (hours >= 12) {
+    period = 'PM';
+    if (hours > 12) {
+      hours -= 12;
+    }
+  } else if (hours === 0) {
+    hours = 12;
+  }
+  
+  // Add leading zeros
+  hours = hours.toString().padStart(2, '0');
+  minutes = minutes.toString().padStart(2, '0');
+  seconds = seconds.toString().padStart(2, '0');
+  
+  // Update clock display
+  document.getElementById('hours').textContent = hours;
+  document.getElementById('minutes').textContent = minutes;
+  document.getElementById('seconds').textContent = seconds;
+  document.getElementById('period').textContent = period;
+  
+  // Update date
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  
+  const dayName = days[istTime.getDay()];
+  const day = istTime.getDate();
+  const month = months[istTime.getMonth()];
+  const year = istTime.getFullYear();
+  
+  document.getElementById('day').textContent = dayName;
+  document.getElementById('date').textContent = `${month} ${day}, ${year}`;
+}
+
+// Initialize clock and update every second
+updateClock();
+setInterval(updateClock, 1000);
+
+// Initialize break popup when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  const breakPopup = document.getElementById('break-popup');
+  if (breakPopup && breakPopup.classList.contains('active')) {
+    // Get start time from the break data
+    const startTimeElement = document.getElementById('break-start-time');
+    if (startTimeElement && startTimeElement.dataset.startTime) {
+      startBreakTimer(startTimeElement.dataset.startTime);
+    }
+  }
+});
+</script>
+
+{% endblock %}

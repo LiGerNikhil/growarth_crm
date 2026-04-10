@@ -1,0 +1,52 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Terminate Employee{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Terminate Employee</h5>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-warning d-flex align-items-center" role="alert">
+          <i class="bx bx-error-circle me-2"></i>
+          <div>
+            <strong>Warning:</strong> This action will terminate the employee and deactivate their user account. This action cannot be easily undone.
+          </div>
+        </div>
+
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <h6>Employee Information:</h6>
+            <p><strong>Name:</strong> {{ employee.full_name }}</p>
+            <p><strong>Employee ID:</strong> {{ employee.employee_id }}</p>
+            <p><strong>Department:</strong> {{ employee.get_department_display }}</p>
+            <p><strong>Position:</strong> {{ employee.position }}</p>
+          </div>
+          <div class="col-md-6">
+            <h6>Employment Details:</h6>
+            <p><strong>Email:</strong> {{ employee.email }}</p>
+            <p><strong>Start Date:</strong> {{ employee.start_date|date:"M d, Y" }}</p>
+            <p><strong>Current Status:</strong> {{ employee.get_employment_status_display }}</p>
+            <p><strong>Days Employed:</strong> {{ employee.days_employed }} days</p>
+          </div>
+        </div>
+
+        <form method="post">
+          {% csrf_token %}
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-danger">
+              <i class="bx bx-trash me-1"></i>Terminate Employee
+            </button>
+            <a href="{% url 'accounts:staff_detail' employee.pk %}" class="btn btn-outline-secondary">
+              <i class="bx bx-x me-1"></i>Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

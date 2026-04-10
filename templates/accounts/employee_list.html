@@ -1,0 +1,215 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Employees{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Employee Management</h5>
+        <div class="d-flex gap-2">
+          <a href="{% url 'accounts:hr_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bx bx-chart me-1"></i>HR Dashboard
+          </a>
+          <a href="{% url 'accounts:staff_create' %}" class="btn btn-primary">
+            <i class="bx bx-plus me-1"></i>Add Employee
+          </a>
+        </div>
+      </div>
+      <div class="card-body">
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+          <div class="col-md-4">
+            <div class="card bg-primary text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ total_employees }}</h4>
+                    <p class="mb-0">Total Employees</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-primary">
+                      <i class="bx bx-group fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card bg-success text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ active_employees }}</h4>
+                    <p class="mb-0">Active Employees</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-success">
+                      <i class="bx bx-check-circle fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card bg-warning text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ onboarding_employees }}</h4>
+                    <p class="mb-0">Onboarding</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-warning">
+                      <i class="bx bx-time-five fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <form method="get" class="row g-3">
+              <div class="col-md-4">
+                {{ search_form.search }}
+              </div>
+              <div class="col-md-2">
+                {{ search_form.department }}
+              </div>
+              <div class="col-md-2">
+                {{ search_form.status }}
+              </div>
+              <div class="col-md-2">
+                {{ search_form.employee_type }}
+              </div>
+              <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                  <i class="bx bx-search me-1"></i>Search
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Employees Table -->
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Employee ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Department</th>
+                <th>Position</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Start Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for employee in employees %}
+              <tr>
+                <td><strong>{{ employee.employee_id }}</strong></td>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="avatar avatar-sm me-2">
+                      <div class="avatar-initial rounded-circle bg-primary text-white">
+                        {{ employee.first_name.0 }}{{ employee.last_name.0 }}
+                      </div>
+                    </div>
+                    <span>{{ employee.full_name }}</span>
+                  </div>
+                </td>
+                <td>{{ employee.email }}</td>
+                <td>{{ employee.get_department_display }}</td>
+                <td>{{ employee.position }}</td>
+                <td>
+                  {% if employee.role == 'hr' %}
+                    <span class="badge bg-label-info">HR</span>
+                  {% elif employee.role == 'admin' %}
+                    <span class="badge bg-label-primary">Admin</span>
+                  {% elif employee.role == 'superadmin' %}
+                    <span class="badge bg-label-dark">SuperAdmin</span>
+                  {% elif employee.role == 'manager' %}
+                    <span class="badge bg-label-warning">Manager</span>
+                  {% elif employee.role == 'team_leader' %}
+                    <span class="badge bg-label-success">Team Leader</span>
+                  {% else %}
+                    <span class="badge bg-label-secondary">Employee</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if employee.employment_status == 'active' %}
+                    <span class="badge bg-label-success">Active</span>
+                  {% elif employee.employment_status == 'onboarding' %}
+                    <span class="badge bg-label-warning">Onboarding</span>
+                  {% elif employee.employment_status == 'inactive' %}
+                    <span class="badge bg-label-secondary">Inactive</span>
+                  {% else %}
+                    <span class="badge bg-label-danger">Terminated</span>
+                  {% endif %}
+                </td>
+                <td>{{ employee.start_date|date:"M d, Y" }}</td>
+                <td>
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                      Actions
+                    </button>
+                    <ul class="dropdown-menu">
+                      <li>
+                        <a class="dropdown-item" href="{% url 'accounts:staff_detail' employee.pk %}">
+                          <i class="bx bx-eye me-2"></i>View Details
+                        </a>
+                      </li>
+                      <li>
+                        <a class="dropdown-item" href="{% url 'accounts:employee_update' employee.pk %}">
+                          <i class="bx bx-edit me-2"></i>Edit
+                        </a>
+                      </li>
+                      <li>
+                        <a class="dropdown-item" href="{% url 'accounts:upload_document' employee.pk %}">
+                          <i class="bx bx-upload me-2"></i>Upload Document
+                        </a>
+                      </li>
+                      <li><hr class="dropdown-divider"></li>
+                      {% if employee.employment_status == 'active' %}
+                      <li>
+                        <a class="dropdown-item text-warning" href="{% url 'accounts:employee_deactivate' employee.pk %}">
+                          <i class="bx bx-user-x me-2"></i>Deactivate
+                        </a>
+                      </li>
+                      {% else %}
+                      <li>
+                        <a class="dropdown-item text-success" href="{% url 'accounts:employee_activate' employee.pk %}">
+                          <i class="bx bx-user-check me-2"></i>Activate
+                        </a>
+                      </li>
+                      {% endif %}
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="9" class="text-center py-4">
+                  <i class="bx bx-inbox fs-2 text-muted"></i>
+                  <p class="text-muted mb-0">No employees found</p>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

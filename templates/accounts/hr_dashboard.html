@@ -1,0 +1,838 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}HR Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+.hr-dashboard {
+    padding: 20px;
+    background: #f8f9fa;
+}
+
+.dashboard-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.dashboard-header h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+.dashboard-header p {
+    margin: 10px 0 0 0;
+    opacity: 0.9;
+    font-size: 1.1rem;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.metric-card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.metric-card.total { border-left-color: #4f46e5; }
+.metric-card.active { border-left-color: #10b981; }
+.metric-card.present { border-left-color: #3b82f6; }
+.metric-card.absent { border-left-color: #ef4444; }
+.metric-card.late { border-left-color: #f59e0b; }
+.metric-card.leave { border-left-color: #8b5cf6; }
+.metric-card.break { border-left-color: #06b6d4; }
+
+.metric-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 5px;
+}
+
+.metric-label {
+    color: #6b7280;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.metric-change {
+    font-size: 0.85rem;
+    margin-top: 8px;
+    padding: 4px 8px;
+    border-radius: 20px;
+    display: inline-block;
+}
+
+.metric-change.positive {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.metric-change.negative {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.charts-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.chart-container {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.chart-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+}
+
+.chart-subtitle {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin: 5px 0 0 0;
+}
+
+.chart-wrapper {
+    position: relative;
+    height: 300px;
+}
+
+.alerts-section {
+    margin-bottom: 30px;
+}
+
+.alert-item {
+    background: white;
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin-bottom: 10px;
+    border-left: 4px solid;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.alert-item.warning {
+    border-left-color: #f59e0b;
+    background: #fffbeb;
+}
+
+.alert-item.info {
+    border-left-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.alert-item.danger {
+    border-left-color: #ef4444;
+    background: #fef2f2;
+}
+
+.alert-icon {
+    font-size: 1.5rem;
+}
+
+.alert-content {
+    flex: 1;
+}
+
+.alert-message {
+    font-weight: 500;
+    color: #1f2937;
+    margin-bottom: 5px;
+}
+
+.alert-priority {
+    font-size: 0.85rem;
+    color: #6b7280;
+    text-transform: uppercase;
+}
+
+.data-table {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.data-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    background: #f9fafb;
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.data-table td {
+    padding: 15px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.data-table tr:hover {
+    background: #f9fafb;
+}
+
+.badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.badge.high { background: #fee2e2; color: #991b1b; }
+.badge.medium { background: #fef3c7; color: #92400e; }
+.badge.low { background: #d1fae5; color: #065f46; }
+
+.calendar-widget {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    margin-top: 15px;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.calendar-day:hover {
+    background: #f3f4f6;
+}
+
+.calendar-day.has-leaves {
+    background: #dbeafe;
+    color: #1e40af;
+    font-weight: 600;
+}
+
+.calendar-day.today {
+    background: #4f46e5;
+    color: white;
+}
+
+.leave-indicator {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 6px;
+    height: 6px;
+    background: #ef4444;
+    border-radius: 50%;
+}
+
+.calendar-widget {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    margin-top: 15px;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+" }}</small>
+        </div>
+    </div>
+
+    <!-- HR Alerts -->
+    {% if alerts %}
+    <div class=alerts-section">
+        <h3>HR Alerts & Notifications</h3>
+        {% for alert in alerts %}
+        <div class="alert-item {{ alert.type }}">
+            <div class="alert-icon">
+                {% if alert.type == 'warning' %}⚠️{% endif %}
+                {% if alert.type == 'info' %}ℹ️{% endif %}
+               {% if alert.type == 'danger' %🚨{% endif %
+            div>
+            <div class="alert-content">
+                <div clas="alert-essage">{{ ert.message }}</div>
+                <div class="aert-priority"Priority: {{ alert.priority }}</div>
+    .calendar-day:hover {
+        background: #f3f4f6;
+        {% endfor %}}
+/div>
+    {% endif %}
+
+    <
+.calendar-day.has-leaves {
+    background: #dbeafe;
+    color: #1e40af;
+    font-weight: 600;
+}
+
+.calendar-day.today {
+    background: #4f46e5;
+    color: white;
+}
+
+.leave-indicator {
+    position: absolute;
+    top: 2px; checked in
+    right: 2px;
+    width: 6px;
+    height: 6px;
+    background: #ef4444;
+    border-radius: 50%;
+}
+
+@media (max-width: 768px) { issues
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .charts-section {
+        grid-template-columns: 1fr;
+    }
+     on leave today
+    .dashboard-header h1 {
+        font-size: 2rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hr-dashboard">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div>
+            <h1>HR Dashboard</h1>
+            <p>Complete Human Resources Management & Analytics</p>
+        </div>
+        <div> violations
+            <small>{{ today|date:"F d, Y" }}</small>
+        </div>
+    </div>
+
+    <!-- HR Alerts -->
+    {% if alerts %}
+    <div clasAtt=ndance Tltsdt
+        <h3>HR Alerts & Notifications</h3>
+        {% for alert in alerts %}
+        <div class="alert-item {{ alert.type }}">
+            <div class="alert-icon">Attndnce Tds(30 ay)
+                {% if alert.type == 'warning' Dai️%datten%anc} trs
+                {% if alert.type == 'info' %}ℹ️{% endif %}
+                {% if alert.type == 'danger' %}🚨{% endif %}
+            </div>
+            <div class="alerattentanc-Trendntent">
+                <div class="alert-message">{{ alert.message }}</div>
+                <div class="alert-priority">Priority: {{ alert.priority }}</div>
+            </div>
+        </divDpartment
+        {% endfor %}
+    </div>
+    {% endif %}
+Dpartment
+    <!-- Key Metrics -->depatmnt
+    <div class="metrics-grid">
+        <div class="metric-card total">
+            <div class="metric-value">{{ total_employees }}</div>
+            <div class="metrdlptabel">Total Employees</div>
+            <div class="metric-change positive">
+                <i class="bx bx-user"></i> Active: {{ active_employees }}
+            </div>
+        </div>
+
+        <div class="metric-card present">
+            <div class="metric-value">{{ today_present }}</div>
+            <div class="metric-label">Present Today</div>
+            <div class="metric-change">
+                <i class="bx bx-check-circle"></i> {{ today_present|add:today_late|add:today_half_day }} checked in
+            </div>
+        </div>
+
+        <div class="metric-card absent">
+            <div class="metric-value">{{ today_absent }}</div>
+            <div class="metric-label">Absent Today</div>
+            <Rcl"mDisricbutionhange negative">
+                <i class="bx bx-x-circle"></i> {{ today_absent|add:today_late|add:today_early_leave|add:today_half_day }} issues
+            </div>
+        </div>
+RlDistbution
+        <div class="metric-card leave">Employes bole
+            <div class="metric-value">{{ pending_leaves }}</div>
+            <div class="metric-label">Pending Leaves</div>
+            <div csass="chart-wramper">
+                <cecvashid=>roleChart"</canvas>
+            </div>
+        </i c>
+l   </ bv>
+
+    <!-- Leive-Calenear>& Pendin< App/ovals  ->
+    <div codss="charas_selties">
+} e     <!-- LetveaCalendar --
+        <div class="calendar-widget">
+   </div> clas="char-hader">
+                <div>
+                    <h5 classchartitle">Leve Caedar</h5>
+                   <p lass="char-subtitl">Next30 dys</p>
+                </iv>
+            </v>
+          <div clss="alegd
+        </div>{%fordayinleave_calendar%}
+             casscaledarday {% fdaylaves> 0 %}haslaves{% endf%} {% if day.day == tday.ay%}tday{%endi %}
+                    { day.day }}
+                    % if day.leaves > 0 %}
+                    <spanclass="lee-indicat"></span>
+                    {% endif %}
+                </dv>
+                {% edf%
+            
+    </div>
+
+<!--RecentPendingLeaves-->
+clas="chart-conainer">
+            <div casshart-heade
+                <di>
+                    <h5class="chat-title">Recent PendLeaveh5
+                    <p class="chart-subtitle">Awaiting approval</p>
+    <div class="metric-card active">
+            </div>
+    <div class="metric-vmax-heigha: 300px; ovlrflow"y: >uto;">
+                {% for {eave {crrerent_pending_leavls %}
+                <divastyle="ctive }}</0iv>orde-bottom: 1px sli346">
+                   <iv styl="fontweght500{{ leave.employee.get_full_name }}</div>
+        <div class="metric-label">Active No0<9div6720
+                        leave.gelea_ypdplay }} - {{ leave.startdate }} t {{ leave.ed_dae
+                    
+            <div clametric-changmasgin-topit5px
+                        <a href="{% url 'accuns:leve_detais'lea.pk %}" class="bn btn-sm btn-prary">Rviewa>
+                    </
+                </div>
+<i c            {% empty %}
+                lss= style="text-align: center; padding: 40px; color: #6b7280;""bx bx-current-location"></i> Currently working
+            </di    No pending leave requests
+                v>
+        </di    {% endfor %}
+            v>
+
+        <div class="metric-card break">
+            <div class="metric-value">{{ active_breaks }}</div>
+            <div class="metric-label">On Break</div>
+            <div class="metric-change">
+                <i class="bx bx-coffee"></i> {{ break_violations }} violations
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-section">
+        <!-- Attendance Trends -->
+        <div class="chart-container">
+            <div class="chart-header">
+                <div>
+                    <h5 class="chart-title">Attendance Trends (30 Days)</h5>
+                    <p class="chart-subtitle">Daily attendance patterns</p>
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="attendanceTrendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Department Distribution -->
+        <div class="chart-container">
+            <div class="chart-header">
+                <div>
+                    <h5 class="chart-title">Department Distribution</h5>
+                    <p class="chart-subtitle">Employees by department</p>
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="deptChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Leave Sndforstics -->
+        <divs/sbody"chart-container">
+        </table>
+    </div>
+
+<div<!-- PerformancecMetricsl-->
+a   s=iv"ca-sseametrics-grider">margin-op: 30p;">
+        <div class="mericcrd">
+            <dvlass="mic-value">{{vg_work_hours}}h</div>
+           <div ass="metric-label">Avg WkingHours ( days)</div
+        </div>
+
+        <div<class="metric-card">
+div>    <iv class="mtric-vlue">{{ total_ovei_this_moh}}h</div>
+            <div class="mtic-label">Ttal Oveti (30ys)</div>
+       </di>
+
+        <dv css="mtric-card">
+            <div class="metric-value">{{ approved_leaves }}</div>
+            <div class="metric-label">Approved Leaves<h ivclass="chart-title">Leave Statistics</h5>
+        </div>
+
+         div class="me ric-ca d"<p class="chart-subtitle">Leave applications by type</p>
+            <div class="metric-value">{<drejecti>_leaves}</div>
+            <div class="medric-laiel">Rejected Leaves</>iv
+          divv class="chart-wrapper">
+                <canvas id="leaveChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Role Distribution -->
+        <div class="chart-container">
+            <div class="chart-header">
+   Att nd nce T   d<
+      atten anc           <h5 class="chart-titlatteneanceTr"ndole Dis.g   on e t('2d' ;      <p class="chart-subtitle">Employees by role</p>
+          a/iendanc
+        </dlie
+        <div class="chart-wrapper">
+            <canvas id="rayCharattentanc"/vrends>ay
+        </div>
+            label: 'Present',
+    </div>ayattenancrenday.pres
+            borderColor: '#10b981',
+</div>r: 'gba(16, 185, 129, 0.1)',
+            tension0.4
+  },{
+label:Absnt
+            data: [{% for day inattendane_trend %}{{ day.absent }}{% if not forloop.lst %},{% endif %}{% nfor %}]
+            borderColor:ef4444',
+            backgrounColor: 'rga(398, 8, 0.1)
+           tension: 0.4
+    <!--}, {
+Leave Calen labrl: 'L tend
+i           dAtp:l[{% for d>y in ttendance_trend %}{{ day.late }}{% if not forloop.last %}{%endif %}{% endfor %}],
+            borderColor: f5e0,
+    <div clabackgroundColor:s'rgba(245,s158,=11,"0.1)',harts-section">
+        <!--tension: 0.4eave Calendar -->
+        <]iv class="calendar-widget">
+    },
+        <div class="chart-header">
+            <div>
+                <h5 class="chart-title">Leave Calendar</h5>
+                <p class="chart-subtitle">Next 30 days</p>
+            </div>
+            </diop
+            }
+<div     ,class="calendar-grid">
+        scales: {
+            y: {
+                beginAtZero: true
+                {% for day in leave_calendar %}
+                <div class="calendar-day {% if day.leaves > 0 %}has-leaves{% endif %} {% if day.day == today.day %}today{% endif %}">
+     
+}               {{ day.day }}
+                   {% if day.leaves > 0 %}
+   D partment             {% endif %}
+      d pt      </div>dpt.g t on e t('2d' ;  {% endfor %}
+        </d>p
+    </div>doughnut
+
+         Recent Pending dvptes -dptdptdepatmnt
+         class="chart-container">
+            <div>dptdptdpt
+                <h5 class="ch[
+                art-title, '#7c3aed', '#db2777', '#dc2626', ">Recent Pending Leaves</h5>
+                '#ea580c', '#ca8a04', '#16a34a', '#0891b2'
+                   <p class="chart-subtitle">Awaiting approval</p>
+         ]      </div>
+    },
+        </div>
+        <div style="max-height: 300px; overflow-y: auto;">
+            {% for leave in recent_pending_leaves %}
+            <div style="padding: 10px; border-bottom: 1px solid #f3f4f6;">
+                <div style="font-weight: 500;">{{ leave.employee.get_full_name }}</div>
+                vofiin'ight',
+            </div>
+            {% empty %}
+            <div style="text-align: center; padding: 40px; color: #6b7280;">
+                No pending leave requests
+               </div>
+            </div>
+        </div>.gvt>onet('2d';
+
+<!-- Department Performance Table -->
+<div class="data-table">
+    <div class="chart-header">
+        <div>
+            <h5 class="chart-title">Department Performance</h5>
+            <p class="chart-subtitle">Last 7 days metrics</p>
+        </div>
+    </div>
+            ]
+<table>}
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'right',
+            <head>
+        }
+    }
+ );
+
+// Role Distribution Chart
+const roleCtx = document.getElementById('roleChart').getContext('2d');
+new Chart(roleCtx, {
+    type: 'bar' 
+    data: {      <tr>
+        labels: [{% for role in role_stats %}'{{ role.role|title }}'{% if not forloop.last %},{% endif %}{% endf r %}],
+        datasets: [{
+            label: 'Em loyees',
+            da a: [{% for role  n role_stats %}{{ role.c unt }}{% if  ot forloop.la t %},{% endif %}{% endfor %}],
+            backgroundColor  '#4f46e5'
+        }]
+    },  <th>Department</th>
+    options: {
+                <th>Employees</th>
+                <th>Attendance Rate</th>
+                <th>Punctuality Rate</th>
+                <th>T
+                display: falseotal Hours</th>
+            }
+        },
+    </trscale: {
+            y{
+             </tbeginAtZero:htruead>
+            <tbody>
+                {% for dept in dept_performance %}
+    }
+                      <td><strong>{{ dept.department|title }}</strong></td>
+                    <td>{{ dept.employee_count }}</td>
+                    <td>
+                        <span class="badge {% if dept.attendance_rate >= 95 %}high{% elif dept.attendance_rate >= 85 %}medium{% else %}low{% endif %}">
+                            {{ dept.attendance_rate }}%
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge {% if dept.punctuality_rate >= 95 %}high{% elif dept.punctuality_rate >= 85 %}medium{% else %}low{% endif %}">
+                            {{ dept.punctuality_rate }}%
+                        </span>
+                    </td>
+                    <td>{{ dept.total_hours|floatformat:1 }}h</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="metrics-grid" style="margin-top: 30px;">
+        <div class="metric-card">
+            <div class="metric-value">{{ avg_working_hours }}h</div>
+            <div class="metric-label">Avg Working Hours (7 days)</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-value">{{ total_overtime_this_month }}h</div>
+            <div class="metric-label">Total Overtime (30 days)</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-value">{{ approved_leaves }}</div>
+            <div class="metric-label">Approved Leaves</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-value">{{ rejected_leaves }}</div>
+            <div class="metric-label">Rejected Leaves</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Attendance Trends Chart
+const attendanceCtx = document.getElementById('attendanceTrendChart').getContext('2d');
+new Chart(attendanceCtx, {
+    type: 'line',
+    data: {
+        labels: [{% for day in attendance_trend %}'{{ day.date }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Present',
+            data: [{% for day in attendance_trend %}{{ day.present }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            tension: 0.4
+        }, {
+            label: 'Absent',
+            data: [{% for day in attendance_trend %}{{ day.absent }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            tension: 0.4
+        }, {
+            label: 'Late',
+            data: [{% for day in attendance_trend %}{{ day.late }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Department Distribution Chart
+const deptCtx = document.getElementById('deptChart').getContext('2d');
+new Chart(deptCtx, {
+    type: 'doughnut',
+    data: {
+        labels: [{% for dept in dept_stats %}'{{ dept.department|title }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            data: [{% for dept in dept_stats %}{{ dept.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            backgroundColor: [
+                '#4f46e5', '#7c3aed', '#db2777', '#dc2626', 
+                '#ea580c', '#ca8a04', '#16a34a', '#0891b2'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'right',
+            }
+        }
+    }
+});
+
+// Leave Statistics Chart
+const leaveCtx = document.getElementById('leaveChart').getContext('2d');
+new Chart(leaveCtx, {
+    type: 'pie',
+    data: {
+        labels: [{% for leave in leave_type_stats %}'{{ leave.leave_type|title }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            data: [{% for leave in leave_type_stats %}{{ leave.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            backgroundColor: [
+                '#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', 
+                '#ef4444', '#06b6d4', '#84cc16'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'right',
+            }
+        }
+    }
+});
+
+// Role Distribution Chart
+const roleCtx = document.getElementById('roleChart').getContext('2d');
+new Chart(roleCtx, {
+    type: 'bar',
+    data: {
+        labels: [{% for role in role_stats %}'{{ role.role|title }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Employees',
+            data: [{% for role in role_stats %}{{ role.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            backgroundColor: '#4f46e5'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

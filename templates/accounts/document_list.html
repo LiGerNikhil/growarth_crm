@@ -1,0 +1,146 @@
+{% extends 'base/layout.html' %}
+{% load static %}
+
+{% block title %}Documents - {{ employee.full_name }}{% endblock %}
+
+{% block content %}
+  <div class="row">
+    <div class="col-12">
+      <!-- Employee Info Card -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+              <a href="{% url 'accounts:document_employee_list' %}" class="btn btn-outline-secondary btn-sm me-3">
+                <i class="bx bx-arrow-back"></i>
+              </a>
+              <div class="avatar-lg bg-primary rounded-circle d-flex align-items-center justify-content-center me-3">
+                <span class="text-white fw-bold fs-4">{{ employee.first_name.0 }}{{ employee.last_name.0 }}</span>
+              </div>
+              <div>
+                <h4 class="card-title mb-1">{{ employee.full_name }}</h4>
+                <p class="text-muted mb-0">
+                  {{ employee.get_role_display }} • {{ employee.position|default:"No Position" }}
+                  {% if employee.employee_id %}• {{ employee.employee_id }}{% endif %}
+                </p>
+              </div>
+            </div>
+            <div>
+              <a href="{% url 'accounts:document_upload' employee.id %}" class="btn btn-primary">
+                <i class="bx bx-upload me-1"></i>Upload Document
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Documents Table -->
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">Documents ({{ documents.count }})</h5>
+          <div class="d-flex gap-2">
+            {% if has_bank_details %}
+              <a href="{% url 'accounts:export_bank_details' %}" class="btn btn-success btn-sm">
+                <i class="bx bx-download me-1"></i>Export Bank Details
+              </a>
+            {% endif %}
+          </div>
+        </div>
+        <div class="card-body">
+          {% if documents %}
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead class="table-light">
+                  <tr>
+                    <th>Document Type</th>
+                    <th>Title</th>
+                    <th>File Name</th>
+                    <th>Bank Details</th>
+                    <th>Uploaded By</th>
+                    <th>Uploaded At</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for document in documents %}
+                  <tr>
+                    <td>
+                      {% if document.document_type == 'bank_details' %}
+                        <span class="badge bg-success">{{ document.get_document_type_display }}</span>
+                      {% elif document.document_type == 'id_proof' %}
+                        <span class="badge bg-info">{{ document.get_document_type_display }}</span>
+                      {% elif document.document_type == 'pan_card' %}
+                        <span class="badge bg-warning">{{ document.get_document_type_display }}</span>
+                      {% else %}
+                        <span class="badge bg-secondary">{{ document.get_document_type_display }}</span>
+                      {% endif %}
+                    </td>
+                    <td>{{ document.title }}</td>
+                    <td>
+                      {% if document.file %}
+                        <i class="bx bx-file me-1"></i>{{ document.filename }}
+                      {% else %}
+                        <span class="text-muted">No file</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if document.document_type == 'bank_details' %}
+                        <small>
+                          {% if document.bank_name %}<strong>{{ document.bank_name }}</strong><br>{% endif %}
+                          {% if document.account_number %}A/C: {{ document.account_number }}<br>{% endif %}
+                          {% if document.ifsc_code %}IFSC: {{ document.ifsc_code }}<br>{% endif %}
+                          {% if document.branch_name %}{{ document.branch_name }}{% endif %}
+                        </small>
+                      {% else %}
+                        <span class="text-muted">-</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if document.uploaded_by %}
+                        {{ document.uploaded_by.get_full_name|default:document.uploaded_by.username }}
+                      {% else %}
+                        <span class="text-muted">-</span>
+                      {% endif %}
+                    </td>
+                    <td>{{ document.uploaded_at|date:"d M Y, h:i A" }}</td>
+                    <td>
+                      <div class="btn-group btn-group-sm">
+                        {% if document.file %}
+                          <a href="{% url 'accounts:document_download' document.id %}" 
+                             class="btn btn-outline-primary" title="Download">
+                            <i class="bx bx-download"></i>
+                          </a>
+                        {% endif %}
+                        <a href="{% url 'accounts:document_delete' document.id %}" 
+                           class="btn btn-outline-danger" title="Delete"
+                           onclick="return confirm('Are you sure you want to delete this document?')">
+                          <i class="bx bx-trash"></i>
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="text-center py-5">
+              <i class="bx bx-file fs-1 text-muted"></i>
+              <h5 class="text-muted mt-3">No documents uploaded</h5>
+              <p class="text-muted">Start by uploading the first document for {{ employee.full_name }}</p>
+              <a href="{% url 'accounts:document_upload' employee.id %}" class="btn btn-primary">
+                <i class="bx bx-upload me-1"></i>Upload First Document
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any custom JavaScript here if needed
+</script>
+{% endblock %}

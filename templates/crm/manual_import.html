@@ -1,0 +1,157 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Manual Data Import{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Manual Data Import</h5>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-info">
+          <i class="bx bx-info-circle me-2"></i>
+          If automatic Google Sheets sync doesn't work, you can manually import your data here.
+        </div>
+
+        <!-- Manual Import Form -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h6 class="card-title mb-0">Import Single Lead</h6>
+          </div>
+          <div class="card-body">
+            <form method="post">
+              {% csrf_token %}
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Name *</label>
+                  <input type="text" name="name" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Email *</label>
+                  <input type="email" name="email" class="form-control" required>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Phone</label>
+                  <input type="tel" name="phone" class="form-control">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Lead Type</label>
+                  <select name="lead_type" class="form-select">
+                    <option value="loan">Loan Application</option>
+                    <option value="quote">Quote Request</option>
+                    <option value="general">General Inquiry</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Loan Type</label>
+                  <input type="text" name="loan_type" class="form-control" placeholder="e.g., personal_loan, home_loan">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Loan Amount</label>
+                  <input type="number" name="loan_amount" class="form-control" step="0.01">
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Employment Status</label>
+                  <input type="text" name="employment_status" class="form-control">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Monthly Income</label>
+                  <input type="number" name="monthly_income" class="form-control" step="0.01">
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Message</label>
+                <textarea name="message" class="form-control" rows="3"></textarea>
+              </div>
+              <div class="mb-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="consent" id="consent" checked>
+                  <label class="form-check-label" for="consent">
+                    Consent received
+                  </label>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary">
+                <i class="bx bx-plus me-1"></i>Import Lead
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- CSV Import -->
+        <div class="card">
+          <div class="card-header">
+            <h6 class="card-title mb-0">Import from CSV</h6>
+          </div>
+          <div class="card-body">
+            <p>Import multiple leads from a CSV file. Your CSV should have columns: name, email, phone, lead_type, loan_type, loan_amount, employment_status, monthly_income, message, consent</p>
+            
+            <form method="post" enctype="multipart/form-data">
+              {% csrf_token %}
+              <input type="hidden" name="import_type" value="csv">
+              <div class="mb-3">
+                <label class="form-label">CSV File</label>
+                <input type="file" name="csv_file" class="form-control" accept=".csv" required>
+              </div>
+              <button type="submit" class="btn btn-success">
+                <i class="bx bx-upload me-1"></i>Import CSV
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Current Data Status -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h6 class="card-title mb-0">Current Data Status</h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                  <div class="card-body text-center">
+                    <h3>{{ total_leads }}</h3>
+                    <p class="mb-0">Total Leads</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                  <div class="card-body text-center">
+                    <h3>{{ loan_leads }}</h3>
+                    <p class="mb-0">Loan Leads</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-info text-white">
+                  <div class="card-body text-center">
+                    <h3>{{ quote_leads }}</h3>
+                    <p class="mb-0">Quote Leads</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-success text-white">
+                  <div class="card-body text-center">
+                    <h3>{{ synced_leads }}</h3>
+                    <p class="mb-0">Synced</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

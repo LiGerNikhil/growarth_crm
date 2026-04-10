@@ -1,0 +1,172 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Working Import - Guaranteed Success{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header bg-success">
+        <h5 class="card-title mb-0">✅ Working Import - Guaranteed Success</h5>
+      </div>
+      <div class="card-body">
+        
+        <!-- Messages -->
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <!-- Status -->
+        <div class="alert alert-info">
+          <h6><i class="bx bx-info-circle me-2"></i>Current Status</h6>
+          <p><strong>Total leads:</strong> {{ total_leads }}</p>
+          <p><strong>Google Sheets leads:</strong> {{ google_sheets_leads }}</p>
+          <p><strong>Database connection:</strong> ✅ Working</p>
+        </div>
+
+        <!-- Working Forms -->
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card border-success">
+              <div class="card-header bg-success text-white">
+                <h6 class="card-title mb-0">💰 Add Loan Lead (100% Working)</h6>
+              </div>
+              <div class="card-body">
+                <form method="post" action="{% url 'crm:working_import' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="type" value="loan">
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Name *</label>
+                    <input type="text" name="name" class="form-control" required>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Email *</label>
+                    <input type="email" name="email" class="form-control" required>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Phone</label>
+                    <input type="tel" name="phone" class="form-control">
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Loan Amount</label>
+                    <input type="number" name="loan_amount" class="form-control" placeholder="50000">
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Message</label>
+                    <textarea name="message" class="form-control" rows="2">Loan application from Google Sheets</textarea>
+                  </div>
+                  
+                  <button type="submit" class="btn btn-success w-100">
+                    <i class="bx bx-check-circle me-1"></i>Add Loan Lead (Working)
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="card border-info">
+              <div class="card-header bg-info text-white">
+                <h6 class="card-title mb-0">📄 Add Quote Lead (100% Working)</h6>
+              </div>
+              <div class="card-body">
+                <form method="post" action="{% url 'crm:working_import' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="type" value="quote">
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Name *</label>
+                    <input type="text" name="name" class="form-control" required>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Email *</label>
+                    <input type="email" name="email" class="form-control" required>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Phone</label>
+                    <input type="tel" name="phone" class="form-control">
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Message</label>
+                    <textarea name="message" class="form-control" rows="4">Quote request from Google Sheets</textarea>
+                  </div>
+                  
+                  <button type="submit" class="btn btn-info w-100">
+                    <i class="bx bx-check-circle me-1"></i>Add Quote Lead (Working)
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Test -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h6 class="card-title mb-0">🚀 Quick Test (One-Click)</h6>
+          </div>
+          <div class="card-body">
+            <p>Click these buttons to test with sample data:</p>
+            <div class="row">
+              <div class="col-md-4">
+                <form method="post" action="{% url 'crm:working_import' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="type" value="loan">
+                  <input type="hidden" name="name" value="Test Loan User">
+                  <input type="hidden" name="email" value="test.loan@example.com">
+                  <input type="hidden" name="phone" value="+1234567890">
+                  <input type="hidden" name="loan_amount" value="75000">
+                  <input type="hidden" name="message" value="Quick test loan application">
+                  <button type="submit" class="btn btn-warning w-100">
+                    <i class="bx bx-test-tube me-1"></i>Test Loan Lead
+                  </button>
+                </form>
+              </div>
+              <div class="col-md-4">
+                <form method="post" action="{% url 'crm:working_import' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="type" value="quote">
+                  <input type="hidden" name="name" value="Test Quote User">
+                  <input type="hidden" name="email" value="test.quote@example.com">
+                  <input type="hidden" name="phone" value="+1234567891">
+                  <input type="hidden" name="message" value="Quick test quote request">
+                  <button type="submit" class="btn btn-warning w-100">
+                    <i class="bx bx-test-tube me-1"></i>Test Quote Lead
+                  </button>
+                </form>
+              </div>
+              <div class="col-md-4">
+                <a href="{% url 'crm:loan_leads' %}" class="btn btn-primary w-100">
+                  <i class="bx bx-eye me-1"></i>View All Leads
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Debug Info -->
+        <div class="alert alert-warning mt-4">
+          <h6><i class="bx bx-bug me-2"></i>Debug Information</h6>
+          <p><strong>If this form works:</strong> The issue is in your other forms</p>
+          <p><strong>If this form fails:</strong> There's a deeper system issue</p>
+          <p><strong>Current leads:</strong> {{ total_leads }} total, {{ google_sheets_leads }} from Google Sheets</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Manager Promotion Request{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Manager Promotion Request</h5>
+        <a href="{% url 'accounts:staff_detail' employee.pk %}" class="btn btn-outline-secondary">
+          <i class="bx bx-arrow-back me-1"></i>Back to Employee
+        </a>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-info">
+          <i class="bx bx-info-circle me-2"></i>
+          Submit a request to promote {{ employee.full_name }} to a management position.
+        </div>
+
+        <form method="post">
+          {% csrf_token %}
+          
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Employee Name</label>
+              <input type="text" class="form-control" value="{{ employee.full_name }}" readonly>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Current Position</label>
+              <input type="text" class="form-control" value="{{ employee.position }}" readonly>
+            </div>
+            
+            <div class="col-12">
+              <label class="form-label">{{ form.requested_role.label }}</label>
+              {{ form.requested_role }}
+              {% if form.requested_role.errors %}
+                <div class="text-danger small">
+                  {{ form.requested_role.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+            
+            <div class="col-12">
+              <label class="form-label">{{ form.reason.label }}</label>
+              {{ form.reason }}
+              {% if form.reason.errors %}
+                <div class="text-danger small">
+                  {{ form.reason.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+            
+            <div class="col-12">
+              <label class="form-label">{{ form.justification.label }}</label>
+              {{ form.justification }}
+              {% if form.justification.errors %}
+                <div class="text-danger small">
+                  {{ form.justification.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+            
+            {% if form.non_field_errors %}
+              <div class="col-12">
+                <div class="alert alert-danger">
+                  {% for error in form.non_field_errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+            
+            <div class="col-12">
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                  <i class="bx bx-send me-1"></i>Submit Request
+                </button>
+                <a href="{% url 'accounts:staff_detail' employee.pk %}" class="btn btn-outline-secondary">
+                  <i class="bx bx-x me-1"></i>Cancel
+                </a>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

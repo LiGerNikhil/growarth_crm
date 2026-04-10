@@ -1,0 +1,502 @@
+{% load static %}
+<aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+  <div class="app-brand demo">
+    <a href="{% url 'core:dashboard' %}" class="app-brand-link">
+      <span class="app-brand-logo demo">
+        <img src="{% static 'img/logo.jpeg' %}" alt="Company Logo" width="80" height="80" style="object-fit: contain;">
+      </span>
+     
+    </a>
+
+    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
+      <i class="icon-base bx bx-chevron-left icon-sm d-flex align-items-center justify-content-center"></i>
+    </a>
+  </div>
+
+  <div class="menu-inner-shadow"></div>
+
+  <ul class="menu-inner py-1">
+    <!-- Dashboard -->
+    <li class="menu-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+      <a href="{% url 'core:dashboard' %}" class="menu-link">
+        <i class="menu-icon icon-base bx bx-home-smile"></i>
+        <div class="text-truncate">Dashboard</div>
+      </a>
+    </li>
+
+    <!-- Management Section -->
+    <li class="menu-header small text-uppercase">
+      <span class="menu-header-text">Management</span>
+    </li>
+
+    <!-- My Leads (for regular employees) -->
+    {% if not user.employee.is_hr and not user.employee.is_superadmin and not user.employee.is_admin %}
+    <li class="menu-item {% if 'my-leads' in request.path %}active{% endif %}">
+      <a href="{% url 'accounts:my_leads' %}" class="menu-link">
+        <i class="menu-icon icon-base bx bx-user"></i>
+        <div class="text-truncate">My Leads</div>
+      </a>
+    </li>
+    {% endif %}
+
+    <!-- Organization (for all users) -->
+    <li class="menu-item {% if 'employee_organization' in request.path %}active{% endif %}">
+      <a href="{% url 'accounts:employee_organization' %}" class="menu-link">
+        <i class="menu-icon icon-base bx bx-group"></i>
+        <div class="text-truncate">Organization</div>
+      </a>
+    </li>
+
+    <!-- Employee Management (for HR/Admin) -->
+    {% if user.employee.is_superadmin or user.employee.is_admin or user.employee.is_hr %}
+    <li class="menu-item {% if 'accounts' in request.path and 'organization' not in request.path %}active{% endif %}">
+      <a href="{% url 'accounts:staff_management' %}" class="menu-link">
+        <i class="menu-icon icon-base bx bx-user"></i>
+        <div class="text-truncate">Employees</div>
+      </a>
+    </li>
+    {% endif %}
+
+    <!-- Phone Assignments (for HR/Admin) -->
+    {% if user.employee.is_superadmin or user.employee.is_admin or user.employee.is_hr %}
+    <li class="menu-item {% if 'phone-assignments' in request.path %}active{% endif %}">
+      <a href="{% url 'accounts:phone_assignment_list' %}" class="menu-link">
+        <i class="menu-icon icon-base bx bx-phone"></i>
+        <div class="text-truncate">Phone Assignments</div>
+      </a>
+    </li>
+    {% endif %}
+
+    <!-- Break Management (for HR/Admin) -->
+    {% if user.employee.is_superadmin or user.employee.is_admin or user.employee.is_hr %}
+    <li class="menu-item {% if 'break-management' in request.path %}active{% endif %}">
+      <a href="{% url 'accounts:break_management_dashboard' %}" class="menu-link">
+        <i class="menu-icon icon-base bx bx-coffee"></i>
+        <div class="text-truncate">Break Management</div>
+      </a>
+    </li>
+    {% endif %}
+
+    <!-- Leave Management (for Manager/Team Leader/HR/Admin) -->
+    <li class="menu-item {% if 'leave' in request.path %}active{% endif %}">
+      {% if user.employee.is_superadmin or user.employee.is_admin or user.employee.is_manager or user.employee.is_team_leader or user.employee.is_hr %}
+        <a href="{% url 'accounts:leave_list' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-calendar"></i>
+          <div class="text-truncate">Leave Management</div>
+        </a>
+      {% else %}
+        <a href="{% url 'accounts:my_leaves' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-calendar-check"></i>
+          <div class="text-truncate">My Leave</div>
+        </a>
+      {% endif %}
+    </li>
+
+    <!-- Support Tickets (for Employee/Team Leader/HR/Admin) -->
+    <li class="menu-item {% if 'tickets' in request.path %}active{% endif %}">
+      {% if user.employee.is_superadmin or user.employee.is_admin or user.employee.is_hr or user.employee.is_employee or user.employee.is_team_leader %}
+        <a href="{% url 'accounts:ticket_list' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-support"></i>
+          <div class="text-truncate">Support Tickets</div>
+        </a>
+      {% endif %}
+    </li>
+
+    <!-- HR/Admin Only Section -->
+    {% if user.employee.is_superadmin or user.employee.is_admin or user.employee.is_hr %}
+    <li class="menu-item {% if 'documents' in request.path %}active{% endif %}">
+      <a href="{% url 'accounts:document_employee_list' %}" class="menu-link">
+        <i class="menu-icon icon-base bx bx-file"></i>
+        <div class="text-truncate">Manage Documents</div>
+      </a>
+    </li>
+
+    <li class="menu-item {% if 'attendance/report' in request.path %}active{% endif %}">
+      <a href="{% url 'accounts:attendance_report' %}" class="menu-link">
+        <i class="menu-icon icon-base bx bx-time-five"></i>
+        <div class="text-truncate">Attendance Report</div>
+      </a>
+    </li>
+    {% endif %}
+
+    <!-- Lead Assignment (for Manager/Admin) -->
+    <li class="menu-item {% if 'lead-assignment' in request.path %}active{% endif %}">
+      {% if user.employee.is_manager or user.employee.is_admin or user.employee.is_superadmin %}
+        <a href="{% url 'accounts:lead_assignment_dashboard' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-user-voice"></i>
+          <div class="text-truncate">Lead Assignment</div>
+        </a>
+      {% endif %}
+    </li>
+
+    <!-- Interview Management for HR -->
+    {% if user.employee.is_hr or user.employee.is_admin or user.employee.is_superadmin %}
+    <li class="menu-item {% if 'interviews' in request.path %}active{% endif %}">
+      <a href="#" class="menu-link menu-toggle" data-bs-toggle="collapse" data-bs-target="#interviews-dropdown" aria-expanded="false">
+        <i class="menu-icon icon-base bx bx-calendar-event"></i>
+        <div class="text-truncate">📅 Interview Management</div>
+        <i class="menu-arrow bx bx-chevron-down"></i>
+      </a>
+      <ul class="collapse submenu" id="interviews-dropdown" data-bs-parent="#layout-menu .menu-inner">
+        <li class="submenu-item {% if 'interviews/' in request.path and 'candidates' not in request.path and 'send-reminders' not in request.path %}active{% endif %}">
+          <a href="{% url 'accounts:interview_dashboard' %}" class="submenu-link">
+            <i class="menu-icon icon-base bx bx-calendar"></i>
+            <div class="text-truncate">📊 Interview Dashboard</div>
+          </a>
+        </li>
+        <li class="submenu-item {% if 'interviews/candidates' in request.path %}active{% endif %}">
+          <a href="{% url 'accounts:candidate_list' %}" class="submenu-link">
+            <i class="menu-icon icon-base bx bx-group"></i>
+            <div class="text-truncate">👥 Candidates</div>
+          </a>
+        </li>
+        <li class="submenu-item {% if 'interviews/schedule' in request.path %}active{% endif %}">
+          <a href="{% url 'accounts:schedule_interview' %}" class="submenu-link">
+            <i class="menu-icon icon-base bx bx-calendar-plus"></i>
+            <div class="text-truncate">➕ Schedule Interview</div>
+          </a>
+        </li>
+        <li class="submenu-item {% if 'interviews/send-reminders' in request.path %}active{% endif %}">
+          <a href="{% url 'accounts:send_interview_reminders' %}" class="submenu-link">
+            <i class="menu-icon icon-base bx bx-bell"></i>
+            <div class="text-truncate">🔔 Send Reminders</div>
+          </a>
+        </li>
+      </ul>
+    </li>
+    {% endif %}
+
+    <!-- Employee and Team Leader Menu Items -->
+    {% if user.employee.role == 'employee' or user.employee.role == 'team_leader' %}
+      <li class="menu-item {% if 'team-members' in request.path %}active{% endif %}">
+        {% if user.employee.is_team_leader %}
+          <a href="{% url 'accounts:team_members' %}" class="menu-link">
+            <i class="menu-icon icon-base bx bx-group"></i>
+            <div class="text-truncate">Team Members</div>
+          </a>
+        {% endif %}
+      </li>
+
+      <li class="menu-item {% if 'emi-calculator' in request.path %}active{% endif %}">
+        <a href="{% url 'accounts:emi_calculator' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-calculator"></i>
+          <div class="text-truncate">EMI Calculator</div>
+        </a>
+      </li>
+
+      <li class="menu-item {% if 'mis' in request.path %}active{% endif %}">
+        {% if user.employee.is_team_leader or user.employee.is_manager %}
+          <a href="{% url 'accounts:mis_dashboard' %}" class="menu-link">
+            <i class="menu-icon icon-base bx bx-chart-line"></i>
+            <div class="text-truncate">MIS Reports</div>
+          </a>
+        {% endif %}
+      </li>
+
+      <!-- Login Statistics (for Manager) -->
+      <li class="menu-item {% if 'login-statistics' in request.path %}active{% endif %}">
+        {% if user.employee.is_manager or user.employee.is_admin or user.employee.is_superadmin %}
+          <a href="{% url 'accounts:login_statistics_dashboard' %}" class="menu-link">
+            <i class="menu-icon icon-base bx bx-log-in-circle"></i>
+            <div class="text-truncate">Login Statistics</div>
+          </a>
+        {% endif %}
+      </li>
+
+      <!-- Attendance Admin (for Manager) -->
+      <li class="menu-item {% if 'attendance-admin' in request.path %}active{% endif %}">
+        {% if user.employee.is_manager or user.employee.is_admin or user.employee.is_superadmin or user.employee.is_hr %}
+          <a href="{% url 'accounts:attendance_admin' %}" class="menu-link">
+            <i class="menu-icon icon-base bx bx-time-five"></i>
+            <div class="text-truncate">Attendance Management</div>
+          </a>
+        {% endif %}
+      </li>
+
+    {% endif %}
+
+    <!-- Admin Only Menu Items -->
+    {% if user.employee.is_superadmin or user.employee.is_admin %}
+      <li class="menu-item {% if 'lead-activity' in request.path %}active{% endif %}">
+        <a href="{% url 'accounts:lead_activity_logs' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-history"></i>
+          <div class="text-truncate">Lead Activity</div>
+        </a>
+      </li>
+
+      <li class="menu-item {% if 'geolocation-logs' in request.path %}active{% endif %}">
+        <a href="{% url 'accounts:geolocation_logs' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-map-pin"></i>
+          <div class="text-truncate">Geolocation Logs</div>
+        </a>
+      </li>
+
+      <li class="menu-item {% if 'teams' in request.path %}active{% endif %}">
+        <a href="{% url 'accounts:team_list' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-group"></i>
+          <div class="text-truncate">Teams</div>
+        </a>
+      </li>
+
+      <li class="menu-item {% if 'accounts/managers' in request.path %}active{% endif %}">
+        <a href="{% url 'accounts:manager_list' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-user-voice"></i>
+          <div class="text-truncate">Managers</div>
+        </a>
+      </li>
+    {% endif %}
+
+    <li class="menu-item {% if 'employee-assignment' in request.path %}active{% endif %}">
+      {% if user.employee.is_superadmin or user.employee.is_admin %}
+        <a href="{% url 'accounts:employee_assignment' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-user-plus"></i>
+          <div class="text-truncate">Employee Assignment</div>
+        </a>
+      {% endif %}
+    </li>
+
+    <li class="menu-item {% if 'login-statistics' in request.path %}active{% endif %}">
+      {% if user.employee.is_superadmin or user.employee.is_admin %}
+        <a href="{% url 'accounts:login_statistics_dashboard' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-bar-chart-alt"></i>
+          <div class="text-truncate">Login Statistics</div>
+        </a>
+      {% endif %}
+    </li>
+
+    <li class="menu-item {% if 'password-requests' in request.path %}active{% endif %}">
+      {% if user.employee.is_superadmin or user.employee.is_admin %}
+        <a href="{% url 'accounts:password_request_list' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-key"></i>
+          <div class="text-truncate">🔑 Password Requests</div>
+        </a>
+      {% endif %}
+    </li>
+
+    <li class="menu-item {% if 'user-activity-logs' in request.path %}active{% endif %}">
+      {% if user.employee.is_superadmin or user.employee.is_admin %}
+        <a href="{% url 'accounts:user_activity_logs' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-history"></i>
+          <div class="text-truncate">Activity Logs</div>
+        </a>
+      {% endif %}
+    </li>
+
+    <li class="menu-item {% if 'employee-performance' in request.path %}active{% endif %}">
+      {% if user.employee.is_superadmin or user.employee.is_admin %}
+        <a href="{% url 'accounts:employee_performance_dashboard' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-chart-line"></i>
+          <div class="text-truncate">Performance</div>
+        </a>
+      {% endif %}
+    </li>
+
+    <!-- Attendance Section -->
+    <li class="menu-header small text-uppercase">
+      <span class="menu-header-text"> Attendance</span>
+    </li>
+
+    {% if not user.employee.is_superadmin and not user.employee.is_admin %}
+    {% if user.employee.is_currently_working %}
+      <!-- When work is started, show break options and end work -->
+      {% if user.employee.is_currently_on_break %}
+      <li class="menu-item {% if 'end-break' in request.path %}active{% endif %}">
+        <a href="{% url 'accounts:end_break' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-play-circle text-warning"></i>
+          <div class="text-truncate">🔄 End Break</div>
+        </a>
+      </li>
+      {% else %}
+      <!-- Show all break options when working but not on break -->
+      <li class="menu-item {% if 'tea-morning' in request.path %}active{% endif %}">
+        <a href="{% url 'accounts:start_break' 'tea_morning' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-coffee text-warning"></i>
+          <div class="text-truncate">🫖 Morning Tea</div>
+        </a>
+      </li>
+      <li class="menu-item {% if 'lunch' in request.path %}active{% endif %}">
+        <a href="{% url 'accounts:start_break' 'lunch' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-restaurant text-success"></i>
+          <div class="text-truncate">🍽️ Lunch Break</div>
+        </a>
+      </li>
+      <li class="menu-item {% if 'tea-afternoon' in request.path %}active{% endif %}">
+        <a href="{% url 'accounts:start_break' 'tea_afternoon' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-coffee text-info"></i>
+          <div class="text-truncate">☕ Afternoon Tea</div>
+        </a>
+      </li>
+      <li class="menu-item {% if 'other-break' in request.path %}active{% endif %}">
+        <a href="{% url 'accounts:start_break' 'other' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-time text-secondary"></i>
+          <div class="text-truncate">⏱️ Other Break</div>
+        </a>
+      </li>
+      {% endif %}
+      <li class="menu-item {% if 'end-work' in request.path %}active{% endif %}">
+        <a href="{% url 'accounts:end_work' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-stop-circle text-danger"></i>
+          <div class="text-truncate">🛑 End Work</div>
+        </a>
+      </li>
+    {% else %}
+      <!-- When work is not started, only show Start Work -->
+      <li class="menu-item {% if 'start-work' in request.path %}active{% endif %}">
+        <a href="{% url 'accounts:start_work' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-play-circle text-success"></i>
+          <div class="text-truncate">▶️ Start Work</div>
+        </a>
+      </li>
+    {% endif %}
+    {% endif %}
+    
+    <li class="menu-item {% if 'attendance/stats' in request.path %}active{% endif %}">
+      <a href="{% url 'accounts:my_attendance_stats' %}" class="menu-link">
+        <i class="menu-icon icon-base bx bx-bar-chart"></i>
+        <div class="text-truncate">📊 My Attendance Stats</div>
+      </a>
+    </li>
+    
+    
+    <li class="menu-item {% if 'my-forwarded-leads' in request.path %}active{% endif %}">
+      <a href="{% url 'accounts:my_forwarded_leads' %}" class="menu-link">
+        <i class="menu-icon icon-base bx bx-send"></i>
+        <div class="text-truncate">📋 My Forwarded Leads</div>
+      </a>
+    </li>
+    
+    {% if user.employee.is_superadmin or user.employee.is_admin %}
+      <li class="menu-item {% if 'attendance-admin' in request.path %}active{% endif %}">
+        <a href="{% url 'accounts:attendance_admin' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-user-check"></i>
+          <div class="text-truncate">👨‍💼 Attendance Admin</div>
+        </a>
+      </li>
+      <li class="menu-item {% if 'attendance/employee' in request.path and 'stats' not in request.path %}active{% endif %}">
+        <a href="{% url 'accounts:staff_management' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-group"></i>
+          <div class="text-truncate">👥 Employee Records</div>
+        </a>
+      </li>
+    {% endif %}
+
+    <li class="menu-item {% if 'excel-upload' in request.path or 'excel-batches' in request.path %}active{% endif %}">
+      {% if user.employee.is_superadmin or user.employee.is_admin %}
+        <a href="{% url 'accounts:excel_upload' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-upload"></i>
+          <div class="text-truncate">Upload Data</div>
+        </a>
+      {% endif %}
+    </li>
+
+    <li class="menu-item {% if 'leads' in request.path %}active{% endif %}">
+      {% if user.employee.is_superadmin or user.employee.is_admin %}
+        <a href="{% url 'accounts:lead_list' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-user-voice"></i>
+          <div class="text-truncate">Leads</div>
+        </a>
+      {% elif not user.employee.is_hr %}
+        <!-- My Leads moved to Management section -->
+      {% endif %}
+    </li>
+
+    <!-- Lead Forwarding for Admins -->
+    {% if user.employee.is_superadmin or user.employee.is_admin %}
+    <li class="menu-item {% if 'lead-forward-dashboard' in request.path %}active{% endif %}">
+      <a href="{% url 'accounts:lead_forward_dashboard' %}" class="menu-link">
+        <i class="menu-icon icon-base bx bx-send"></i>
+        <div class="text-truncate">📤 Lead Forwarding</div>
+      </a>
+    </li>
+    {% endif %}
+
+    <!-- CRM Section -->
+    <li class="menu-header small text-uppercase">
+      <span class="menu-header-text"> Growarth CRM</span>
+    </li>
+
+
+    {% if user.employee.is_superadmin or user.employee.is_admin %}
+    <li class="menu-item {% if 'leads' in request.path %}active{% endif %}">
+      <a href="{% url 'crm:leads' %}" class="menu-link">
+        <i class="menu-icon icon-base bx bx-user-plus"></i>
+        <div class="text-truncate">All Leads</div>
+      </a>
+    </li>
+
+    <!-- Leads Dropdown -->
+    <li class="menu-item {% if 'leads' in request.path or 'loan-leads' in request.path or 'quote-leads' in request.path %}active{% endif %}">
+      <a href="#" class="menu-link menu-toggle" data-bs-toggle="collapse" data-bs-target="#leads-dropdown" aria-expanded="false">
+        <i class="menu-icon icon-base bx bx-list-ul"></i>
+        <div class="text-truncate">📊 Leads ({{ total_leads_count|default:0 }})</div>
+        <i class="menu-arrow bx bx-chevron-down"></i>
+      </a>
+      <ul class="collapse submenu" id="leads-dropdown" data-bs-parent="#layout-menu .menu-inner">
+        <li class="submenu-item {% if 'leads' in request.path %}active{% endif %}">
+          <a href="{% url 'crm:leads' %}" class="submenu-link">
+            <i class="menu-icon icon-base bx bx-list-check"></i>
+            <div class="text-truncate">All Leads ({{ total_leads_count|default:0 }})</div>
+          </a>
+        </li>
+        <li class="submenu-item {% if 'loan-leads' in request.path %}active{% endif %}">
+          <a href="{% url 'crm:loan_leads' %}" class="submenu-link">
+            <i class="menu-icon icon-base bx bx-dollar-circle"></i>
+            <div class="text-truncate">💰 Loan Leads ({{ loan_leads_count|default:0 }})</div>
+          </a>
+        </li>
+        <li class="submenu-item {% if 'quote-leads' in request.path %}active{% endif %}">
+          <a href="{% url 'crm:quote_leads' %}" class="submenu-link">
+            <i class="menu-icon icon-base bx bx-file"></i>
+            <div class="text-truncate">📄 Quote Leads ({{ quote_leads_count|default:0 }})</div>
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <!-- Google Sheets Dropdown -->
+    <li class="menu-item {% if 'google-sheets' in request.path %}active{% endif %}">
+      <a href="#" class="menu-link menu-toggle" data-bs-toggle="collapse" data-bs-target="#google-sheets-dropdown" aria-expanded="false">
+        <i class="menu-icon icon-base bx bx-cloud-download"></i>
+        <div class="text-truncate">☁️ Google Sheets</div>
+        <i class="menu-arrow bx bx-chevron-down"></i>
+      </a>
+      <ul class="collapse submenu" id="google-sheets-dropdown" data-bs-parent="#layout-menu .menu-inner">
+        <li class="submenu-item">
+          <a href="{% url 'crm:imported_leads' %}" class="submenu-link">
+            <i class="menu-icon icon-base bx bx-download"></i>
+            <div class="text-truncate">📥 Imported Leads</div>
+          </a>
+        </li>
+        <li class="submenu-item">
+          <a href="{% url 'crm:sync_google_sheets_data' %}" class="submenu-link">
+            <i class="menu-icon icon-base bx bx-sync"></i>
+            <div class="text-truncate">🔄 Sync Now</div>
+          </a>
+        </li>
+        <li class="submenu-item {% if 'google-sheets/sheet1' in request.path %}active{% endif %}">
+          <a href="{% url 'crm:google_sheets_sheet1' %}" class="submenu-link">
+            <i class="menu-icon icon-base bx bx-table"></i>
+            <div class="text-truncate">📈 Sheet1 Live (Loan)</div>
+          </a>
+        </li>
+        <li class="submenu-item {% if 'google-sheets/quotes' in request.path %}active{% endif %}">
+          <a href="{% url 'crm:google_sheets_quotes' %}" class="submenu-link">
+            <i class="menu-icon icon-base bx bx-file"></i>
+            <div class="text-truncate">📋 Sheet2 Live (Quotes)</div>
+          </a>
+        </li>
+        <li class="submenu-item {% if 'google-sheets/settings' in request.path %}active{% endif %}">
+          <a href="{% url 'crm:google_sheets_settings' %}" class="submenu-link">
+            <i class="menu-icon icon-base bx bx-cog"></i>
+            <div class="text-truncate">⚙️ Settings</div>
+          </a>
+        </li>
+      </ul>
+    </li>
+    {% endif %}
+
+    
+    
+    </li>
+  </ul>
+</aside>

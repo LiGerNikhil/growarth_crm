@@ -1,0 +1,72 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">System Settings</h5>
+      </div>
+      <div class="card-body">
+        <div class="nav-align-top mb-4">
+          <ul class="nav nav-pills mb-3" role="tablist">
+            <li class="nav-item">
+              <button type="button" class="nav-link active" role="tab" data-bs-toggle="tab" data-bs-target="#general">
+                General
+              </button>
+            </li>
+            <li class="nav-item">
+              <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#security">
+                Security
+              </button>
+            </li>
+            <li class="nav-item">
+              <button type="button" class="nav-link" role="tab" data-bs-toggle="tab" data-bs-target="#notifications">
+                Notifications
+              </button>
+            </li>
+          </ul>
+          <div class="tab-content">
+            <div class="tab-pane fade show active" id="general">
+              <h6 class="mb-3">General Settings</h6>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">Company Name</label>
+                  <input type="text" class="form-control" value="CRM System">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Timezone</label>
+                  <select class="form-select">
+                    <option>UTC</option>
+                    <option>EST</option>
+                    <option>PST</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="tab-pane fade" id="security">
+              <h6 class="mb-3">Security Settings</h6>
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="2fa" checked>
+                <label class="form-check-label" for="2fa">Enable Two-Factor Authentication</label>
+              </div>
+            </div>
+            <div class="tab-pane fade" id="notifications">
+              <h6 class="mb-3">Notification Settings</h6>
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="emailNotif" checked>
+                <label class="form-check-label" for="emailNotif">Email Notifications</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-4">
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

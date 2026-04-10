@@ -1,0 +1,171 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Update Phone Assignment - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold">
+        <i class="bx bx-edit text-primary me-2"></i>Update Phone Assignment
+      </h4>
+      <p class="text-muted mb-0">Update phone number assignment for employee</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'accounts:phone_assignment_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bx bx-arrow-back me-1"></i>Back to Phone Assignments
+      </a>
+    </div>
+  </div>
+
+  <!-- Current Assignment Info -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-light">
+      <h6 class="card-title mb-0">
+        <i class="bx bx-phone text-info me-2"></i>Current Assignment
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="d-flex align-items-center mb-3">
+            <div class="avatar avatar-lg bg-primary bg-opacity-10 rounded-circle me-3">
+              <span class="text-primary fw-bold fs-4">{{ phone_assignment.employee.first_name.0|upper }}</span>
+            </div>
+            <div>
+              <h5 class="mb-0 fw-bold">{{ phone_assignment.employee.get_full_name }}</h5>
+              <p class="text-muted mb-0">{{ phone_assignment.employee.position }}</p>
+            </div>
+          </div>
+          <div class="mb-3">
+            <strong>Employee ID:</strong> {{ phone_assignment.employee.employee_id|default:"-" }}<br>
+            <strong>Email:</strong> {{ phone_assignment.employee.user.email }}<br>
+            <strong>Department:</strong> {{ phone_assignment.employee.get_department_display }}<br>
+            <strong>Role:</strong> {{ phone_assignment.employee.get_role_display }}
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="mb-3">
+            <strong>Assigned Date:</strong> {{ phone_assignment.assigned_date|date:"M d, Y H:i A" }}<br>
+            <strong>Assigned By:</strong> {{ phone_assignment.assigned_by.username }}<br>
+            <strong>Current Status:</strong> 
+            {% if phone_assignment.is_active %}
+              <span class="badge bg-success">Active</span>
+            {% else %}
+              <span class="badge bg-secondary">Inactive</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Update Form -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-light">
+      <h6 class="card-title mb-0">
+        <i class="bx bx-edit text-warning me-2"></i>Update Phone Assignment
+      </h6>
+    </div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label for="phone_number" class="form-label fw-semibold">
+              <i class="bx bx-phone me-1"></i>Phone Number *
+            </label>
+            <input type="tel" 
+                   class="form-control" 
+                   id="phone_number" 
+                   name="phone_number" 
+                   value="{{ phone_assignment.phone_number }}"
+                   placeholder="Enter Indian phone number (e.g., +91 9876543210)"
+                   required>
+            <div class="form-text">Format: +91 XXXXX XXXXX or 0XXXX XXXXXX</div>
+          </div>
+          <div class="col-md-6">
+            <label for="phone_type" class="form-label fw-semibold">
+              <i class="bx bx-tag me-1"></i>Phone Type
+            </label>
+            <select class="form-select" id="phone_type" name="phone_type">
+              {% for value, label in phone_types %}
+                <option value="{{ value }}" {% if phone_assignment.phone_type == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-12">
+            <div class="form-check mb-3">
+              <input class="form-check-input" 
+                     type="checkbox" 
+                     id="is_active" 
+                     name="is_active" 
+                     {% if phone_assignment.is_active %}checked{% endif %}>
+              <label class="form-check-label" for="is_active">
+                <i class="bx bx-check-circle me-1"></i>Active Assignment
+              </label>
+            </div>
+          </div>
+          <div class="col-12">
+            <label for="notes" class="form-label fw-semibold">
+              <i class="bx bx-note me-1"></i>Notes
+            </label>
+            <textarea class="form-control" 
+                      id="notes" 
+                      name="notes" 
+                      rows="3" 
+                      placeholder="Optional notes about this phone assignment...">{{ phone_assignment.notes }}</textarea>
+          </div>
+          <div class="col-12">
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary">
+                <i class="bx bx-check me-1"></i>Update Assignment
+              </button>
+              <a href="{% url 'accounts:phone_assignment_list' %}" class="btn btn-outline-secondary">
+                <i class="bx bx-x me-1"></i>Cancel
+              </a>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+<style>
+.bg-label-primary { background-color: #e7e7ff !important; color: #696cff !important; }
+.bg-label-secondary { background-color: #6c757d !important; color: #ffffff !important; }
+.bg-label-official { background-color: #fff4dd !important; color: #ffab00 !important; }
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+}
+
+.avatar-lg {
+  width: 3rem;
+  height: 3rem;
+  font-size: 1.25rem;
+}
+
+.bg-opacity-10 {
+  opacity: 0.1 !important;
+}
+
+.card {
+  border-radius: 0.5rem;
+}
+
+.card-header {
+  border-radius: 0.5rem 0.5rem 0 0 !important;
+}
+
+.form-check-input:checked {
+  background-color: #696cff;
+  border-color: #696cff;
+}
+</style>

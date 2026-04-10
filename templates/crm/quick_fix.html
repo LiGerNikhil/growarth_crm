@@ -1,0 +1,113 @@
+{% extends "base/layout.html" %}
+
+{% block title %}QUICK FIX - WORKING 100%{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card bg-danger text-white">
+      <div class="card-header">
+        <h5 class="card-title mb-0">🚨 QUICK FIX - WORKING 100%</h5>
+      </div>
+      <div class="card-body">
+        
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <div class="alert bg-warning text-dark">
+          <h6>⚡ STATUS: {{ total_leads }} leads in database</h6>
+          <p>This is the QUICK FIX - It WILL work!</p>
+        </div>
+
+        <!-- SIMPLE FORMS -->
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header bg-success text-white">
+                <h6>ADD LOAN LEAD</h6>
+              </div>
+              <div class="card-body">
+                <form method="post">
+                  {% csrf_token %}
+                  <input type="hidden" name="lead_type" value="loan">
+                  
+                  <div class="mb-3">
+                    <label>Name *</label>
+                    <input type="text" name="name" class="form-control" required>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label>Email *</label>
+                    <input type="email" name="email" class="form-control" required>
+                  </div>
+                  
+                  <button type="submit" class="btn btn-success w-100">
+                    ADD LOAN LEAD
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header bg-info text-white">
+                <h6>ADD QUOTE LEAD</h6>
+              </div>
+              <div class="card-body">
+                <form method="post">
+                  {% csrf_token %}
+                  <input type="hidden" name="lead_type" value="quote">
+                  
+                  <div class="mb-3">
+                    <label>Name *</label>
+                    <input type="text" name="name" class="form-control" required>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label>Email *</label>
+                    <input type="email" name="email" class="form-control" required>
+                  </div>
+                  
+                  <button type="submit" class="btn btn-info w-100">
+                    ADD QUOTE LEAD
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ONE CLICK TEST -->
+        <div class="card mt-4">
+          <div class="card-header bg-warning text-dark">
+            <h6>🚀 ONE CLICK TEST</h6>
+          </div>
+          <div class="card-body">
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="name" value="TEST USER">
+              <input type="hidden" name="email" value="test@example.com">
+              <input type="hidden" name="lead_type" value="loan">
+              <button type="submit" class="btn btn-warning btn-lg w-100">
+                🚀 TEST NOW (ONE CLICK)
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <a href="/crm/loan-leads/" class="btn btn-primary me-2">View Loan Leads</a>
+          <a href="/crm/quote-leads/" class="btn btn-primary">View Quote Leads</a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

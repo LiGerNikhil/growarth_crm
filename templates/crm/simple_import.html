@@ -1,0 +1,147 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Simple Google Sheets Import{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Simple Google Sheets Import</h5>
+      </div>
+      <div class="card-body">
+        
+        <!-- Current Status -->
+        <div class="alert alert-success">
+          <h6><i class="bx bx-check-circle me-2"></i>Import Status</h6>
+          <p><strong>Total Google Sheets leads imported:</strong> {{ google_sheets_leads }}</p>
+          <p><strong>Loan leads from Google Sheets:</strong> {{ loan_google_sheets_leads }}</p>
+          <p><strong>Quote leads from Google Sheets:</strong> {{ quote_google_sheets_leads }}</p>
+        </div>
+
+        <!-- Quick Add Forms -->
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header bg-warning text-white">
+                <h6 class="card-title mb-0">Add Loan Lead (Sheet1)</h6>
+              </div>
+              <div class="card-body">
+                <form method="post" action="{% url 'crm:simple_import' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="type" value="loan">
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Name *</label>
+                    <input type="text" name="name" class="form-control" required>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Email *</label>
+                    <input type="email" name="email" class="form-control" required>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Phone</label>
+                    <input type="tel" name="phone" class="form-control">
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Loan Type</label>
+                    <select name="loan_type" class="form-select">
+                      <option value="personal_loan">Personal Loan</option>
+                      <option value="home_loan">Home Loan</option>
+                      <option value="business_loan">Business Loan</option>
+                      <option value="car_loan">Car Loan</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Loan Amount</label>
+                    <input type="number" name="loan_amount" class="form-control" placeholder="e.g., 50000">
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Message</label>
+                    <textarea name="message" class="form-control" rows="2"></textarea>
+                  </div>
+                  
+                  <button type="submit" class="btn btn-warning w-100">
+                    <i class="bx bx-plus me-1"></i>Add Loan Lead
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header bg-info text-white">
+                <h6 class="card-title mb-0">Add Quote Lead (Sheet2)</h6>
+              </div>
+              <div class="card-body">
+                <form method="post" action="{% url 'crm:simple_import' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="type" value="quote">
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Name *</label>
+                    <input type="text" name="name" class="form-control" required>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Email *</label>
+                    <input type="email" name="email" class="form-control" required>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Phone</label>
+                    <input type="tel" name="phone" class="form-control">
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Message/Requirements</label>
+                    <textarea name="message" class="form-control" rows="4" placeholder="What does the customer need?"></textarea>
+                  </div>
+                  
+                  <button type="submit" class="btn btn-info w-100">
+                    <i class="bx bx-plus me-1"></i>Add Quote Lead
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- View Links -->
+        <div class="row mt-4">
+          <div class="col-md-6">
+            <a href="{% url 'crm:loan_leads' %}" class="btn btn-warning w-100">
+              <i class="bx bx-dollar me-1"></i>View All Loan Leads
+            </a>
+          </div>
+          <div class="col-md-6">
+            <a href="{% url 'crm:quote_leads' %}" class="btn btn-info w-100">
+              <i class="bx bx-file me-1"></i>View All Quote Leads
+            </a>
+          </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="alert alert-info mt-4">
+          <h6><i class="bx bx-info-circle me-2"></i>How to Import Your Google Sheets Data:</h6>
+          <ol>
+            <li>Open your Google Sheets (Sheet1 for loans, Sheet2 for quotes)</li>
+            <li>Copy each row's data</li>
+            <li>Paste into the appropriate form above</li>
+            <li>Click "Add Lead" for each entry</li>
+            <li>Check the results in the Loan Leads and Quote Leads pages</li>
+          </ol>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

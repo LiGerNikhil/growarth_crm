@@ -1,0 +1,216 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Import Google Sheets Data{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Import Google Sheets Data</h5>
+      </div>
+      <div class="card-body">
+        
+        <!-- Current Status -->
+        <div class="alert alert-info">
+          <h6><i class="bx bx-info-circle me-2"></i>Current Google Sheets Data Status</h6>
+          <div class="row mt-3">
+            <div class="col-md-4">
+              <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                  <h4>{{ total_google_sheets_leads }}</h4>
+                  <p class="mb-0">Total Google Sheets Leads</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                  <h4>{{ loan_google_sheets_leads }}</h4>
+                  <p class="mb-0">Loan Leads from Sheets</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                  <h4>{{ quote_google_sheets_leads }}</h4>
+                  <p class="mb-0">Quote Leads from Sheets</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Import Instructions -->
+        <div class="alert alert-warning">
+          <h6><i class="bx bx-error me-2"></i>Issue Identified</h6>
+          <p>Your Google Sheets data is not appearing in the CRM because it hasn't been imported yet. Use the forms below to manually import your existing Google Sheets data.</p>
+          <p><strong>Steps:</strong></p>
+          <ol>
+            <li>Open your Google Sheets (Sheet1 for loans, Sheet2 for quotes)</li>
+            <li>Copy data from each row</li>
+            <li>Paste into the appropriate form below</li>
+            <li>Click "Import to CRM" for each lead</li>
+          </ol>
+        </div>
+
+        <!-- Loan Data Import -->
+        <div class="card mb-4">
+          <div class="card-header bg-warning text-white">
+            <h6 class="card-title mb-0">
+              <i class="bx bx-dollar me-2"></i>Import Loan Data (From Sheet1)
+            </h6>
+          </div>
+          <div class="card-body">
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="import_type" value="loan">
+              
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Name *</label>
+                  <input type="text" name="name" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Email *</label>
+                  <input type="email" name="email" class="form-control" required>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Phone</label>
+                  <input type="tel" name="phone" class="form-control">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Loan Type</label>
+                  <select name="loan_type" class="form-select">
+                    <option value="">Select Loan Type</option>
+                    <option value="personal_loan">Personal Loan</option>
+                    <option value="home_loan">Home Loan</option>
+                    <option value="business_loan">Business Loan</option>
+                    <option value="car_loan">Car Loan</option>
+                    <option value="education_loan">Education Loan</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Loan Amount</label>
+                  <input type="number" name="loan_amount" class="form-control" step="0.01" placeholder="e.g., 50000">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Employment Status</label>
+                  <select name="employment" class="form-select">
+                    <option value="">Select Status</option>
+                    <option value="employed">Employed</option>
+                    <option value="self_employed">Self Employed</option>
+                    <option value="business_owner">Business Owner</option>
+                    <option value="student">Student</option>
+                    <option value="retired">Retired</option>
+                    <option value="unemployed">Unemployed</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Monthly Income</label>
+                  <input type="number" name="monthly_income" class="form-control" step="0.01" placeholder="e.g., 5000">
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label">Message/Notes</label>
+                <textarea name="message" class="form-control" rows="3" placeholder="Any additional information from Google Sheets..."></textarea>
+              </div>
+              
+              <button type="submit" class="btn btn-warning">
+                <i class="bx bx-download me-1"></i>Import Loan Lead to CRM
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Quote Data Import -->
+        <div class="card mb-4">
+          <div class="card-header bg-info text-white">
+            <h6 class="card-title mb-0">
+              <i class="bx bx-file me-2"></i>Import Quote Data (From Sheet2)
+            </h6>
+          </div>
+          <div class="card-body">
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="import_type" value="quote">
+              
+              <div class="row">
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Name *</label>
+                  <input type="text" name="name" class="form-control" required>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Email *</label>
+                  <input type="email" name="email" class="form-control" required>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Phone/Mobile</label>
+                  <input type="tel" name="phone" class="form-control">
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label">Message/Requirements</label>
+                <textarea name="message" class="form-control" rows="4" placeholder="Quote requirements or message from Google Sheets..."></textarea>
+              </div>
+              
+              <button type="submit" class="btn btn-info">
+                <i class="bx bx-download me-1"></i>Import Quote Lead to CRM
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+          <div class="card-header">
+            <h6 class="card-title mb-0">Quick Actions</h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <a href="{% url 'crm:loan_leads' %}" class="btn btn-warning w-100">
+                  <i class="bx bx-dollar me-1"></i>View Loan Leads
+                </a>
+              </div>
+              <div class="col-md-6">
+                <a href="{% url 'crm:quote_leads' %}" class="btn btn-info w-100">
+                  <i class="bx bx-file me-1"></i>View Quote Leads
+                </a>
+              </div>
+            </div>
+            
+            <div class="row mt-3">
+              <div class="col-md-6">
+                <a href="{% url 'crm:sync_google_sheets_data' %}" class="btn btn-success w-100">
+                  <i class="bx bx-cloud-download me-1"></i>Try Auto-Sync
+                </a>
+              </div>
+              <div class="col-md-6">
+                <a href="{% url 'crm:import/manual' %}" class="btn btn-secondary w-100">
+                  <i class="bx bx-upload me-1"></i>Bulk CSV Import
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

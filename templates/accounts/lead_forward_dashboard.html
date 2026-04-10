@@ -1,0 +1,603 @@
+{% extends 'base/layout.html' %}
+{% load static %}
+{% load lead_filters %}
+
+{% block title %}Lead Forwarding Dashboard{% endblock %}
+
+{% block page_css %}
+<style>
+.lead-forward-container {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  min-height: 100vh;
+  padding: 1rem 0;
+}
+
+.main-header {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-bottom: 1px solid #e9ecef;
+  padding: 2rem 0;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.header-content {
+  text-align: center;
+}
+
+.main-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.main-header p {
+  font-size: 1.1rem;
+  color: #6c757d;
+  margin: 0;
+}
+
+.stats-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e9ecef;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #007bff;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.95rem;
+  color: #6c757d;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lead-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.lead-card {
+  background: white;
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.lead-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #007bff, #0056b3);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.lead-card:hover::before {
+  transform: scaleX(1);
+}
+
+.lead-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.lead-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.lead-info {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-bottom: 0.25rem;
+}
+
+.lead-info strong {
+  color: #495057;
+}
+
+.lead-actions {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.forward-btn {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.forward-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+}
+
+.forwarded-leads-section {
+  background: white;
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e9ecef;
+  margin-bottom: 2rem;
+}
+
+.forwarded-lead-item {
+  padding: 1rem;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.forwarded-lead-item:last-child {
+  border-bottom: none;
+}
+
+.forward-info {
+  flex: 1;
+}
+
+.forward-lead-name {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 0.25rem;
+}
+
+.forward-details {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.forward-status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-accepted {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-rejected {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.status-completed {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background-color: white;
+  margin: 5% auto;
+  padding: 2rem;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.close {
+  font-size: 2rem;
+  font-weight: 300;
+  cursor: pointer;
+  color: #6c757d;
+  line-height: 1;
+}
+
+.close:hover {
+  color: #495057;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.form-control, .form-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .main-header h1 {
+    font-size: 2rem;
+  }
+  
+  .lead-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .stats-section {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 576px) {
+  .stats-section {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-content {
+    margin: 10% auto;
+    padding: 1.5rem;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lead-forward-container">
+  <div class="container-fluid">
+    
+    <!-- Main Header -->
+    <div class="main-header">
+      <div class="container">
+        <div class="header-content">
+          <h1><i class="bx bx-send me-3"></i>Lead Forwarding Dashboard</h1>
+          <p>Forward Google leads to employees and track their progress</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      
+      <!-- Statistics Section -->
+      <div class="stats-section">
+        <div class="stat-card">
+          <div class="stat-number">{{ google_leads.count }}</div>
+          <div class="stat-label">Available Google Leads</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{ forwarded_leads.count }}</div>
+          <div class="stat-label">Total Forwarded</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{ forwarded_leads|filter_status:'accepted'|length }}</div>
+          <div class="stat-label">Accepted</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{ forwarded_leads|filter_status:'pending'|length }}</div>
+          <div class="stat-label">Pending</div>
+        </div>
+      </div>
+
+      <!-- Debug Info -->
+<div class="alert alert-info">
+  <strong>Debug Info:</strong><br>
+  Google Leads Count: {{ google_leads.count }}<br>
+  {% if google_leads %}
+    First Lead: {{ google_leads.0.name }} (ID: {{ google_leads.0.id }})<br>
+  {% else %}
+    No Google Leads Found!<br>
+  {% endif %}
+</div>
+
+<!-- Google Leads Section -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3><i class="bx bx-cloud-download me-2"></i>Google Leads Available for Forwarding</h3>
+          </div>
+          
+          <div class="lead-grid">
+            {% for lead in google_leads %}
+            <!-- Debug: {{ lead|pprint }} -->
+            <div class="lead-card">
+              <div class="lead-name">{{ lead.name }}</div>
+              <div class="lead-info"><strong>Email:</strong> {{ lead.email }}</div>
+              <div class="lead-info"><strong>Phone:</strong> {{ lead.phone|default:"N/A" }}</div>
+              <div class="lead-info"><strong>Type:</strong> {{ lead.get_lead_type_display }}</div>
+              <div class="lead-info"><strong>Source:</strong> {{ lead.get_source_display }}</div>
+              <div class="lead-info"><strong>Status:</strong> {{ lead.get_status_display }}</div>
+              {% if lead.loan_amount %}
+              <div class="lead-info"><strong>Loan Amount:</strong> ₹{{ lead.loan_amount }}</div>
+              {% endif %}
+              {% if lead.loan_type %}
+              <div class="lead-info"><strong>Loan Type:</strong> {{ lead.loan_type }}</div>
+              {% endif %}
+              
+              <div class="lead-actions">
+                <button class="forward-btn" onclick="openForwardModal({{ lead.id }}, '{{ lead.name }}')">
+                  <i class="bx bx-send me-1"></i>Forward to Employee
+                </button>
+              </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+              <div class="text-center py-5">
+                <i class="bx bx-cloud-download" style="font-size: 3rem; color: #ccc;"></i>
+                <h4 class="mt-3">No Google Leads Available</h4>
+                <p class="text-muted">All Google leads have been forwarded or there are no leads in the system.</p>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Forwarded Leads Section -->
+      <div class="forwarded-leads-section">
+        <h3><i class="bx bx-history me-2"></i>Recently Forwarded Leads</h3>
+        
+        {% if forwarded_leads %}
+          {% for forward in forwarded_leads|slice:":10" %}
+          <div class="forwarded-lead-item">
+            <div class="forward-info">
+              <div class="forward-lead-name">{{ forward.lead_name }}</div>
+              <div class="forward-details">
+                <strong>{{ forward.lead_source }}</strong> • {{ forward.lead_email }}
+                {% if forward.lead_phone %}• {{ forward.lead_phone }}{% endif %}<br>
+                Forwarded to {{ forward.forwarded_to.get_full_name }} by {{ forward.forwarded_by.get_full_name }}
+                on {{ forward.forwarded_at|date:"M d, Y H:i" }}
+                {% if forward.notes %}• {{ forward.notes|truncatewords:10 }}{% endif %}
+              </div>
+            </div>
+            <div class="forward-status status-{{ forward.status }}">
+              {{ forward.get_status_display }}
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-center py-4">
+            <i class="bx bx-send" style="font-size: 2rem; color: #ccc;"></i>
+            <p class="text-muted mt-2">No leads have been forwarded yet.</p>
+          </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Forward Modal -->
+<div id="forwardModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title">Forward Lead to Employee</h5>
+      <span class="close" onclick="closeForwardModal()">&times;</span>
+    </div>
+    <form id="forwardForm">
+      <input type="hidden" id="leadId" name="lead_id">
+      
+      <div class="form-group">
+        <label class="form-label">Lead Name:</label>
+        <input type="text" class="form-control" id="leadName" readonly>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Forward to Employee:</label>
+        <select class="form-select" id="employeeId" name="employee_id" required>
+          <option value="">Select an employee...</option>
+          {% for employee in employees %}
+            <option value="{{ employee.id }}">{{ employee.get_full_name }} ({{ employee.get_role_display }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Priority:</label>
+        <select class="form-select" id="priority" name="priority">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+          <option value="urgent">Urgent</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Message to Employee:</label>
+        <textarea class="form-control form-textarea" id="message" name="message" 
+                  placeholder="Add any instructions or notes for the employee..."></textarea>
+      </div>
+      
+      <button type="submit" class="btn-primary">
+        <i class="bx bx-send me-1"></i>Forward Lead
+      </button>
+      <button type="button" class="btn-secondary" onclick="closeForwardModal()">
+        Cancel
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+function openForwardModal(leadId, leadName) {
+  document.getElementById('leadId').value = leadId;
+  document.getElementById('leadName').value = leadName;
+  document.getElementById('forwardModal').style.display = 'block';
+}
+
+function closeForwardModal() {
+  document.getElementById('forwardModal').style.display = 'none';
+  document.getElementById('forwardForm').reset();
+}
+
+// Handle form submission
+document.getElementById('forwardForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  const formData = new FormData(this);
+  const leadId = formData.get('lead_id');
+  
+  fetch(`/accounts/forward-lead/${leadId}/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': getCookie('csrftoken'),
+    },
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert('Lead forwarded successfully!');
+      closeForwardModal();
+      location.reload();
+    } else {
+      alert('Error: ' + data.error);
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('An error occurred while forwarding the lead.');
+  });
+});
+
+// Get CSRF token
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+  const modal = document.getElementById('forwardModal');
+  if (event.target == modal) {
+    closeForwardModal();
+  }
+}
+</script>
+{% endblock %}

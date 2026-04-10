@@ -1,0 +1,528 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Leads Management{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Leads Management</h5>
+        <div class="d-flex gap-2">
+          <a href="{% url 'crm:sync_google_sheets_data' %}" class="btn btn-success">
+            <i class="bx bx-download me-1"></i>Sync Google Sheets
+          </a>
+          <a href="{% url 'crm:google_sheets_settings' %}" class="btn btn-outline-info">
+            <i class="bx bx-cog me-1"></i>Google Sheets Settings
+          </a>
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#loanLeadModal">
+            <i class="bx bx-plus me-1"></i>Capture Loan Lead
+          </button>
+          <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#quoteLeadModal">
+            <i class="bx bx-plus me-1"></i>Capture Quote Lead
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="card bg-primary text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ total_leads }}</h4>
+                    <p class="mb-0">Total Leads</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-primary">
+                      <i class="bx bx-user fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-success text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ new_leads }}</h4>
+                    <p class="mb-0">New Leads</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-success">
+                      <i class="bx bx-user-plus fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-warning text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ loan_leads }}</h4>
+                    <p class="mb-0">Loan Leads</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-warning">
+                      <i class="bx bx-dollar fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-info text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ quote_leads }}</h4>
+                    <p class="mb-0">Quote Leads</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-info">
+                      <i class="bx bx-file fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters and Search -->
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <form method="get" class="d-flex gap-2">
+              <input type="text" name="search" class="form-control" placeholder="Search leads..." value="{{ search_query }}">
+              <button type="submit" class="btn btn-outline-secondary">
+                <i class="bx bx-search"></i>
+              </button>
+            </form>
+          </div>
+          <div class="col-md-4">
+            <form method="get" class="d-flex gap-2">
+              <select name="status" class="form-select" onchange="this.form.submit()">
+                <option value="">All Status</option>
+                {% for status_value, status_label in status_choices %}
+                  <option value="{{ status_value }}" {% if current_status == status_value %}selected{% endif %}>
+                    {{ status_label }}
+                  </option>
+                {% endfor %}
+              </select>
+              {% if search_query %}
+                <input type="hidden" name="search" value="{{ search_query }}">
+              {% endif %}
+              {% if current_lead_type %}
+                <input type="hidden" name="lead_type" value="{{ current_lead_type }}">
+              {% endif %}
+            </form>
+          </div>
+          <div class="col-md-4">
+            <form method="get" class="d-flex gap-2">
+              <select name="lead_type" class="form-select" onchange="this.form.submit()">
+                <option value="">All Types</option>
+                {% for type_value, type_label in lead_type_choices %}
+                  <option value="{{ type_value }}" {% if current_lead_type == type_value %}selected{% endif %}>
+                    {{ type_label }}
+                  </option>
+                {% endfor %}
+              </select>
+              {% if search_query %}
+                <input type="hidden" name="search" value="{{ search_query }}">
+              {% endif %}
+              {% if current_status %}
+                <input type="hidden" name="status" value="{{ current_status }}">
+              {% endif %}
+            </form>
+          </div>
+        </div>
+
+        <!-- Leads Table -->
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Type</th>
+                <th>Loan Type</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for lead in leads %}
+              <tr>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="avatar avatar-sm me-2">
+                      <div class="avatar-initial rounded-circle bg-primary text-white">
+                        {{ lead.name.0 }}
+                      </div>
+                    </div>
+                    <div>
+                      <div class="fw-medium">{{ lead.name }}</div>
+                      {% if lead.synced_with_google %}
+                        <small class="text-success"><i class="bx bx-cloud-check"></i> Synced</small>
+                      {% endif %}
+                    </div>
+                  </div>
+                </td>
+                <td>{{ lead.email }}</td>
+                <td>{{ lead.phone|default:"-" }}</td>
+                <td>
+                  {% if lead.lead_type == 'loan' %}
+                    <span class="badge bg-label-warning">Loan Application</span>
+                  {% elif lead.lead_type == 'quote' %}
+                    <span class="badge bg-label-info">Quote Request</span>
+                  {% else %}
+                    <span class="badge bg-label-secondary">General Inquiry</span>
+                  {% endif %}
+                </td>
+                <td>{{ lead.loan_type|default:"-" }}</td>
+                <td>
+                  {% if lead.loan_amount %}
+                    ${{ lead.loan_amount|floatformat:0 }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td>
+                  {% if lead.status == 'new' %}
+                    <span class="badge bg-label-success">New</span>
+                  {% elif lead.status == 'contacted' %}
+                    <span class="badge bg-label-warning">Contacted</span>
+                  {% elif lead.status == 'qualified' %}
+                    <span class="badge bg-label-info">Qualified</span>
+                  {% elif lead.status == 'converted' %}
+                    <span class="badge bg-label-primary">Converted</span>
+                  {% else %}
+                    <span class="badge bg-label-secondary">Lost</span>
+                  {% endif %}
+                </td>
+                <td>{{ lead.created_at|date:"M d, Y" }}</td>
+                <td>
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                      Actions
+                    </button>
+                    <ul class="dropdown-menu">
+                      <li>
+                        <a class="dropdown-item" href="{% url 'crm:lead_detail' lead.pk %}">
+                          <i class="bx bx-eye me-2"></i>View Details
+                        </a>
+                      </li>
+                      <li>
+                        <a class="dropdown-item" href="{% url 'crm:lead_update' lead.pk %}">
+                          <i class="bx bx-edit me-2"></i>Edit
+                        </a>
+                      </li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li>
+                        <a class="dropdown-item" href="{% url 'crm:sync_with_google_sheets' lead.pk %}">
+                          <i class="bx bx-cloud-upload me-2"></i>Sync to Google Sheets
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="9" class="text-center py-4">
+                  <i class="bx bx-inbox fs-1 text-muted mb-2 d-block"></i>
+                  <p class="text-muted mb-0">No leads found</p>
+                  <div class="d-flex gap-2 justify-content-center mt-2">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#loanLeadModal">
+                      <i class="bx bx-plus me-1"></i>Capture Loan Lead
+                    </button>
+                    <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#quoteLeadModal">
+                      <i class="bx bx-plus me-1"></i>Capture Quote Lead
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loan Lead Capture Modal -->
+<div class="modal fade" id="loanLeadModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Capture Loan Lead</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="loanLeadForm">
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Full Name *</label>
+              <input type="text" name="name" class="form-control" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Email *</label>
+              <input type="email" name="email" class="form-control" required>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Phone</label>
+              <input type="tel" name="phone" class="form-control">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Loan Type</label>
+              <select name="loanType" class="form-select">
+                <option value="">Select Loan Type</option>
+                <option value="personal_loan">Personal Loan</option>
+                <option value="home_loan">Home Loan</option>
+                <option value="business_loan">Business Loan</option>
+                <option value="car_loan">Car Loan</option>
+                <option value="education_loan">Education Loan</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Loan Amount</label>
+              <input type="number" name="loanAmount" class="form-control" step="0.01">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Employment Status</label>
+              <select name="employment" class="form-select">
+                <option value="">Select Employment Status</option>
+                <option value="employed">Employed</option>
+                <option value="self_employed">Self Employed</option>
+                <option value="business_owner">Business Owner</option>
+                <option value="student">Student</option>
+                <option value="retired">Retired</option>
+                <option value="unemployed">Unemployed</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Monthly Income</label>
+              <input type="number" name="monthlyIncome" class="form-control" step="0.01">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Message</label>
+            <textarea name="message" class="form-control" rows="3"></textarea>
+          </div>
+          <div class="mb-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="consent" id="loanConsent" required>
+              <label class="form-check-label" for="loanConsent">
+                I consent to be contacted regarding my loan inquiry
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="bx bx-save me-1"></i>Save Loan Lead
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Quote Lead Capture Modal -->
+<div class="modal fade" id="quoteLeadModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Capture Quote Lead</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="quoteLeadForm">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Full Name *</label>
+            <input type="text" name="name" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email *</label>
+            <input type="email" name="email" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Mobile</label>
+            <input type="tel" name="mobile" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Message</label>
+            <textarea name="message" class="form-control" rows="3"></textarea>
+          </div>
+          <div class="mb-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="consent" id="quoteConsent" required>
+              <label class="form-check-label" for="quoteConsent">
+                I consent to be contacted regarding my quote request
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-info">
+            <i class="bx bx-save me-1"></i>Save Quote Lead
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// Google Sheets Web App URLs
+const loanScriptURL = "https://script.google.com/macros/s/AKfycby-pJuT6CjTbSViGQd3qgOYzKQe-KPH0IQJ9UZCrujWCLXnnUeqWqz6sXkHOQ28tbiz-A/exec";
+const quoteScriptURL = "https://script.google.com/macros/s/AKfycby-pJuT6CjTbSViGQd3qgOYzKQe-KPH0IQJ9UZCrujWCLXnnUeqWqz6sXkHOQ28tbiz-A/exec";
+
+// Loan lead form submission
+document.getElementById('loanLeadForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  const formData = new FormData(this);
+  const formDataObj = {};
+  
+  // Convert FormData to object
+  for (let [key, value] of formData.entries()) {
+    formDataObj[key] = value;
+  }
+  
+  // Add timestamp
+  formDataObj.timestamp = new Date().toISOString();
+  
+  // Send to Google Sheets
+  fetch(loanScriptURL, {
+    method: 'POST',
+    body: JSON.stringify(formDataObj),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Also save to local database
+      fetch('/crm/webhook/loan-lead/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(formDataObj)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Loan lead captured successfully!');
+          bootstrap.Modal.getInstance(document.getElementById('loanLeadModal')).hide();
+          location.reload();
+        } else {
+          alert('Error saving loan lead: ' + data.error);
+        }
+      });
+    } else {
+      alert('Error: ' + data.error);
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Error submitting loan lead. Please try again.');
+  });
+});
+
+// Quote lead form submission
+document.getElementById('quoteLeadForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  const formData = new FormData(this);
+  const formDataObj = {};
+  
+  // Convert FormData to object
+  for (let [key, value] of formData.entries()) {
+    formDataObj[key] = value;
+  }
+  
+  // Add timestamp
+  formDataObj.timestamp = new Date().toISOString();
+  
+  // Send to Google Sheets
+  fetch(quoteScriptURL, {
+    method: 'POST',
+    body: JSON.stringify(formDataObj),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // Also save to local database
+      fetch('/crm/webhook/quote-lead/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(formDataObj)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Quote lead captured successfully!');
+          bootstrap.Modal.getInstance(document.getElementById('quoteLeadModal')).hide();
+          location.reload();
+        } else {
+          alert('Error saving quote lead: ' + data.error);
+        }
+      });
+    } else {
+      alert('Error: ' + data.error);
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Error submitting quote lead. Please try again.');
+  });
+});
+
+// Helper function to get CSRF token
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+</script>
+{% endblock %}

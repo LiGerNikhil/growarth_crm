@@ -1,0 +1,101 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Update Login Statistics{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">
+            <i class="bx bx-edit me-2"></i>Update Login Statistics
+          </h5>
+          <a href="{% url 'accounts:login_statistics_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bx bx-arrow-left me-1"></i>Back to Dashboard
+          </a>
+        </div>
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Manager *</label>
+                {{ form.manager }}
+                {% if form.manager.errors %}
+                  <div class="text-danger">{{ form.manager.errors }}</div>
+                {% endif %}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Team Leader</label>
+                {{ form.team_leader }}
+                {% if form.team_leader.errors %}
+                  <div class="text-danger">{{ form.team_leader.errors }}</div>
+                {% endif %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">File Count *</label>
+                {{ form.file_count }}
+                {% if form.file_count.errors %}
+                  <div class="text-danger">{{ form.file_count.errors }}</div>
+                {% endif %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Login Count *</label>
+                {{ form.login_count }}
+                {% if form.login_count.errors %}
+                  <div class="text-danger">{{ form.login_count.errors }}</div>
+                {% endif %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Total Count *</label>
+                {{ form.total_count }}
+                {% if form.total_count.errors %}
+                  <div class="text-danger">{{ form.total_count.errors }}</div>
+                {% endif %}
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Date *</label>
+                {{ form.date }}
+                {% if form.date.errors %}
+                  <div class="text-danger">{{ form.date.errors }}</div>
+                {% endif %}
+              </div>
+              <div class="col-md-12">
+                <label class="form-label">Notes</label>
+                {{ form.notes }}
+                {% if form.notes.errors %}
+                  <div class="text-danger">{{ form.notes.errors }}</div>
+                {% endif %}
+              </div>
+            </div>
+            
+            <div class="row mt-4">
+              <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                  <i class="bx bx-save me-1"></i>Update Statistics
+                </button>
+                <a href="{% url 'accounts:login_statistics_dashboard' %}" class="btn btn-secondary">
+                  <i class="bx bx-x me-1"></i>Cancel
+                </a>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.form-control:focus {
+  border-color: #4e73df;
+  box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+.form-select:focus {
+  border-color: #4e73df;
+  box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+</style>
+{% endblock %}

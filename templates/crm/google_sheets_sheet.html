@@ -1,0 +1,293 @@
+{% extends "base/layout.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">{{ page_title }}</h5>
+        <div>
+          <button type="button" class="btn btn-primary" onclick="fetchGoogleSheetsData()">
+            <i class="bx bx-refresh me-1"></i>Refresh Data
+          </button>
+          <button type="button" class="btn btn-success" onclick="syncToCRM()">
+            <i class="bx bx-download me-1"></i>Sync to CRM
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        
+        <!-- Status Messages -->
+        <div id="status-message" class="alert alert-info" style="display: none;">
+          <i class="bx bx-info-circle me-2"></i>
+          <span id="status-text">Loading Google Sheets data...</span>
+        </div>
+
+        <!-- Google Sheets Data Table -->
+        <div id="google-sheets-data">
+          <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading Google Sheets data...</p>
+          </div>
+        </div>
+
+        <!-- Sync Results -->
+        <div id="sync-results" style="display: none;">
+          <div class="alert alert-success">
+            <h6><i class="bx bx-check-circle me-2"></i>Sync Results</h6>
+            <div id="sync-details"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const scriptURL = "https://script.google.com/macros/s/AKfycbxd8IrL9YKRIMYZo4Rj9g3LL93m5eT28ANKxX3rzudQC-kNUVm6Nig2VNBTR_aygna1Mw/exec";
+const sheetType = "{{ sheet_type }}";
+const sheetName = "{{ sheet_name }}";
+
+// Fetch Google Sheets data
+async function fetchGoogleSheetsData() {
+  const statusDiv = document.getElementById('status-message');
+  const statusText = document.getElementById('status-text');
+  const dataDiv = document.getElementById('google-sheets-data');
+  
+  statusDiv.style.display = 'block';
+  statusText.textContent = 'Fetching data from Google Sheets...';
+  
+  try {
+    const response = await fetch(scriptURL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: 'action=get_all_data'
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      displayGoogleSheetsData(result);
+      const sheetData = sheetName === 'Sheet1' ? result.data?.sheet1 : result.data?.sheet2;
+      statusDiv.className = 'alert alert-success';
+      statusText.textContent = `Successfully loaded ${sheetData?.length || 0} rows from ${sheetName}`;
+    } else {
+      throw new Error(`HTTP ${response.status_code}: ${response.statusText}`);
+    }
+  } catch (error) {
+    statusDiv.className = 'alert alert-danger';
+    statusText.textContent = `Error fetching data: ${error.message}`;
+    dataDiv.innerHTML = `
+      <div class="alert alert-warning">
+        <h6><i class="bx bx-error me-2"></i>Unable to fetch Google Sheets data</h6>
+        <p><strong>Error:</strong> ${error.message}</p>
+        <p><strong>Possible causes:</strong></p>
+        <ul>
+          <li>Google Sheets Web App is not deployed or accessible</li>
+          <li>Network connectivity issues</li>
+          <li>Google Apps Script permissions</li>
+          <li>CORS restrictions</li>
+        </ul>
+        <p><strong>Solution:</strong></p>
+        <ol>
+          <li>Check if the Google Sheets Web App URL is accessible</li>
+          <li>Ensure the Google Apps Script is deployed as a web app</li>
+          <li>Verify the script has the correct doGet/doPost functions</li>
+          <li>Use the manual import option below</li>
+        </ol>
+        <div class="mt-3">
+          <a href="{% url 'crm:simple_import' %}" class="btn btn-warning">
+            <i class="bx bx-upload me-1"></i>Use Manual Import Instead
+          </a>
+        </div>
+      </div>
+    `;
+  }
+}
+
+// Display Google Sheets data
+function displayGoogleSheetsData(result) {
+  const dataDiv = document.getElementById('google-sheets-data');
+  
+  if (!result || !result.success) {
+    dataDiv.innerHTML = `
+      <div class="alert alert-warning">
+        <h6><i class="bx bx-error me-2"></i>No Data Available</h6>
+        <p>${result?.error || 'Unable to load Google Sheets data'}</p>
+      </div>
+    `;
+    return;
+  }
+  
+  const sheetData = sheetName === 'Sheet1' ? result.data?.sheet1 : result.data?.sheet2;
+  
+  if (!sheetData || sheetData.length === 0) {
+    dataDiv.innerHTML = `
+      <div class="alert alert-warning">
+        <h6><i class="bx bx-info-circle me-2"></i>No Data in ${sheetName}</h6>
+        <p>There are no rows in ${sheetName}. Add some data to see it here.</p>
+      </div>
+    `;
+    return;
+  }
+        <h6><i class="bx bx-info-circle me-2"></i>No data found</h6>
+        <p>No data found in ${sheetName}. The sheet might be empty or the data format is not recognized.</p>
+      </div>
+    `;
+    return;
+  }
+  
+  let html = `
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead class="table-dark">
+          <tr>
+  `;
+  
+  // Table headers
+  if (sheetData.length > 0) {
+    const headers = Object.keys(sheetData[0]);
+    headers.forEach(header => {
+      html += `<th>${header}</th>`;
+    });
+    html += `<th>Actions</th></tr></thead><tbody>`;
+    
+    // Table rows
+    sheetData.forEach((row, index) => {
+      html += `<tr>`;
+      headers.forEach(header => {
+        html += `<td>${row[header] || ''}</td>`;
+      });
+      html += `
+        <td>
+          <button type="button" class="btn btn-sm btn-primary" onclick="importRow(${index})">
+            <i class="bx bx-download me-1"></i>Import
+          </button>
+        </td>
+      `;
+      html += `</tr>`;
+    });
+  }
+  
+  html += `</tbody></table></div>`;
+  
+  dataDiv.innerHTML = html;
+  
+  // Store data for later use
+  window.googleSheetsData = sheetData;
+}
+
+// Import single row to CRM
+function importRow(rowIndex) {
+  const row = window.googleSheetsData[rowIndex];
+  
+  // Convert row data to lead format
+  const leadData = {
+    name: row['Name'] || row['name'] || '',
+    email: row['Email'] || row['email'] || '',
+    phone: row['Phone'] || row['phone'] || row['Mobile'] || row['mobile'] || '',
+    lead_type: sheetType,
+    message: row['Message'] || row['message'] || row['Requirements'] || row['requirements'] || '',
+    source: 'google_sheets',
+    synced_with_google: true,
+    status: 'new'
+  };
+  
+  if (sheetType === 'loan') {
+    leadData.loan_type = row['Loan Type'] || row['loan_type'] || '';
+    leadData.loan_amount = row['Loan Amount'] || row['loan_amount'] || '';
+    leadData.employment_status = row['Employment'] || row['employment'] || '';
+    leadData.monthly_income = row['Monthly Income'] || row['monthly_income'] || '';
+  }
+  
+  // Send to CRM
+  fetch('/crm/import/google-sheets-row/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken')
+    },
+    body: JSON.stringify(leadData)
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert(`Successfully imported: ${leadData.name}`);
+      fetchGoogleSheetsData(); // Refresh data
+    } else {
+      alert(`Error importing: ${data.error}`);
+    }
+  })
+  .catch(error => {
+    alert(`Network error: ${error.message}`);
+  });
+}
+
+// Sync all data to CRM
+function syncToCRM() {
+  if (!window.googleSheetsData || window.googleSheetsData.length === 0) {
+    alert('No data to sync. Please refresh data first.');
+    return;
+  }
+  
+  const syncResults = document.getElementById('sync-results');
+  const syncDetails = document.getElementById('sync-details');
+  
+  syncResults.style.display = 'block';
+  syncDetails.innerHTML = '<div class="spinner-border spinner-border-sm me-2"></div>Syncing data...';
+  
+  let successCount = 0;
+  let errorCount = 0;
+  const totalRows = window.googleSheetsData.length;
+  
+  // Process each row
+  window.googleSheetsData.forEach((row, index) => {
+    setTimeout(() => {
+      importRow(index);
+      successCount++;
+      
+      if (successCount + errorCount === totalRows) {
+        syncDetails.innerHTML = `
+          <p><strong>Sync Complete!</strong></p>
+          <ul>
+            <li>Successfully imported: ${successCount} rows</li>
+            <li>Errors: ${errorCount} rows</li>
+            <li>Total processed: ${totalRows} rows</li>
+          </ul>
+          <a href="{% if sheet_type == 'loan' %}{% url 'crm:loan_leads' %}{% else %}{% url 'crm:quote_leads' %}{% endif %}" class="btn btn-primary">
+            <i class="bx bx-eye me-1"></i>View Imported Leads
+          </a>
+        `;
+      }
+    }, index * 100); // Stagger requests to avoid overwhelming the server
+  });
+}
+
+// Get CSRF token
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+// Load data on page load
+document.addEventListener('DOMContentLoaded', function() {
+  fetchGoogleSheetsData();
+});
+</script>
+{% endblock %}

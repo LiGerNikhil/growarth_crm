@@ -1,0 +1,136 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Delete Phone Assignment - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold">
+        <i class="bx bx-trash text-danger me-2"></i>Delete Phone Assignment
+      </h4>
+      <p class="text-muted mb-0">Remove phone number assignment from employee</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'accounts:phone_assignment_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bx bx-arrow-back me-1"></i>Back to Phone Assignments
+      </a>
+    </div>
+  </div>
+
+  <!-- Assignment Details -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-danger text-white">
+      <h6 class="card-title mb-0">
+        <i class="bx bx-phone me-2"></i>Phone Assignment Details
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="d-flex align-items-center mb-3">
+            <div class="avatar avatar-lg bg-primary bg-opacity-10 rounded-circle me-3">
+              <span class="text-primary fw-bold fs-4">{{ phone_assignment.employee.first_name.0|upper }}</span>
+            </div>
+            <div>
+              <h5 class="mb-0 fw-bold">{{ phone_assignment.employee.get_full_name }}</h5>
+              <p class="text-muted mb-0">{{ phone_assignment.employee.position }}</p>
+            </div>
+          </div>
+          <div class="mb-3">
+            <strong>Employee ID:</strong> {{ phone_assignment.employee.employee_id|default:"-" }}<br>
+            <strong>Email:</strong> {{ phone_assignment.employee.user.email }}<br>
+            <strong>Department:</strong> {{ phone_assignment.employee.get_department_display }}<br>
+            <strong>Role:</strong> {{ phone_assignment.employee.get_role_display }}
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="mb-3">
+            <strong>Phone Number:</strong> {{ phone_assignment.phone_number }}<br>
+            <strong>Type:</strong> 
+            <span class="badge bg-label-{{ phone_assignment.phone_type }}">{{ phone_assignment.get_phone_type_display }}</span><br>
+            <strong>Status:</strong> 
+            {% if phone_assignment.is_active %}
+              <span class="badge bg-success">Active</span>
+            {% else %}
+              <span class="badge bg-secondary">Inactive</span>
+            {% endif %}<br>
+            <strong>Assigned Date:</strong> {{ phone_assignment.assigned_date|date:"M d, Y H:i A" }}<br>
+            <strong>Assigned By:</strong> {{ phone_assignment.assigned_by.username }}
+          </div>
+        </div>
+      </div>
+      
+      {% if phone_assignment.notes %}
+        <div class="mt-3">
+          <strong>Notes:</strong><br>
+          <div class="alert alert-info">
+            {{ phone_assignment.notes }}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Confirmation Form -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-warning">
+      <h6 class="card-title mb-0">
+        <i class="bx bx-error-alt me-2"></i>Confirm Deletion
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="alert alert-warning d-flex align-items-center">
+        <i class="bx bx-error-alt fs-3 me-3"></i>
+        <div>
+          <strong>Warning:</strong> This action cannot be undone. The phone number will become available for reassignment.
+        </div>
+      </div>
+      
+      <form method="post" class="mt-4">
+        {% csrf_token %}
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-danger">
+            <i class="bx bx-trash me-1"></i>Yes, Delete Assignment
+          </button>
+          <a href="{% url 'accounts:phone_assignment_list' %}" class="btn btn-outline-secondary">
+            <i class="bx bx-x me-1"></i>Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+<style>
+.bg-label-primary { background-color: #e7e7ff !important; color: #696cff !important; }
+.bg-label-secondary { background-color: #6c757d !important; color: #ffffff !important; }
+.bg-label-official { background-color: #fff4dd !important; color: #ffab00 !important; }
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+}
+
+.avatar-lg {
+  width: 3rem;
+  height: 3rem;
+  font-size: 1.25rem;
+}
+
+.bg-opacity-10 {
+  opacity: 0.1 !important;
+}
+
+.card {
+  border-radius: 0.5rem;
+}
+
+.card-header {
+  border-radius: 0.5rem 0.5rem 0 0 !important;
+}
+</style>

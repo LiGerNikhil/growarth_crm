@@ -1,0 +1,351 @@
+{% extends "base/layout.html" %}
+{% load static %}
+{% load lead_filters %}
+
+{% block title %}Interview Dashboard{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+  <div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Page Header -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+            <h4 class="card-title mb-0">
+              <i class="bx bx-calendar-event me-2"></i>
+              Interview Dashboard
+            </h4>
+            <div class="d-flex gap-2 flex-wrap">
+              <a href="{% url 'accounts:add_candidate' %}" class="btn btn-primary">
+                <i class="bx bx-user-plus me-1"></i>Add Candidate
+              </a>
+              <a href="{% url 'accounts:schedule_interview' %}" class="btn btn-success">
+                <i class="bx bx-calendar-plus me-1"></i>Schedule Interview
+              </a>
+              {% if current_employee.is_admin or current_employee.is_superadmin or current_employee.is_hr %}
+                <a href="{% url 'accounts:send_interview_reminders' %}" class="btn btn-warning">
+                  <i class="bx bx-bell me-1"></i>Send Reminders
+                </a>
+              {% endif %}
+              <a href="{% url 'accounts:candidate_list' %}" class="btn btn-outline-secondary">
+                <i class="bx bx-group me-1"></i>All Candidates
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+      <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card bg-primary text-white">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="flex-grow-1">
+                <h3 class="mb-1">{{ today_interviews|length }}</h3>
+                <p class="mb-0">Today's Interviews</p>
+              </div>
+              <div class="flex-shrink-0">
+                <i class="bx bx-calendar" style="font-size: 2rem;"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card bg-success text-white">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="flex-grow-1">
+                <h3 class="mb-1">{{ all_interviews|length }}</h3>
+                <p class="mb-0">Upcoming (7 Days)</p>
+              </div>
+              <div class="flex-shrink-0">
+                <i class="bx bx-calendar-check" style="font-size: 2rem;"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card bg-warning text-white">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="flex-grow-1">
+                <h3 class="mb-1">{{ interviews_needing_reminders|length }}</h3>
+                <p class="mb-0">Need Reminders</p>
+              </div>
+              <div class="flex-shrink-0">
+                <i class="bx bx-bell" style="font-size: 2rem;"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card bg-info text-white">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="flex-grow-1">
+                <h3 class="mb-1">{{ user_interviews|length }}</h3>
+                <p class="mb-0">My Interviews</p>
+              </div>
+              <div class="flex-shrink-0">
+                <i class="bx bx-user" style="font-size: 2rem;"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interviews Needing Reminders -->
+    {% if interviews_needing_reminders %}
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card border-warning">
+            <div class="card-header bg-warning text-white">
+              <h5 class="card-title mb-0">
+                <i class="bx bx-bell me-2"></i>
+                Interviews Needing Reminders (24h)
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-hover table-striped">
+                  <thead class="table-dark">
+                    <tr>
+                      <th>Candidate</th>
+                      <th>Interview Type</th>
+                      <th>Scheduled Date</th>
+                      <th>Primary Interviewer</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for interview in interviews_needing_reminders %}
+                      <tr class="table-warning">
+                        <td>
+                          <a href="{% url 'accounts:interview_detail' interview.pk %}" class="text-decoration-none">
+                            {{ interview.candidate.full_name }}
+                          </a>
+                        </td>
+                        <td>
+                          <span class="badge bg-{{ interview.interview_type|status_color }}">
+                            {{ interview.get_interview_type_display }}
+                          </span>
+                        </td>
+                        <td>
+                          {% if interview.is_today %}
+                            <span class="badge bg-danger">Today</span>
+                          {% endif %}
+                          {{ interview.scheduled_date|date:"Y-m-d H:i" }}
+                        </td>
+                        <td>
+                          {% if interview.primary_interviewer %}
+                            {{ interview.primary_interviewer.user.get_full_name }}
+                          {% else %}
+                            <span class="text-muted">Not assigned</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          <a href="{% url 'accounts:interview_detail' interview.pk %}" class="btn btn-sm btn-primary">
+                            <i class="bx bx-eye me-1"></i>View
+                          </a>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Today's Interviews -->
+    {% if today_interviews %}
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="card-title mb-0">
+                <i class="bx bx-calendar me-2"></i>
+                Today's Interviews
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-hover table-striped">
+                  <thead class="table-dark">
+                    <tr>
+                      <th>Candidate</th>
+                      <th>Interview Type</th>
+                      <th>Time</th>
+                      <th>Duration</th>
+                      <th>Location</th>
+                      <th>Interviewer</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for interview in today_interviews %}
+                      <tr>
+                        <td>
+                          <a href="{% url 'accounts:interview_detail' interview.pk %}" class="text-decoration-none">
+                            {{ interview.candidate.full_name }}
+                          </a>
+                        </td>
+                        <td>
+                          <span class="badge bg-{{ interview.interview_type|status_color }}">
+                            {{ interview.get_interview_type_display }}
+                          </span>
+                        </td>
+                        <td>
+                          <strong>{{ interview.scheduled_date|date:"H:i" }}</strong>
+                        </td>
+                        <td>{{ interview.duration }} min</td>
+                        <td>
+                          {% if interview.interview_link %}
+                            <a href="{{ interview.interview_link }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                              <i class="bx bx-link me-1"></i>Join
+                            </a>
+                          {% else %}
+                            {{ interview.location }}
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if interview.primary_interviewer %}
+                            {{ interview.primary_interviewer.user.get_full_name }}
+                          {% else %}
+                            <span class="text-muted">Not assigned</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          <a href="{% url 'accounts:interview_detail' interview.pk %}" class="btn btn-sm btn-primary">
+                            <i class="bx bx-edit me-1"></i>Update
+                          </a>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Upcoming Interviews -->
+    {% if all_interviews %}
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="card-title mb-0">
+                <i class="bx bx-calendar-check me-2"></i>
+                Upcoming Interviews (Next 7 Days)
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-hover table-striped">
+                  <thead class="table-dark">
+                    <tr>
+                      <th>Candidate</th>
+                      <th>Position</th>
+                      <th>Interview Type</th>
+                      <th>Date & Time</th>
+                      <th>Duration</th>
+                      <th>Primary Interviewer</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for interview in all_interviews %}
+                      <tr>
+                        <td>
+                          <a href="{% url 'accounts:interview_detail' interview.pk %}" class="text-decoration-none">
+                            {{ interview.candidate.full_name }}
+                          </a>
+                        </td>
+                        <td>{{ interview.candidate.position_applied }}</td>
+                        <td>
+                          <span class="badge bg-{{ interview.interview_type|status_color }}">
+                            {{ interview.get_interview_type_display }}
+                          </span>
+                        </td>
+                        <td>
+                          {% if interview.is_today %}
+                            <span class="badge bg-danger">Today</span>
+                          {% endif %}
+                          {{ interview.scheduled_date|date:"Y-m-d H:i" }}
+                        </td>
+                        <td>{{ interview.duration }} min</td>
+                        <td>
+                          {% if interview.primary_interviewer %}
+                            {{ interview.primary_interviewer.user.get_full_name }}
+                          {% else %}
+                            <span class="text-muted">Not assigned</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          <span class="badge bg-{{ interview.status|status_color }}">
+                            {{ interview.get_status_display }}
+                          </span>
+                        </td>
+                        <td>
+                          <div class="dropdown">
+                            <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                              <i class="bx bx-dots-horizontal-rounded"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                              <li>
+                                <a class="dropdown-item" href="{% url 'accounts:interview_detail' interview.pk %}">
+                                  <i class="bx bx-eye me-2"></i>View Details
+                                </a>
+                              </li>
+                              <li>
+                                <a class="dropdown-item" href="{% url 'accounts:schedule_interview_for_candidate' interview.candidate.pk %}">
+                                  <i class="bx bx-calendar-plus me-2"></i>Reschedule
+                                </a>
+                              </li>
+                            </ul>
+                          </div>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-body text-center py-5">
+              <i class="bx bx-calendar-x" style="font-size: 3rem; color: #6c757d;"></i>
+              <h5 class="mt-3">No Upcoming Interviews</h5>
+              <p class="text-muted">There are no interviews scheduled for the next 7 days.</p>
+              <a href="{% url 'accounts:schedule_interview' %}" class="btn btn-primary">
+                <i class="bx bx-calendar-plus me-1"></i>Schedule First Interview
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

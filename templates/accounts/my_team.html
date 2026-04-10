@@ -1,0 +1,197 @@
+{% extends "base/layout.html" %}
+
+{% block title %}My Team{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">My Team</h5>
+        {% if manager %}
+          <a href="{% url 'accounts:staff_management' %}" class="btn btn-outline-primary">
+            <i class="bx bx-user-plus me-1"></i>Assign Employee
+          </a>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        
+        <!-- Manager View -->
+        {% if manager %}
+        <div class="mb-4">
+          <div class="alert alert-info">
+            <i class="bx bx-info-circle me-2"></i>
+            As a manager, you can see all team leaders under your supervision and their respective team members.
+          </div>
+        </div>
+        
+        <!-- Team Leaders Section -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <h6 class="mb-3">Team Leaders Under Your Supervision ({{ team_leader_count }})</h6>
+            {% if team_leaders %}
+              <div class="row">
+                {% for team_leader in team_leaders %}
+                  <div class="col-md-6 mb-3">
+                    <div class="card">
+                      <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                          <div class="avatar avatar-sm me-3">
+                            <div class="avatar-initial rounded-circle bg-info text-white">
+                              {{ team_leader.first_name.0 }}
+                            </div>
+                          </div>
+                          <div>
+                            <h6 class="mb-0">
+                              <a href="{% url 'accounts:team_leader_assignment' team_leader.pk %}" class="text-decoration-none">
+                                {{ team_leader.full_name }}
+                              </a>
+                            </h6>
+                            <small class="text-muted">{{ team_leader.position }}</small>
+                          </div>
+                        </div>
+                        
+                        <!-- Team members for this team leader -->
+                        {% for team_leader_key, members in team_members_by_leader.items %}
+                          {% if team_leader_key.pk == team_leader.pk %}
+                            {% if members %}
+                              <div class="list-group list-group-flush">
+                                {% for member in members %}
+                                  <div class="list-group-item px-0 d-flex align-items-center">
+                                    <div class="avatar avatar-xs me-2">
+                                      <div class="avatar-initial rounded-circle bg-success text-white">
+                                        {{ member.first_name.0 }}
+                                      </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                      <div class="fw-medium">{{ member.full_name }}</div>
+                                      <small class="text-muted">{{ member.position }}</small>
+                                    </div>
+                                    <a href="{% url 'accounts:staff_detail' member.pk %}" class="btn btn-sm btn-outline-primary">
+                                      <i class="bx bx-eye"></i>
+                                    </a>
+                                  </div>
+                                {% endfor %}
+                              </div>
+                            {% else %}
+                              <p class="text-muted mb-0">No team members assigned</p>
+                            {% endif %}
+                          {% endif %}
+                        {% endfor %}
+                      </div>
+                      <div class="card-footer">
+                        <a href="{% url 'accounts:team_leader_assignment' team_leader.pk %}" class="btn btn-sm btn-outline-primary w-100">
+                          <i class="bx bx-user-plus me-1"></i>Manage Team Members
+                        </a>
+                      </div>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="alert alert-warning">
+                <i class="bx bx-user-x me-2"></i>
+                No team leaders are currently assigned to your supervision.
+              </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+        
+        <!-- Team Leader View -->
+        {% if team_leader %}
+        <div class="mb-4">
+          <div class="d-flex align-items-center mb-3">
+            <div class="avatar avatar-lg me-3">
+              <div class="avatar-initial rounded-circle bg-primary text-white">
+                {{ team_leader.first_name.0 }}
+              </div>
+            </div>
+            <div>
+              <h5 class="mb-0">{{ team_leader.full_name }}</h5>
+              <p class="text-muted mb-0">{{ team_leader.position }} • Team Leader</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-12">
+            <h6 class="mb-3">Team Members ({{ member_count }})</h6>
+            {% if team_members %}
+              <div class="list-group">
+                {% for member in team_members %}
+                  <div class="list-group-item d-flex align-items-center">
+                    <div class="avatar avatar-sm me-3">
+                      <div class="avatar-initial rounded-circle bg-success text-white">
+                        {{ member.first_name.0 }}
+                      </div>
+                    </div>
+                    <div class="flex-grow-1">
+                      <div class="fw-medium">{{ member.full_name }}</div>
+                      <small class="text-muted">{{ member.position }} • {{ member.get_department_display }}</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                      <a href="{% url 'accounts:staff_detail' member.pk %}" class="btn btn-sm btn-outline-primary">
+                        <i class="bx bx-eye"></i> View
+                      </a>
+                      <a href="{% url 'accounts:assign_employee_to_team' member.pk %}" class="btn btn-sm btn-outline-warning">
+                        <i class="bx bx-transfer"></i> Reassign
+                      </a>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="alert alert-info">
+                <i class="bx bx-user-x me-2"></i>
+                No team members assigned to you yet.
+              </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+        
+        <!-- Employee View -->
+        {% if employee and team_leader %}
+        <div class="row">
+          <div class="col-md-6">
+            <div class="text-center">
+              <div class="avatar avatar-xl mb-3">
+                <div class="avatar-initial rounded-circle bg-secondary text-white">
+                  {{ employee.first_name.0 }}
+                </div>
+              </div>
+              <h5 class="mb-1">{{ employee.full_name }}</h5>
+              <p class="text-muted mb-3">{{ employee.position }}</p>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <h6 class="mb-3">Your Team Leader</h6>
+            <div class="card">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="avatar avatar-sm me-3">
+                    <div class="avatar-initial rounded-circle bg-info text-white">
+                      {{ team_leader.first_name.0 }}
+                    </div>
+                  </div>
+                  <div class="flex-grow-1">
+                    <div class="fw-medium">{{ team_leader.full_name }}</div>
+                    <small class="text-muted">{{ team_leader.position }}</small>
+                  </div>
+                  <a href="{% url 'accounts:staff_detail' team_leader.pk %}" class="btn btn-sm btn-outline-primary">
+                    <i class="bx bx-message-square-detail"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+        
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

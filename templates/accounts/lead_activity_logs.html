@@ -1,0 +1,271 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Lead Activity Logs - Admin{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+          <i class="bx bx-history me-2"></i>Lead Activity Logs
+        </h5>
+        <a href="{% url 'core:dashboard' %}" class="btn btn-outline-secondary">
+          <i class="bx bx-arrow-left me-1"></i>Back to Dashboard
+        </a>
+      </div>
+      <div class="card-body">
+        
+        <!-- Filters -->
+        <form method="get" class="mb-4">
+          <div class="row g-3">
+            <div class="col-md-2">
+              <label for="lead_id" class="form-label">
+                <i class="bx bx-target-lock me-1"></i>Lead ID
+              </label>
+              <input type="text" name="lead_id" id="lead_id" class="form-control" 
+                     value="{{ lead_id_filter }}" placeholder="Enter lead ID">
+            </div>
+            
+            <div class="col-md-2">
+              <label for="action_type" class="form-label">
+                <i class="bx bx-filter me-1"></i>Action Type
+              </label>
+              <select name="action_type" id="action_type" class="form-select">
+                <option value="">All Actions</option>
+                {% for action_type, label in action_types %}
+                  <option value="{{ action_type }}" {% if action_type == action_type_filter %}selected{% endif %}>
+                    {{ label }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <div class="col-md-2">
+              <label for="user" class="form-label">
+                <i class="bx bx-user me-1"></i>User
+              </label>
+              <select name="user" id="user" class="form-select">
+                <option value="">All Users</option>
+                {% for user in users %}
+                  <option value="{{ user.id }}" {% if user.id|stringformat:"s" == user_filter %}selected{% endif %}>
+                    {{ user.username }} ({{ user.get_full_name }})
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <div class="col-md-2">
+              <label for="start_date" class="form-label">
+                <i class="bx bx-calendar me-1"></i>Start Date
+              </label>
+              <input type="date" name="start_date" id="start_date" class="form-control" value="{{ start_date }}">
+            </div>
+            
+            <div class="col-md-2">
+              <label for="end_date" class="form-label">
+                <i class="bx bx-calendar me-1"></i>End Date
+              </label>
+              <input type="date" name="end_date" id="end_date" class="form-control" value="{{ end_date }}">
+            </div>
+            
+            <div class="col-md-2">
+              <label class="form-label">
+                <i class="bx bx-cog me-1"></i>Actions
+              </label>
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                  <i class="bx bx-search me-1"></i>Filter
+                </button>
+                <a href="{% url 'accounts:lead_activity_logs' %}" class="btn btn-outline-secondary">
+                  <i class="bx bx-x me-1"></i>Clear
+                </a>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <!-- Active Filters Summary -->
+        {% if lead_id_filter or action_type_filter or user_filter or start_date or end_date %}
+          <div class="alert alert-info mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <i class="bx bx-filter me-2"></i>
+                <strong>Active Filters:</strong>
+                {% if lead_id_filter %}Lead ID: {{ lead_id_filter }}{% endif %}
+                {% if action_type_filter %}{% if lead_id_filter %} | {% endif %}Action: {{ action_type_filter }}{% endif %}
+                {% if user_filter %}{% if lead_id_filter or action_type_filter %} | {% endif %}User: {{ user_filter }}{% endif %}
+                {% if start_date %}{% if lead_id_filter or action_type_filter or user_filter %} | {% endif %}From: {{ start_date|date:"M d, Y" }}{% endif %}
+                {% if end_date %}{% if lead_id_filter or action_type_filter or user_filter or start_date %} | {% endif %}To: {{ end_date|date:"M d, Y" }}{% endif %}
+              </div>
+              <span class="badge bg-primary">{{ page_obj.paginator.count }} activities found</span>
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- Activity Logs Table -->
+        {% if activities %}
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th width="80">ID</th>
+                  <th>Lead</th>
+                  <th>User</th>
+                  <th>Action</th>
+                  <th>Old Value</th>
+                  <th>New Value</th>
+                  <th>Description</th>
+                  <th>Date/Time</th>
+                  <th>IP Address</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for activity in activities %}
+                  <tr>
+                    <td>
+                      <span class="badge bg-light text-dark">{{ activity.id }}</span>
+                    </td>
+                    <td>
+                      {% if activity.lead %}
+                        <a href="{% url 'accounts:lead_detail' activity.lead.pk %}" 
+                           class="text-primary text-decoration-none" target="_blank">
+                          <div class="d-flex align-items-center">
+                            <div class="avatar avatar-sm bg-label-primary rounded-circle me-2">
+                              <span>{{ activity.lead.first_name.0 }}{{ activity.lead.last_name.0 }}</span>
+                            </div>
+                            <div>
+                              <div class="fw-medium">{{ activity.lead.get_full_name }}</div>
+                              <small class="text-muted">ID: {{ activity.lead.pk }}</small>
+                            </div>
+                          </div>
+                        </a>
+                      {% else %}
+                        <span class="text-muted">Lead deleted</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="avatar avatar-sm bg-label-success rounded-circle me-2">
+                          <span>{{ activity.user.username.0|upper }}</span>
+                        </div>
+                        <div>
+                          <div class="fw-medium">{{ activity.user.get_full_name }}</div>
+                          <small class="text-muted">@{{ activity.user.username }}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge bg-{{ 
+                        'success' if activity.action_type == 'created' else
+                        'info' if activity.action_type == 'updated' else
+                        'primary' if activity.action_type == 'assigned' else
+                        'warning' if activity.action_type == 'unassigned' else
+                        'secondary' if activity.action_type == 'status_changed' else
+                        'info' if activity.action_type == 'note_added' else
+                        'success' if activity.action_type == 'converted' else
+                        'danger' if activity.action_type == 'deleted' else
+                        'light text-dark'
+                      }}">
+                        {{ activity.get_action_type_display }}
+                      </span>
+                    </td>
+                    <td>
+                      {% if activity.old_value %}
+                        <span class="text-muted">{{ activity.old_value|truncatechars:30 }}</span>
+                      {% else %}
+                        <span class="text-muted">-</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if activity.new_value %}
+                        <span class="text-primary">{{ activity.new_value|truncatechars:30 }}</span>
+                      {% else %}
+                        <span class="text-muted">-</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if activity.description %}
+                        <span class="text-muted">{{ activity.description|truncatechars:50 }}</span>
+                      {% else %}
+                        <span class="text-muted">-</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <div>
+                        <div>{{ activity.created_at|date:"M d, Y" }}</div>
+                        <small class="text-muted">{{ activity.created_at|time:"g:i A" }}</small>
+                      </div>
+                    </td>
+                    <td>
+                      {% if activity.ip_address %}
+                        <code class="text-muted">{{ activity.ip_address }}</code>
+                      {% else %}
+                        <span class="text-muted">-</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <a href="{% url 'accounts:lead_activity_detail' activity.pk %}" 
+                         class="btn btn-sm btn-outline-primary">
+                        <i class="bx bx-eye"></i>
+                      </a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          {% if page_obj.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+              <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if lead_id_filter %}&lead_id={{ lead_id_filter }}{% endif %}{% if action_type_filter %}&action_type={{ action_type_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}">
+                      <i class="bx bx-chevron-left"></i>
+                    </a>
+                  </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                  {% if page_obj.number == num %}
+                    <li class="page-item active">
+                      <span class="page-link">{{ num }}</span>
+                    </li>
+                  {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ num }}{% if lead_id_filter %}&lead_id={{ lead_id_filter }}{% endif %}{% if action_type_filter %}&action_type={{ action_type_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}">{{ num }}</a>
+                    </li>
+                  {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if lead_id_filter %}&lead_id={{ lead_id_filter }}{% endif %}{% if action_type_filter %}&action_type={{ action_type_filter }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}">
+                      <i class="bx bx-chevron-right"></i>
+                    </a>
+                  </li>
+                {% endif %}
+              </ul>
+            </nav>
+          {% endif %}
+        {% else %}
+          <div class="text-center py-5">
+            <i class="bx bx-history fs-1 text-muted mb-3"></i>
+            <h6 class="mb-2">No Activity Logs Found</h6>
+            <p class="text-muted">
+              {% if lead_id_filter or action_type_filter or user_filter or start_date or end_date %}
+                Try adjusting your filters to see more results.
+              {% else %}
+                No lead activities have been recorded yet.
+              {% endif %}
+            </p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,466 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Upload Excel Data - Lead Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-1">
+        <i class="bx bx-cloud-upload text-primary me-2"></i>Upload Excel Data
+      </h4>
+      <p class="text-muted mb-0">Import leads from Excel or CSV files</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'accounts:excel_batch_list' %}" class="btn btn-outline-secondary">
+        <i class="bx bx-history me-1"></i>Upload History
+      </a>
+      <a href="{% url 'accounts:lead_list' %}" class="btn btn-outline-primary">
+        <i class="bx bx-list-ul me-1"></i>View Leads
+      </a>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="row">
+    <!-- Upload Form Section -->
+    <div class="col-lg-8">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white border-bottom">
+          <h6 class="mb-0">
+            <i class="bx bx-file-plus text-primary me-2"></i>Upload New Batch
+          </h6>
+        </div>
+        <div class="card-body">
+          <!-- Progress Indicator -->
+          <div id="upload-progress" class="alert alert-info d-none mb-4">
+            <div class="d-flex align-items-center">
+              <div class="spinner-border spinner-border-sm me-3" role="status">
+                <span class="visually-hidden">Processing...</span>
+              </div>
+              <div class="flex-grow-1">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span id="progress-text">Preparing upload...</span>
+                  <span id="progress-percent">0%</span>
+                </div>
+                <div class="progress" style="height: 6px;">
+                  <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" 
+                       role="progressbar" style="width: 0%" id="progress-bar"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <form method="post" enctype="multipart/form-data" id="upload-form" novalidate>
+            {% csrf_token %}
+            
+            <!-- Batch Name -->
+            <div class="mb-4">
+              <label for="{{ form.batch_name.id_for_label }}" class="form-label fw-semibold">
+                <i class="bx bx-tag text-muted me-1"></i>Batch Name
+                <span class="text-danger">*</span>
+              </label>
+              {{ form.batch_name }}
+              {% if form.batch_name.errors %}
+                <div class="invalid-feedback d-block mt-1">
+                  {{ form.batch_name.errors.0 }}
+                </div>
+              {% endif %}
+              <div class="form-text">
+                <i class="bx bx-info-circle"></i> Give this batch a descriptive name (e.g., "January 2024 Website Leads")
+              </div>
+            </div>
+
+            <!-- File Upload -->
+            <div class="mb-4">
+              <label for="{{ form.excel_file.id_for_label }}" class="form-label fw-semibold">
+                <i class="bx bx-file text-muted me-1"></i>Excel File
+                <span class="text-danger">*</span>
+              </label>
+              <div class="file-upload-wrapper">
+                <div class="file-upload-area" id="file-upload-area">
+                  <input type="file" name="excel_file" id="{{ form.excel_file.id_for_label }}" 
+                         class="file-input" accept=".xlsx,.xls,.csv" required>
+                  <div class="file-upload-content text-center">
+                    <i class="bx bx-cloud-upload fs-1 text-primary mb-3"></i>
+                    <h6 class="mb-2">Drop file here or click to browse</h6>
+                    <p class="text-muted mb-3">Support for Excel (.xlsx, .xls) and CSV files</p>
+                    <button type="button" class="btn btn-outline-primary btn-sm">
+                      <i class="bx bx-folder-open me-1"></i>Choose File
+                    </button>
+                  </div>
+                </div>
+                <div id="file-preview" class="d-none">
+                  <div class="alert alert-success d-flex align-items-center">
+                    <i class="bx bx-file fs-4 me-3"></i>
+                    <div class="flex-grow-1">
+                      <div class="fw-semibold" id="file-name"></div>
+                      <small class="text-muted" id="file-size"></small>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearFile()">
+                      <i class="bx bx-x"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              {% if form.excel_file.errors %}
+                <div class="invalid-feedback d-block mt-1">
+                  {{ form.excel_file.errors.0 }}
+                </div>
+              {% endif %}
+              <div class="form-text">
+                <i class="bx bx-info-circle"></i> Maximum file size: 10MB. All data will be processed as uploaded.
+              </div>
+            </div>
+
+            <!-- Advanced Options -->
+            <div class="mb-4">
+              <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#advancedOptions">
+                <i class="bx bx-cog me-1"></i>Advanced Options
+                <i class="bx bx-chevron-down ms-1"></i>
+              </button>
+              <div class="collapse mt-3" id="advancedOptions">
+                <div class="card bg-light border">
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="mb-3">
+                          <label for="skip_rows" class="form-label">Skip Header Rows</label>
+                          <input type="number" name="skip_rows" id="skip_rows" class="form-control" 
+                                 value="0" min="0" max="10">
+                          <small class="text-muted">Number of rows to skip at the beginning</small>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="mb-3">
+                          <label for="sheet_name" class="form-label">Sheet Name (Excel only)</label>
+                          <input type="text" name="sheet_name" id="sheet_name" class="form-control" 
+                                   placeholder="Leave empty for first sheet">
+                          <small class="text-muted">Specific sheet name to process</small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary btn-lg px-4" id="upload-btn">
+                <i class="bx bx-cloud-upload me-2"></i>Upload and Process
+              </button>
+              <button type="reset" class="btn btn-outline-secondary btn-lg px-4" onclick="resetForm()">
+                <i class="bx bx-refresh me-2"></i>Reset
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Instructions Section -->
+    <div class="col-lg-4">
+      <!-- Instructions Card -->
+      <div class="card shadow-sm border-0 mb-3">
+        <div class="card-header bg-white border-bottom">
+          <h6 class="mb-0">
+            <i class="bx bx-info-circle text-primary me-2"></i>Upload Instructions
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <h6 class="text-primary mb-2">
+              <i class="bx bx-check-circle me-1"></i>Required Columns
+            </h6>
+            <p class="small text-muted mb-2">At minimum, your file should contain:</p>
+            <ul class="small mb-0">
+              <li><code>first_name</code> - Contact's first name</li>
+              <li><code>last_name</code> - Contact's last name</li>
+            </ul>
+          </div>
+
+          <div class="mb-3">
+            <h6 class="text-primary mb-2">
+              <i class="bx bx-plus-circle me-1"></i>Optional Columns
+            </h6>
+            <p class="small text-muted mb-2">Additional data will be stored:</p>
+            <ul class="small mb-0">
+              <li><code>email</code>, <code>phone</code>, <code>company</code></li>
+              <li><code>position</code>, <code>department</code>, <code>source</code></li>
+              <li>Any custom columns you include</li>
+            </ul>
+          </div>
+
+          <div class="mb-3">
+            <h6 class="text-warning mb-2">
+              <i class="bx bx-error-circle me-1"></i>Important Notes
+            </h6>
+            <ul class="small mb-0 text-muted">
+              <li>All data will be processed as-is</li>
+              <li>No required field validation</li>
+              <li>Missing fields will use defaults</li>
+              <li>Duplicate emails will be handled</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sample Format Card -->
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white border-bottom">
+          <h6 class="mb-0">
+            <i class="bx bx-table text-primary me-2"></i>Sample Format
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered">
+              <thead class="table-light">
+                <tr>
+                  <th>first_name</th>
+                  <th>last_name</th>
+                  <th>email</th>
+                  <th>phone</th>
+                  <th>company</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>John</td>
+                  <td>Doe</td>
+                  <td>john@example.com</td>
+                  <td>555-0123</td>
+                  <td>ABC Corp</td>
+                </tr>
+                <tr>
+                  <td>Jane</td>
+                  <td>Smith</td>
+                  <td>jane@example.com</td>
+                  <td>-</td>
+                  <td>XYZ Ltd</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <small class="text-muted">Additional columns will be automatically included.</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.file-upload-wrapper {
+  position: relative;
+}
+
+.file-upload-area {
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background-color: #f8f9fa;
+}
+
+.file-upload-area:hover {
+  border-color: #696cff;
+  background-color: #f0f4ff;
+}
+
+.file-upload-area.dragover {
+  border-color: #696cff;
+  background-color: #f0f4ff;
+  transform: scale(1.02);
+}
+
+.file-input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+}
+
+.card {
+  transition: transform 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.btn-lg {
+  font-weight: 500;
+  border-radius: 6px;
+}
+
+.form-control-lg {
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control-lg:focus {
+  border-color: #696cff;
+  box-shadow: 0 0 0 0.2rem rgba(105, 108, 255, 0.25);
+}
+
+.alert {
+  border-radius: 6px;
+  border: none;
+}
+
+.progress {
+  border-radius: 3px;
+  background-color: #e9ecef;
+}
+
+.progress-bar {
+  border-radius: 3px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('{{ form.excel_file.id_for_label }}');
+    const fileUploadArea = document.getElementById('file-upload-area');
+    const filePreview = document.getElementById('file-preview');
+    const fileName = document.getElementById('file-name');
+    const fileSize = document.getElementById('file-size');
+    const uploadForm = document.getElementById('upload-form');
+    const uploadBtn = document.getElementById('upload-btn');
+    const uploadProgress = document.getElementById('upload-progress');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    const progressPercent = document.getElementById('progress-percent');
+
+    // File selection
+    fileUploadArea.addEventListener('click', () => fileInput.click());
+    
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            handleFileSelect(file);
+        }
+    });
+
+    // Drag and drop
+    fileUploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('dragover');
+    });
+
+    fileUploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+    });
+
+    fileUploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            handleFileSelect(files[0]);
+        }
+    });
+
+    function handleFileSelect(file) {
+        // Validate file size (10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            alert('File size exceeds 10MB limit. Please choose a smaller file.');
+            clearFile();
+            return;
+        }
+
+        // Validate file type
+        const validTypes = ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/csv'];
+        if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
+            alert('Please select a valid Excel or CSV file.');
+            clearFile();
+            return;
+        }
+
+        // Show file preview
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        fileUploadArea.style.display = 'none';
+        filePreview.classList.remove('d-none');
+    }
+
+    function clearFile() {
+        fileInput.value = '';
+        fileUploadArea.style.display = 'block';
+        filePreview.classList.add('d-none');
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Form submission
+    uploadForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Validate file is selected
+        if (!fileInput.files.length) {
+            alert('Please select a file to upload.');
+            return;
+        }
+
+        // Show progress
+        uploadProgress.classList.remove('d-none');
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin me-2"></i>Processing...';
+
+        // Simulate progress
+        let progressValue = 0;
+        const interval = setInterval(() => {
+            progressValue += Math.random() * 30;
+            if (progressValue > 90) progressValue = 90;
+            progressBar.style.width = progressValue + '%';
+            progressPercent.textContent = Math.round(progressValue) + '%';
+            
+            if (progressValue < 30) {
+                progressText.textContent = 'Validating file...';
+            } else if (progressValue < 60) {
+                progressText.textContent = 'Processing data...';
+            } else {
+                progressText.textContent = 'Creating leads...';
+            }
+        }, 500);
+
+        // Submit form
+        setTimeout(() => {
+            uploadForm.submit();
+        }, 2000);
+    });
+
+    // Reset form
+    window.resetForm = function() {
+        uploadForm.reset();
+        clearFile();
+        uploadProgress.classList.add('d-none');
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = '<i class="bx bx-cloud-upload me-2"></i>Upload and Process';
+        progressBar.style.width = '0%';
+        progressPercent.textContent = '0%';
+    };
+
+    window.clearFile = clearFile;
+    }
+  });
+});
+</script>
+{% endblock %}

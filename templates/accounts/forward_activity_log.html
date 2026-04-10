@@ -1,0 +1,513 @@
+{% extends 'base/layout.html' %}
+{% load static %}
+
+{% block title %}Activity Log - Lead {{ forward.lead.id }}{% endblock %}
+
+{% block page_css %}
+<style>
+.activity-log-container {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  min-height: 100vh;
+  padding: 1rem 0;
+}
+
+.main-header {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-bottom: 1px solid #e9ecef;
+  padding: 2rem 0;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.header-content {
+  text-align: center;
+}
+
+.main-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.main-header p {
+  font-size: 1.1rem;
+  color: #6c757d;
+  margin: 0;
+}
+
+.lead-summary {
+  background: white;
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e9ecef;
+  margin-bottom: 2rem;
+}
+
+.lead-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.lead-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.lead-id {
+  font-size: 0.9rem;
+  color: #6c757d;
+  font-family: 'Courier New', monospace;
+  background: #f8f9fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.status-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 25px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-accepted {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-rejected {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.status-completed {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.lead-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #495057;
+  min-width: 80px;
+}
+
+.detail-value {
+  color: #6c757d;
+}
+
+.forward-info {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #007bff;
+}
+
+.forward-title {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.forward-details {
+  font-size: 0.9rem;
+  color: #6c757d;
+  line-height: 1.6;
+}
+
+.forward-message {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 6px;
+  font-style: italic;
+  color: #495057;
+}
+
+.activity-section {
+  background: white;
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e9ecef;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.activity-timeline {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.activity-timeline::before {
+  content: '';
+  position: absolute;
+  left: 0.5rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #e9ecef;
+}
+
+.activity-item {
+  position: relative;
+  padding-bottom: 2rem;
+}
+
+.activity-item:last-child {
+  padding-bottom: 0;
+}
+
+.activity-item::before {
+  content: '';
+  position: absolute;
+  left: -1.5rem;
+  top: 0.5rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #007bff;
+  border: 2px solid white;
+  box-shadow: 0 0 0 2px #e9ecef;
+}
+
+.activity-item.created::before {
+  background: #28a745;
+}
+
+.activity-item.updated::before {
+  background: #17a2b8;
+}
+
+.activity-item.assigned::before {
+  background: #ffc107;
+}
+
+.activity-item.status_changed::before {
+  background: #dc3545;
+}
+
+.activity-item.forwarded::before {
+  background: #6f42c1;
+}
+
+.activity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 0.75rem;
+}
+
+.activity-type {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: #e9ecef;
+  color: #495057;
+}
+
+.activity-type.created {
+  background: #d4edda;
+  color: #155724;
+}
+
+.activity-type.updated {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.activity-type.assigned {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.activity-type.status_changed {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.activity-type.forwarded {
+  background: #e2d9f3;
+  color: #6f42c1;
+}
+
+.activity-time {
+  font-size: 0.85rem;
+  color: #6c757d;
+  white-space: nowrap;
+}
+
+.activity-content {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 3px solid #007bff;
+}
+
+.activity-description {
+  color: #495057;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+}
+
+.activity-user {
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.no-activities {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #6c757d;
+}
+
+.no-activities i {
+  font-size: 3rem;
+  color: #dee2e6;
+  margin-bottom: 1rem;
+}
+
+.back-btn {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+  color: white;
+  text-decoration: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .main-header h1 {
+    font-size: 2rem;
+  }
+  
+  .lead-summary-header {
+    flex-direction: column;
+    align-items: start;
+    gap: 1rem;
+  }
+  
+  .lead-details {
+    grid-template-columns: 1fr;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: start;
+    gap: 1rem;
+  }
+  
+  .activity-header {
+    flex-direction: column;
+    align-items: start;
+    gap: 0.5rem;
+  }
+  
+  .activity-timeline {
+    padding-left: 1.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .lead-summary,
+  .activity-section {
+    padding: 1.5rem;
+  }
+  
+  .main-header {
+    padding: 1.5rem 0;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="activity-log-container">
+  <div class="container-fluid">
+    
+    <!-- Main Header -->
+    <div class="main-header">
+      <div class="container">
+        <div class="header-content">
+          <h1><i class="bx bx-history me-3"></i>Activity Log</h1>
+          <p>Complete history for Lead #{{ forward.lead.id }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      
+      <!-- Lead Summary -->
+      <div class="lead-summary">
+        <div class="lead-summary-header">
+          <div>
+            <div class="lead-title">{{ forward.lead.name }}</div>
+            <div class="lead-id">Lead #{{ forward.lead.id }}</div>
+          </div>
+          <div class="status-badge status-{{ forward.status }}">
+            {{ forward.get_status_display }}
+          </div>
+        </div>
+
+        <div class="lead-details">
+          <div class="detail-item">
+            <span class="detail-label">Email:</span>
+            <span class="detail-value">{{ forward.lead.email }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Phone:</span>
+            <span class="detail-value">{{ forward.lead.phone|default:"N/A" }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Type:</span>
+            <span class="detail-value">{{ forward.lead.get_lead_type_display }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Source:</span>
+            <span class="detail-value">{{ forward.lead.get_source_display }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Lead Status:</span>
+            <span class="detail-value">{{ forward.lead.get_status_display }}</span>
+          </div>
+          {% if forward.lead.loan_amount %}
+          <div class="detail-item">
+            <span class="detail-label">Loan Amount:</span>
+            <span class="detail-value">₹{{ forward.lead.loan_amount }}</span>
+          </div>
+          {% endif %}
+          <div class="detail-item">
+            <span class="detail-label">Priority:</span>
+            <span class="detail-value">{{ forward.get_priority_display }}</span>
+          </div>
+        </div>
+
+        <div class="forward-info">
+          <div class="forward-title">Forward Information</div>
+          <div class="forward-details">
+            <div><strong>Forwarded by:</strong> {{ forward.forwarded_by.get_full_name }}</div>
+            <div><strong>Forwarded to:</strong> {{ forward.forwarded_to.get_full_name }}</div>
+            <div><strong>Forwarded on:</strong> {{ forward.forwarded_at|date:"M d, Y H:i" }}</div>
+            {% if forward.accepted_at %}
+            <div><strong>Accepted on:</strong> {{ forward.accepted_at|date:"M d, Y H:i" }}</div>
+            {% endif %}
+            {% if forward.completed_at %}
+            <div><strong>Completed on:</strong> {{ forward.completed_at|date:"M d, Y H:i" }}</div>
+            {% endif %}
+          </div>
+          {% if forward.message %}
+          <div class="forward-message">
+            <strong>Message from {{ forward.forwarded_by.get_full_name }}:</strong><br>
+            {{ forward.message }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Activity Section -->
+      <div class="activity-section">
+        <div class="section-header">
+          <h3 class="section-title">Activity Timeline</h3>
+          <a href="{% url 'accounts:my_forwarded_leads' %}" class="back-btn">
+            <i class="bx bx-arrow-back"></i>
+            Back to My Leads
+          </a>
+        </div>
+
+        {% if activities %}
+          <div class="activity-timeline">
+            {% for activity in activities %}
+            <div class="activity-item {{ activity.action_type }}">
+              <div class="activity-header">
+                <span class="activity-type {{ activity.action_type }}">
+                  {{ activity.get_action_type_display }}
+                </span>
+                <span class="activity-time">
+                  {{ activity.created_at|date:"M d, Y H:i" }}
+                </span>
+              </div>
+              <div class="activity-content">
+                <div class="activity-description">
+                  {{ activity.description|default:"No description provided" }}
+                </div>
+                {% if activity.user %}
+                <div class="activity-user">
+                  by {{ activity.user.get_full_name|default:activity.user.username }}
+                </div>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="no-activities">
+            <i class="bx bx-history"></i>
+            <h4>No Activities Recorded</h4>
+            <p>No activities have been logged for this lead yet.</p>
+          </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

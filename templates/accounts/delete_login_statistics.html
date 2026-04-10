@@ -1,0 +1,111 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Delete Login Statistics{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">
+            <i class="bx bx-trash me-2"></i>Delete Login Statistics
+          </h5>
+          <a href="{% url 'accounts:login_statistics_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bx bx-arrow-left me-1"></i>Back to Dashboard
+          </a>
+        </div>
+        <div class="card-body">
+          <!-- Warning Section -->
+          <div class="alert alert-danger mb-4">
+            <div class="d-flex align-items-center">
+              <i class="bx bx-error-circle fs-4 me-3"></i>
+              <div>
+                <h6 class="alert-heading mb-1">⚠️ Delete Confirmation</h6>
+                <p class="mb-0">This action cannot be undone. The login statistics will be permanently removed from the system.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Statistics Details -->
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <h6 class="text-muted">Statistics Details</h6>
+              <table class="table table-sm">
+                <tr>
+                  <td><strong>Date:</strong></td>
+                  <td>{{ stats.date|date:"Y-m-d" }}</td>
+                </tr>
+                <tr>
+                  <td><strong>Manager:</strong></td>
+                  <td>{{ stats.manager.full_name }}</td>
+                </tr>
+                <tr>
+                  <td><strong>Team Leader:</strong></td>
+                  <td>
+                    {% if stats.team_leader %}
+                      {{ stats.team_leader.full_name }}
+                    {% else %}
+                      <span class="text-muted">-</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>File Count:</strong></td>
+                  <td>{{ stats.file_count }}</td>
+                </tr>
+                <tr>
+                  <td><strong>Login Count:</strong></td>
+                  <td>{{ stats.login_count }}</td>
+                </tr>
+                <tr>
+                  <td><strong>Total Count:</strong></td>
+                  <td>{{ stats.total_count }}</td>
+                </tr>
+                {% if stats.notes %}
+                <tr>
+                  <td><strong>Notes:</strong></td>
+                  <td>{{ stats.notes }}</td>
+                </tr>
+                {% endif %}
+              </table>
+            </div>
+          </div>
+
+          <!-- Delete Form -->
+          <form method="post">
+            {% csrf_token %}
+            <div class="row">
+              <div class="col-12">
+                <button type="submit" class="btn btn-danger" onclick="return confirmDeletion()">
+                  <i class="bx bx-trash me-2"></i>Delete Statistics Permanently
+                </button>
+                <a href="{% url 'accounts:login_statistics_dashboard' %}" class="btn btn-secondary">
+                  <i class="bx bx-x me-1"></i>Cancel
+                </a>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function confirmDeletion() {
+    return confirm(`⚠️ Are you sure you want to permanently delete these login statistics?\n\nDate: {{ stats.date|date:"Y-m-d" }}\nManager: {{ stats.manager.full_name }}\n\nThis action cannot be undone.`);
+}
+</script>
+
+<style>
+.table-sm td {
+  padding: 0.5rem;
+  vertical-align: middle;
+}
+
+.table-sm td:first-child {
+  width: 150px;
+}
+</style>
+{% endblock %}

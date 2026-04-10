@@ -1,0 +1,162 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Assign Employees to {{ team_leader.full_name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+          <h5 class="card-title mb-0">Team Leader Assignment</h5>
+          <p class="text-muted mb-0 mt-1">Manage employees assigned to {{ team_leader.full_name }}</p>
+        </div>
+        <a href="{% url 'accounts:my_team' %}" class="btn btn-outline-secondary">
+          <i class="bx bx-arrow-back me-1"></i>Back to My Team
+        </a>
+      </div>
+      <div class="card-body">
+        
+        <!-- Team Leader Info -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <div class="d-flex align-items-center p-3 bg-light rounded">
+              <div class="avatar avatar-lg me-3">
+                <div class="avatar-initial rounded-circle bg-primary text-white">
+                  {{ team_leader.first_name.0 }}
+                </div>
+              </div>
+              <div class="flex-grow-1">
+                <h5 class="mb-1">{{ team_leader.full_name }}</h5>
+                <p class="text-muted mb-0">{{ team_leader.position }} • Team Leader</p>
+                <div class="d-flex gap-3 mt-2">
+                  <span class="badge bg-label-success">{{ assigned_count }} Assigned</span>
+                  <span class="badge bg-label-info">{{ assignable_count }} Available</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Currently Assigned Employees -->
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h6 class="card-title mb-0">Currently Assigned Employees ({{ assigned_count }})</h6>
+              </div>
+              <div class="card-body">
+                {% if assigned_employees %}
+                  <div class="list-group list-group-flush">
+                    {% for employee in assigned_employees %}
+                      <div class="list-group-item px-0 d-flex align-items-center">
+                        <div class="avatar avatar-sm me-2">
+                          <div class="avatar-initial rounded-circle bg-success text-white">
+                            {{ employee.first_name.0 }}
+                          </div>
+                        </div>
+                        <div class="flex-grow-1">
+                          <div class="fw-medium">{{ employee.full_name }}</div>
+                          <small class="text-muted">{{ employee.position }} • {{ employee.get_department_display }}</small>
+                        </div>
+                        <form method="POST" class="d-inline">
+                          {% csrf_token %}
+                          <input type="hidden" name="employee_id" value="{{ employee.pk }}">
+                          <input type="hidden" name="action" value="remove">
+                          <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                  onclick="return confirm('Are you sure you want to remove {{ employee.full_name }} from this team?')">
+                            <i class="bx bx-user-x"></i> Remove
+                          </button>
+                        </form>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  <div class="text-center py-4">
+                    <i class="bx bx-user-x text-muted" style="font-size: 2rem;"></i>
+                    <p class="text-muted mb-0">No employees currently assigned</p>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Available Employees for Assignment -->
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h6 class="card-title mb-0">Available Employees ({{ assignable_count }})</h6>
+              </div>
+              <div class="card-body">
+                {% if assignable_employees %}
+                  <div class="list-group list-group-flush">
+                    {% for employee in assignable_employees %}
+                      <div class="list-group-item px-0 d-flex align-items-center">
+                        <div class="avatar avatar-sm me-2">
+                          <div class="avatar-initial rounded-circle bg-secondary text-white">
+                            {{ employee.first_name.0 }}
+                          </div>
+                        </div>
+                        <div class="flex-grow-1">
+                          <div class="fw-medium">{{ employee.full_name }}</div>
+                          <small class="text-muted">{{ employee.position }} • {{ employee.get_department_display }}</small>
+                        </div>
+                        <form method="POST" class="d-inline">
+                          {% csrf_token %}
+                          <input type="hidden" name="employee_id" value="{{ employee.pk }}">
+                          <input type="hidden" name="action" value="assign">
+                          <button type="submit" class="btn btn-sm btn-outline-primary">
+                            <i class="bx bx-user-plus"></i> Assign
+                          </button>
+                        </form>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  <div class="text-center py-4">
+                    <i class="bx bx-user-check text-muted" style="font-size: 2rem;"></i>
+                    <p class="text-muted mb-0">All employees are already assigned</p>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Assign Section -->
+        {% if assignable_employees %}
+        <div class="row">
+          <div class="col-12">
+            <div class="card bg-light">
+              <div class="card-body">
+                <h6 class="card-title mb-3">Quick Assign Multiple Employees</h6>
+                <form method="POST">
+                  {% csrf_token %}
+                  <div class="row">
+                    <div class="col-md-8">
+                      <select name="employee_id" class="form-select" required>
+                        <option value="">Select an employee to assign...</option>
+                        {% for employee in assignable_employees %}
+                          <option value="{{ employee.pk }}">{{ employee.full_name }} - {{ employee.position }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-md-4">
+                      <input type="hidden" name="action" value="assign">
+                      <button type="submit" class="btn btn-primary w-100">
+                        <i class="bx bx-user-plus me-1"></i>Assign to {{ team_leader.first_name }}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

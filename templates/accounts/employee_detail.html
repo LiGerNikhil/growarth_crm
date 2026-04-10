@@ -1,0 +1,340 @@
+{% extends "base/layout.html" %}
+
+{% block title %}{{ employee.full_name }} - Employee Details{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <!-- Employee Header -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div class="d-flex align-items-center">
+            <div class="avatar avatar-xl me-3">
+              <div class="avatar-initial rounded-circle bg-primary text-white">
+                {{ employee.first_name.0 }}{{ employee.last_name.0 }}
+              </div>
+            </div>
+            <div>
+              <h4 class="mb-1">{{ employee.full_name }}</h4>
+              <p class="text-muted mb-1">{{ employee.position }} • {{ employee.get_department_display }}</p>
+              <div class="d-flex gap-2">
+                <span class="badge bg-label-primary">{{ employee.employee_id }}</span>
+                {% if employee.employment_status == 'active' %}
+                  <span class="badge bg-label-success">Active</span>
+                {% elif employee.employment_status == 'onboarding' %}
+                  <span class="badge bg-label-warning">Onboarding</span>
+                {% elif employee.employment_status == 'inactive' %}
+                  <span class="badge bg-label-secondary">Inactive</span>
+                {% else %}
+                  <span class="badge bg-label-danger">Terminated</span>
+                {% endif %}
+                <span class="badge bg-label-info">{{ employee.get_employee_type_display }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex gap-2">
+            <a href="{% url 'accounts:employee_update' employee.pk %}" class="btn btn-outline-primary">
+              <i class="bx bx-edit me-1"></i>Edit
+            </a>
+            <a href="{% url 'accounts:upload_document' employee.pk %}" class="btn btn-outline-secondary">
+              <i class="bx bx-upload me-1"></i>Upload Document
+            </a>
+            {% if request.user.employee.is_manager or request.user.employee.is_superadmin %}
+              <a href="{% url 'accounts:assign_employee_to_team' employee.pk %}" class="btn btn-outline-info">
+                <i class="bx bx-group me-1"></i>Assign Team
+              </a>
+            {% endif %}
+            <div class="dropdown">
+              <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                Actions
+              </button>
+              <ul class="dropdown-menu">
+                <li>
+                  <a class="dropdown-item" href="{% url 'accounts:staff_detail' employee.pk %}">
+                    <i class="bx bx-eye me-2"></i>View Details
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="{% url 'accounts:employee_update' employee.pk %}">
+                    <i class="bx bx-edit me-2"></i>Edit
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="{% url 'accounts:upload_document' employee.pk %}">
+                    <i class="bx bx-upload me-2"></i>Upload Document
+                  </a>
+                </li>
+                {% if request.user.employee.is_manager or request.user.employee.is_superadmin %}
+                  <li>
+                    <a class="dropdown-item" href="{% url 'accounts:assign_employee_to_team' employee.pk %}">
+                      <i class="bx bx-group me-2"></i>Assign Team
+                    </a>
+                  </li>
+                {% endif %}
+                <li><hr class="dropdown-divider"></li>
+                {% if employee.employment_status == 'active' %}
+                <li>
+                  <a class="dropdown-item text-warning" href="{% url 'accounts:employee_deactivate' employee.pk %}">
+                    <i class="bx bx-user-x me-2"></i>Deactivate
+                  </a>
+                </li>
+                {% else %}
+                <li>
+                  <a class="dropdown-item text-success" href="{% url 'accounts:employee_activate' employee.pk %}">
+                    <i class="bx bx-user-check me-2"></i>Activate
+                  </a>
+                </li>
+                {% endif %}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Personal Information -->
+      <div class="col-md-6">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Personal Information</h5>
+          </div>
+          <div class="card-body">
+            <div class="row mb-3">
+              <div class="col-sm-4 text-muted">Email:</div>
+              <div class="col-sm-8">{{ employee.email }}</div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-sm-4 text-muted">Phone:</div>
+              <div class="col-sm-8">{{ employee.phone|default:"Not provided" }}</div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-sm-4 text-muted">Date of Birth:</div>
+              <div class="col-sm-8">{{ employee.date_of_birth|date:"M d, Y"|default:"Not provided" }}</div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-sm-4 text-muted">Address:</div>
+              <div class="col-sm-8">
+                {% if employee.address %}
+                  {{ employee.address }}<br>
+                  {{ employee.city }}, {{ employee.state }} {{ employee.postal_code }}<br>
+                  {{ employee.country }}
+                {% else %}
+                  Not provided
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Emergency Contact -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Emergency Contact</h5>
+          </div>
+          <div class="card-body">
+            <div class="row mb-3">
+              <div class="col-sm-4 text-muted">Name:</div>
+              <div class="col-sm-8">{{ employee.emergency_contact_name|default:"Not provided" }}</div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-sm-4 text-muted">Phone:</div>
+              <div class="col-sm-8">{{ employee.emergency_contact_phone|default:"Not provided" }}</div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-sm-4 text-muted">Relationship:</div>
+              <div class="col-sm-8">{{ employee.emergency_contact_relationship|default:"Not provided" }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Employment Details -->
+      <div class="col-md-6">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Employment Details</h5>
+          </div>
+          <div class="card-body">
+            <div class="row mb-3">
+              <div class="col-sm-4 text-muted">Employee ID:</div>
+              <div class="col-sm-8"><strong>{{ employee.employee_id }}</strong></div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-sm-4 text-muted">Department:</div>
+              <div class="col-sm-8">{{ employee.get_department_display }}</div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-sm-4 text-muted">Position:</div>
+              <div class="col-sm-8">{{ employee.position }}</div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-sm-4 text-muted">Manager:</div>
+              <div class="col-sm-8">
+                {% if employee.manager %}
+                  <a href="{% url 'accounts:staff_detail' employee.manager.pk %}">
+                    {{ employee.manager.full_name }}
+                  </a>
+                {% else %}
+                  Not assigned
+                {% endif %}
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-sm-4 text-muted">Team Leader:</div>
+              <div class="col-sm-8">
+                {% if employee.team_leader %}
+                  <a href="{% url 'accounts:staff_detail' employee.team_leader.pk %}">
+                    {{ employee.team_leader.full_name }}
+                  </a>
+                {% else %}
+                  Not assigned
+                {% endif %}
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-sm-4 text-muted">Hire Date:</div>
+              <div class="col-sm-8">{{ employee.hire_date|date:"M d, Y" }}</div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-sm-4 text-muted">Start Date:</div>
+              <div class="col-sm-8">{{ employee.start_date|date:"M d, Y" }}</div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-sm-4 text-muted">Probation End:</div>
+              <div class="col-sm-8">{{ employee.probation_end_date|date:"M d, Y"|default:"Not set" }}</div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-sm-4 text-muted">Days Employed:</div>
+              <div class="col-sm-8">{{ employee.days_employed }} days</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Compensation -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Compensation</h5>
+          </div>
+          <div class="card-body">
+            <div class="row mb-3">
+              <div class="col-sm-4 text-muted">Salary:</div>
+              <div class="col-sm-8">${{ employee.salary|default:"0"|floatformat:2 }}</div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-sm-4 text-muted">Bonus:</div>
+              <div class="col-sm-8">{{ employee.bonus_percentage|default:"0" }}%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Onboarding Progress -->
+    <div class="row">
+      <div class="col-md-6">
+        <div class="card mb-4">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Onboarding Progress</h5>
+            <a href="{% url 'accounts:create_onboarding_task' employee.pk %}" class="btn btn-sm btn-primary">
+              <i class="bx bx-plus me-1"></i>Add Task
+            </a>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="small">Overall Progress</span>
+                <span class="small">{{ onboarding_progress|floatformat:0 }}%</span>
+              </div>
+              <div class="progress" style="height: 8px;">
+                <div class="progress-bar" role="progressbar" style="width: {{ onboarding_progress }}%" 
+                     aria-valuenow="{{ onboarding_progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+            </div>
+            
+            <div class="list-group list-group-flush">
+              {% for task in onboarding_tasks %}
+                <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                  <div class="d-flex align-items-center">
+                    {% if task.status == 'completed' %}
+                      <i class="bx bx-check-circle text-success me-2"></i>
+                    {% elif task.status == 'in_progress' %}
+                      <i class="bx bx-time-five text-warning me-2"></i>
+                    {% else %}
+                      <i class="bx bx-circle text-muted me-2"></i>
+                    {% endif %}
+                    <div>
+                      <div class="fw-medium">{{ task.title }}</div>
+                      {% if task.description %}
+                        <small class="text-muted">{{ task.description|truncatechars:50 }}</small>
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-center">
+                    {% if task.status == 'completed' %}
+                      <span class="badge bg-label-success me-2">Completed</span>
+                    {% elif task.status == 'in_progress' %}
+                      <span class="badge bg-label-warning me-2">In Progress</span>
+                    {% else %}
+                      <span class="badge bg-label-secondary me-2">Pending</span>
+                    {% endif %}
+                    <a href="{% url 'accounts:update_onboarding_task' task.pk %}" class="btn btn-sm btn-outline-secondary">
+                      <i class="bx bx-edit"></i>
+                    </a>
+                  </div>
+                </div>
+              {% empty %}
+                <div class="text-center py-4">
+                  <i class="bx bx-inbox fs-2 text-muted"></i>
+                  <p class="text-muted mb-0">No onboarding tasks yet</p>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Documents -->
+      <div class="col-md-6">
+        <div class="card mb-4">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Documents</h5>
+            <a href="{% url 'accounts:upload_document' employee.pk %}" class="btn btn-sm btn-primary">
+              <i class="bx bx-upload me-1"></i>Upload
+            </a>
+          </div>
+          <div class="card-body">
+            <div class="list-group list-group-flush">
+              {% for document in documents %}
+                <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                  <div class="d-flex align-items-center">
+                    <i class="bx bx-file text-primary me-2"></i>
+                    <div>
+                      <div class="fw-medium">{{ document.title }}</div>
+                      <small class="text-muted">{{ document.get_document_type_display }} • {{ document.uploaded_at|date:"M d, Y" }}</small>
+                    </div>
+                  </div>
+                  <div class="d-flex align-items-center">
+                    <a href="{{ document.file.url }}" class="btn btn-sm btn-outline-primary me-2" target="_blank">
+                      <i class="bx bx-download"></i>
+                    </a>
+                    <a href="{% url 'accounts:delete_document' document.pk %}" class="btn btn-sm btn-outline-danger">
+                      <i class="bx bx-trash"></i>
+                    </a>
+                  </div>
+                </div>
+              {% empty %}
+                <div class="text-center py-4">
+                  <i class="bx bx-file-blank fs-2 text-muted"></i>
+                  <p class="text-muted mb-0">No documents uploaded yet</p>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

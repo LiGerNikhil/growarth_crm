@@ -1,0 +1,585 @@
+{% extends 'base/layout.html' %}
+{% load static %}
+
+{% block title %}Attendance Report Dashboard{% endblock %}
+
+{% block content %}
+<style>
+.success-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.success-popup-content {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  max-width: 400px;
+  animation: slideInUp 0.4s ease-out;
+  position: relative;
+}
+
+.success-icon {
+  font-size: 48px;
+  color: #28a745;
+  margin-bottom: 15px;
+  animation: scaleIn 0.5s ease-out;
+}
+
+.success-message h5 {
+  color: #28a745;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.success-message p {
+  color: #6c757d;
+  margin-bottom: 0;
+}
+
+.success-close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #6c757d;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.success-close-btn:hover {
+  transform: rotate(90deg);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+</style>
+
+<!-- Success Popup -->
+<div id="successPopup" class="success-popup" style="display: none;">
+  <div class="success-popup-content">
+    <div class="success-icon">
+      <i class="bx bx-check-circle"></i>
+    </div>
+    <div class="success-message">
+      <h5>Status Updated Successfully!</h5>
+      <p>Attendance status has been changed.</p>
+    </div>
+    <button class="success-close-btn" onclick="closeSuccessPopup()">
+      <i class="bx bx-x"></i>
+    </button>
+  </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+      <!-- Header Card -->
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h4 class="card-title mb-0">
+            <i class="bx bx-time-five me-2"></i>Attendance Report Dashboard
+          </h4>
+          <div class="d-flex gap-2">
+            <a href="{% url 'accounts:export_attendance_report' %}?{{ request.GET.urlencode }}" class="btn btn-success btn-sm">
+              <i class="bx bx-download me-1"></i>Export to Excel
+            </a>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- Filters -->
+          <form method="get" class="row g-3">
+            <div class="col-md-6 col-lg-3">
+              <label for="start_date" class="form-label">Start Date</label>
+              <input type="date" name="start_date" id="start_date" class="form-control" 
+                     value="{{ start_date }}">
+            </div>
+            <div class="col-md-6 col-lg-3">
+              <label for="end_date" class="form-label">End Date</label>
+              <input type="date" name="end_date" id="end_date" class="form-control" 
+                     value="{{ end_date }}">
+            </div>
+            <div class="col-md-6 col-lg-3">
+              <label for="team_leader" class="form-label">Team Leader</label>
+              <select name="team_leader" id="team_leader" class="form-select">
+                <option value="">All Team Leaders</option>
+                {% for tl in team_leaders %}
+                  <option value="{{ tl.id }}" {% if selected_team_leader == tl.id|stringformat:"s" %}selected{% endif %}>
+                    {{ tl.full_name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6 col-lg-3">
+              <label for="employee" class="form-label">Employee</label>
+              <select name="employee" id="employee" class="form-select">
+                <option value="">All Employees</option>
+                {% for emp in employees %}
+                  <option value="{{ emp.id }}" {% if selected_employee == emp.id|stringformat:"s" %}selected{% endif %}>
+                    {{ emp.full_name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6 col-lg-3">
+              <label for="status" class="form-label">Status</label>
+              <select name="status" id="status" class="form-select">
+                <option value="">All Status</option>
+                {% for status_value, status_label in status_choices %}
+                  <option value="{{ status_value }}" {% if selected_status == status_value %}selected{% endif %}>
+                    {{ status_label }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6 col-lg-3 d-flex align-items-end">
+              <div class="d-flex gap-2 w-100">
+                <button type="submit" class="btn btn-primary">
+                  <i class="bx bx-search me-1"></i>Apply Filters
+                </button>
+                <a href="{% url 'accounts:attendance_report' %}" class="btn btn-outline-secondary">
+                  <i class="bx bx-x me-1"></i>Clear
+                </a>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="row mb-4">
+        <div class="col-md-3">
+          <div class="card bg-primary text-white">
+            <div class="card-body">
+              <h5 class="card-title">Total Records</h5>
+              <h3 class="mb-0">{{ total_records }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-success text-white">
+            <div class="card-body">
+              <h5 class="card-title">Full Days</h5>
+              <h3 class="mb-0">{{ full_days }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-warning text-white">
+            <div class="card-body">
+              <h5 class="card-title">Half Days</h5>
+              <h3 class="mb-0">{{ half_days }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-danger text-white">
+            <div class="card-body">
+              <h5 class="card-title">Manually Corrected</h5>
+              <h3 class="mb-0">{{ manually_corrected }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attendance Table -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Attendance Records</h5>
+        </div>
+        <div class="card-body">
+          {% if attendances %}
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead class="table-light">
+                  <tr>
+                    <th>Employee Name</th>
+                    <th>Date</th>
+                    <th>Team Leader</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Break Duration</th>
+                    <th>Effective Hours</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for attendance in attendances %}
+                  <tr class="{% if attendance.needs_buffer_review %}table-warning{% endif %}">
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-2">
+                          <span class="text-white fw-bold">{{ attendance.employee.first_name.0 }}{{ attendance.employee.last_name.0 }}</span>
+                        </div>
+                        <div>
+                          <div class="fw-medium">{{ attendance.employee.full_name }}</div>
+                          <small class="text-muted">{{ attendance.employee.position|default:"" }}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{{ attendance.date|date:"d M Y" }}</td>
+                    <td>{{ attendance.employee.team_leader.full_name|default:"-" }}</td>
+                    <td>{{ attendance.start_time|date:"H:i"|default:"-" }}</td>
+                    <td>{{ attendance.end_time|date:"H:i"|default:"-" }}</td>
+                    <td>{{ attendance.break_hours|default:"0" }}h</td>
+                    <td>
+                      <span class="badge {% if attendance.effective_hours >= 8 %}bg-success{% elif attendance.effective_hours >= 4 %}bg-warning{% else %}bg-danger{% endif %}">
+                        {{ attendance.effective_hours }}h
+                      </span>
+                    </td>
+                    <td>
+                      <span class="badge {% if attendance.final_status == 'full_day_present' %}bg-success{% elif attendance.final_status == 'half_day' %}bg-warning{% else %}bg-danger{% endif %}">
+                        {{ attendance.get_final_status_display }}
+                        {% if attendance.correction_status == 'manually_corrected' %}
+                          <i class="bx bx-edit-alt ms-1" title="Manually Corrected"></i>
+                        {% endif %}
+                      </span>
+                      {% if attendance.needs_buffer_review %}
+                        <i class="bx bx-info-circle text-warning ms-1" title="Within 15 minutes buffer"></i>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <div class="d-flex gap-2">
+                        <select class="form-select form-select-sm" id="status-{{ attendance.id }}">
+                          {% for status_choice in status_choices %}
+                            <option value="{{ status_choice.0 }}" 
+                                    {% if attendance.final_status == status_choice.0 %}selected{% endif %}>
+                              {{ status_choice.1 }}
+                            </option>
+                          {% endfor %}
+                        </select>
+                        <button class="btn btn-primary btn-sm" 
+                                onclick="
+                                    const newStatus = document.getElementById('status-{{ attendance.id }}').value;
+                                    if (newStatus && confirm('Change status to: ' + newStatus + '?')) {
+                                        const form = document.createElement('form');
+                                        form.method = 'POST';
+                                        form.action = '/accounts/attendance/override/{{ attendance.id }}/';
+                                        
+                                        const csrf = document.querySelector('[name=csrfmiddlewaretoken]');
+                                        if (csrf) {
+                                            const csrfInput = document.createElement('input');
+                                            csrfInput.type = 'hidden';
+                                            csrfInput.name = 'csrfmiddlewaretoken';
+                                            csrfInput.value = csrf.value;
+                                            form.appendChild(csrfInput);
+                                        }
+                                        
+                                        const statusInput = document.createElement('input');
+                                        statusInput.type = 'hidden';
+                                        statusInput.name = 'status';
+                                        statusInput.value = newStatus;
+                                        form.appendChild(statusInput);
+                                        
+                                        const attendanceInput = document.createElement('input');
+                                        attendanceInput.type = 'hidden';
+                                        attendanceInput.name = 'attendance_id';
+                                        attendanceInput.value = '{{ attendance.id }}';
+                                        form.appendChild(attendanceInput);
+                                        
+                                        const notesInput = document.createElement('input');
+                                        notesInput.type = 'hidden';
+                                        notesInput.name = 'notes';
+                                        notesInput.value = 'Status changed via dropdown';
+                                        form.appendChild(notesInput);
+                                        
+                                        document.body.appendChild(form);
+                                        form.submit();
+                                    }
+                                "
+                                id="btn-{{ attendance.id }}">
+                          <i class="bx bx-save"></i> Update
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Page navigation" class="mt-4">
+              <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page=1{{ request.GET.urlencode|add:'&' }}">First</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{{ request.GET.urlencode|add:'&' }}">Previous</a>
+                  </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                  {% if page_obj.number == num %}
+                    <li class="page-item active">
+                      <span class="page-link">{{ num }}</span>
+                    </li>
+                  {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ num }}{{ request.GET.urlencode|add:'&' }}">{{ num }}</a>
+                    </li>
+                  {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{{ request.GET.urlencode|add:'&' }}">Next</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{{ request.GET.urlencode|add:'&' }}">Last</a>
+                  </li>
+                {% endif %}
+              </ul>
+            </nav>
+            {% endif %}
+          {% else %}
+            <div class="text-center py-5">
+              <i class="bx bx-time-five fs-1 text-muted"></i>
+              <h5 class="text-muted mt-3">No attendance records found</h5>
+              <p class="text-muted">Try adjusting your filters or date range.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+<!-- Success popup -->
+<div id="successPopup" class="position-fixed top-0 start-0 w-100 h-100 d-none justify-content-center align-items-center" style="background-color: rgba(0, 0, 0, 0.5);">
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <strong>Success!</strong> Attendance status updated successfully!
+    <button type="button" class="btn-close" onclick="closeSuccessPopup()"></button>
+  </div>
+</div>
+
+<script>
+// Test function to check if JavaScript is loading
+console.log('JavaScript is loading!');
+
+function testFunction() {
+    console.log('Test function called!');
+    alert('JavaScript is working!');
+}
+
+// Simple test button
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded!');
+    
+    // Add test button to page
+    const testBtn = document.createElement('button');
+    testBtn.textContent = 'Test JS';
+    testBtn.className = 'btn btn-success mb-3';
+    testBtn.onclick = testFunction;
+    
+    const container = document.querySelector('.container-fluid');
+    if (container) {
+        container.insertBefore(testBtn, container.firstChild);
+    }
+    
+    // Check for success messages and show popup
+    const successMessages = document.querySelectorAll('.alert-success');
+    if (successMessages.length > 0) {
+        showSuccessPopup();
+        // Hide the regular success messages
+        successMessages.forEach(msg => msg.style.display = 'none');
+    }
+});
+
+function updateAttendanceStatus(attendanceId) {
+    console.log('updateAttendanceStatus called for ID:', attendanceId);
+    
+    // Get selected status from dropdown
+    const statusSelect = document.getElementById('status-' + attendanceId);
+    const newStatus = statusSelect.value;
+    
+    console.log('Selected status:', newStatus);
+    
+    if (!newStatus) {
+        alert('Please select a status');
+        return;
+    }
+    
+    const confirmChange = confirm('Change attendance status to: ' + newStatus + '?');
+    
+    if (!confirmChange) {
+        console.log('User cancelled the change');
+        return;
+    }
+    
+    console.log('User confirmed the change');
+    
+    // Get CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    const tokenValue = csrfToken ? csrfToken.value : '';
+    
+    console.log('CSRF token found:', tokenValue ? 'yes' : 'no');
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('attendance_id', attendanceId);
+    formData.append('status', newStatus);
+    formData.append('notes', 'Status changed via dropdown');
+    formData.append('csrfmiddlewaretoken', tokenValue);
+    
+    // Find the button by ID
+    const button = document.getElementById('btn-' + attendanceId);
+    
+    console.log('Button found:', button ? 'yes' : 'no');
+    
+    // Show loading
+    const originalText = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Saving...';
+    
+    const url = `/accounts/attendance/override/${attendanceId}/`;
+    console.log('Sending request to:', url);
+    console.log('Form data:', Object.fromEntries(formData));
+    
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        if (data.success) {
+            // Update UI immediately without reload
+            updateStatusBadge(statusSelect, newStatus);
+            
+            // Restore button
+            button.disabled = false;
+            button.innerHTML = originalText;
+            
+            // Show success message
+            showSuccessMessage('Attendance status updated successfully!');
+        } else {
+            console.log('Error from server:', data.error);
+            alert('Error: ' + (data.error || 'Failed to update status.'));
+            button.disabled = false;
+            button.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        console.error('Network error:', error);
+        alert('Error occurred: ' + error.message);
+        button.disabled = false;
+        button.innerHTML = originalText;
+    });
+}
+
+function updateStatusBadge(selectElement, newStatus) {
+    // Find the status badge in the same row
+    const row = selectElement.closest('tr');
+    const statusBadge = row.querySelector('.badge');
+    
+    if (statusBadge) {
+        // Update badge text
+        const statusText = getStatusText(newStatus);
+        statusBadge.textContent = statusText;
+        
+        // Update badge color based on status
+        statusBadge.className = 'badge';
+        if (newStatus === 'full_day_present') {
+            statusBadge.classList.add('bg-success');
+        } else if (newStatus === 'half_day') {
+            statusBadge.classList.add('bg-warning');
+        } else if (newStatus === 'absent') {
+            statusBadge.classList.add('bg-danger');
+        } else {
+            statusBadge.classList.add('bg-secondary');
+        }
+        
+        // Add manually corrected indicator
+        if (!statusBadge.querySelector('.bx-edit-alt')) {
+            const editIcon = document.createElement('i');
+            editIcon.className = 'bx bx-edit-alt ms-1';
+            editIcon.title = 'Manually Corrected';
+            statusBadge.appendChild(editIcon);
+        }
+    }
+}
+
+function getStatusText(status) {
+    const statusMap = {
+        'present': 'Present',
+        'absent': 'Absent', 
+        'late': 'Late',
+        'early_leave': 'Early Leave',
+        'half_day': 'Half Day',
+        'full_day_present': 'Full Day Present'
+    };
+    return statusMap[status] || status;
+}
+
+function showSuccessMessage(message) {
+    // Create success alert
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+    alertDiv.innerHTML = `
+        <strong>Success!</strong> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Insert at top of container
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
+}
+
+// Store original options on page load
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('select.form-select-sm').forEach(select => {
+        select.setAttribute('data-original-options', select.innerHTML);
+        select.setAttribute('data-original-value', select.value);
+    });
+});
+</script>

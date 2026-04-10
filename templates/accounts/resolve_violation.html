@@ -1,0 +1,184 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Resolve Violation{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Page Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">
+            <i class="bx bx-check-circle me-2"></i>Resolve Attendance Violation
+          </h5>
+          <a href="{% url 'accounts:attendance_admin' %}" class="btn btn-outline-primary btn-sm">
+            <i class="bx bx-arrow-back me-1"></i>Back to Attendance Admin
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Violation Details -->
+  <div class="row">
+    <div class="col-lg-8 mb-4">
+      <div class="card">
+        <div class="card-header">
+          <h6 class="card-title mb-0">
+            <i class="bx bx-info-circle me-2"></i>Violation Details
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Employee</label>
+                <div class="d-flex align-items-center">
+                  <div class="avatar avatar-sm bg-light rounded-circle me-2">
+                    <i class="bx bx-user text-muted"></i>
+                  </div>
+                  <div>
+                    <div class="fw-semibold">{{ violation.employee.get_full_name }}</div>
+                    <small class="text-muted">{{ violation.employee.employee_id }}</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Violation Type</label>
+                <div>
+                  <span class="badge bg-danger fs-6">{{ violation.get_violation_type_display }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Violation Time</label>
+                <div class="text-muted">{{ violation.violation_time|date:"F j, Y g:i A" }}</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Expected Time</label>
+                <div class="text-muted">
+                  {% if violation.expected_time %}
+                    {{ violation.expected_time|date:"F j, Y g:i A" }}
+                  {% else %}
+                    N/A
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {% if violation.time_difference_minutes %}
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Time Difference</label>
+                  <div class="text-{% if violation.time_difference_minutes > 0 %}danger{% else %}warning{% endif %}">
+                    {{ violation.time_difference_minutes }} minutes
+                    {% if violation.time_difference_minutes > 0 %}
+                      (late/over)
+                    {% else %}
+                      (early/under)
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Description</label>
+            <div class="text-muted">{{ violation.description }}</div>
+          </div>
+
+          {% if violation.attendance %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Related Attendance</label>
+              <div class="text-muted">
+                Date: {{ violation.attendance.date|date:"F j, Y" }} |
+                Status: <span class="badge bg-secondary">{{ violation.attendance.get_status_display }}</span> |
+                Hours: {{ violation.attendance.total_hours }}
+              </div>
+            </div>
+          {% endif %}
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Status</label>
+            <div>
+              {% if violation.resolved %}
+                <span class="badge bg-success">Resolved</span>
+                {% if violation.resolved_at %}
+                  on {{ violation.resolved_at|date:"F j, Y g:i A" }}
+                {% endif %}
+                {% if violation.resolved_by %}
+                  by {{ violation.resolved_by.get_full_name }}
+                {% endif %}
+              {% else %}
+                <span class="badge bg-danger">Unresolved</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resolution Form -->
+    <div class="col-lg-4 mb-4">
+      {% if not violation.resolved %}
+        <div class="card">
+          <div class="card-header">
+            <h6 class="card-title mb-0">
+              <i class="bx bx-check me-2"></i>Resolve Violation
+            </h6>
+          </div>
+          <div class="card-body">
+            <form method="post">
+              {% csrf_token %}
+
+              <div class="mb-3">
+                <label for="id_review_notes" class="form-label">Review Notes (Optional)</label>
+                <textarea name="review_notes" class="form-control" id="id_review_notes" rows="4"
+                          placeholder="Add any notes about the resolution..."></textarea>
+              </div>
+
+              <div class="d-grid">
+                <button type="submit" class="btn btn-success">
+                  <i class="bx bx-check-circle me-1"></i>Resolve Violation
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      {% else %}
+        <div class="card">
+          <div class="card-header">
+            <h6 class="card-title mb-0">
+              <i class="bx bx-check-circle me-2"></i>Already Resolved
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="text-center py-4">
+              <i class="bx bx-check-circle fs-3 text-success mb-3"></i>
+              <h6 class="text-success">Violation Resolved</h6>
+              <p class="text-muted mb-0">This violation has already been resolved.</p>
+            </div>
+            <div class="d-grid">
+              <a href="{% url 'accounts:attendance_admin' %}" class="btn btn-primary">
+                <i class="bx bx-arrow-back me-1"></i>Back to Admin
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,282 @@
+{% extends "base/layout.html" %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">My Profile</h5>
+        <div class="d-flex gap-2">
+          <a href="{% url 'accounts:password_change' %}" class="btn btn-warning">
+            <i class="bx bx-lock-alt me-1"></i>Change Password
+          </a>
+          <a href="{% url 'accounts:account_settings' %}" class="btn btn-outline-primary">
+            <i class="bx bx-cog me-1"></i>Settings
+          </a>
+          <a href="{% url 'accounts:staff_management' %}" class="btn btn-outline-secondary">
+            <i class="bx bx-group me-1"></i>Staff Management
+          </a>
+        </div>
+      </div>
+      <div class="card-body">
+        {% if employee %}
+        <!-- Profile Header -->
+        <div class="row mb-4">
+          <div class="col-md-4">
+            <div class="text-center">
+              <div class="avatar avatar-xl mb-3">
+                <div class="avatar-initial rounded-circle bg-primary text-white" style="width: 120px; height: 120px; font-size: 3rem;">
+                  {{ employee.first_name.0 }}{{ employee.last_name.0 }}
+                </div>
+              </div>
+              <h4 class="mb-1">{{ employee.full_name }}</h4>
+              <p class="text-muted mb-2">{{ employee.position }}</p>
+              <span class="badge bg-label-primary">{{ employee.get_role_display }}</span>
+            </div>
+          </div>
+          <div class="col-md-8">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <h6 class="text-muted mb-2">Personal Information</h6>
+                <p class="mb-1"><strong>Employee ID:</strong> {{ employee.employee_id|default:"Pending" }}</p>
+                <p class="mb-1"><strong>Email:</strong> {{ employee.email }}</p>
+                <p class="mb-1"><strong>Personal Phone:</strong> {{ employee.phone|default:"Not Provided" }}</p>
+                <p class="mb-1"><strong>Date of Birth:</strong> {{ employee.date_of_birth|date:"M d, Y"|default:"Not Set" }}</p>
+              </div>
+              <div class="col-md-6 mb-3">
+                <h6 class="text-muted mb-2">Employment Information</h6>
+                <p class="mb-1"><strong>Department:</strong> {{ employee.get_department_display }}</p>
+                <p class="mb-1"><strong>Employee Type:</strong> {{ employee.get_employee_type_display }}</p>
+                <p class="mb-1"><strong>Status:</strong> 
+                  <span class="badge bg-label-{% if employee.employment_status == 'active' %}success{% elif employee.employment_status == 'inactive' %}secondary{% elif employee.employment_status == 'onboarding' %}warning{% else %}danger{% endif %}">
+                    {{ employee.get_employment_status_display }}
+                  </span>
+                </p>
+                <p class="mb-1"><strong>Days Employed:</strong> {{ employee.days_employed }} days</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Assigned Phone Numbers -->
+        {% if employee.phone_numbers.all %}
+        <div class="row mb-4">
+          <div class="col-12">
+            <h6 class="mb-3">Assigned Phone Numbers</h6>
+            <div class="card bg-light">
+              <div class="card-body">
+                {% for phone in employee.phone_numbers.all %}
+                  <div class="d-flex justify-content-between align-items-center p-3 mb-2 border rounded">
+                    <div>
+                      <span class="badge bg-label-{{ phone.phone_type }} me-2">{{ phone.get_phone_type_display }}</span>
+                      <strong>{{ phone.phone_number }}</strong>
+                    </div>
+                    <div>
+                      {% if phone.is_active %}
+                        <span class="badge bg-success">Active</span>
+                      {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Employment Details -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <h6 class="mb-3">Employment Details</h6>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card bg-light">
+                  <div class="card-body">
+                    <h6 class="card-title">Important Dates</h6>
+                    <p class="mb-1"><strong>Hire Date:</strong> {{ employee.hire_date|date:"M d, Y"|default:"Not Set" }}</p>
+                    <p class="mb-1"><strong>Start Date:</strong> {{ employee.start_date|date:"M d, Y"|default:"Not Set" }}</p>
+                    <p class="mb-1"><strong>Probation End:</strong> {{ employee.probation_end_date|date:"M d, Y"|default:"Not Set" }}</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card bg-light">
+                  <div class="card-body">
+                    <h6 class="card-title">Compensation</h6>
+                    <p class="mb-1"><strong>Base Salary:</strong> 
+                      {% if employee.salary %}
+                        ${{ employee.salary|floatformat:2 }}
+                      {% else %}
+                        Not Set
+                      {% endif %}
+                    </p>
+                    <p class="mb-1"><strong>Bonus Percentage:</strong> 
+                      {% if employee.bonus_percentage %}
+                        {{ employee.bonus_percentage }}%
+                      {% else %}
+                        Not Set
+                      {% endif %}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <h6 class="mb-3">Contact Information</h6>
+            <div class="card bg-light">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <p class="mb-1"><strong>Address:</strong> {{ employee.address|default:"Not Set" }}</p>
+                    <p class="mb-1"><strong>City:</strong> {{ employee.city|default:"Not Set" }}</p>
+                    <p class="mb-1"><strong>State:</strong> {{ employee.state|default:"Not Set" }}</p>
+                  </div>
+                  <div class="col-md-6">
+                    <p class="mb-1"><strong>Postal Code:</strong> {{ employee.postal_code|default:"Not Set" }}</p>
+                    <p class="mb-1"><strong>Country:</strong> {{ employee.country|default:"Not Set" }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Emergency Contact -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <h6 class="mb-3">Emergency Contact</h6>
+            <div class="card bg-light">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-4">
+                    <p class="mb-1"><strong>Contact Name:</strong> {{ employee.emergency_contact_name|default:"Not Set" }}</p>
+                  </div>
+                  <div class="col-md-4">
+                    <p class="mb-1"><strong>Contact Phone:</strong> {{ employee.emergency_contact_phone|default:"Not Set" }}</p>
+                  </div>
+                  <div class="col-md-4">
+                    <p class="mb-1"><strong>Relationship:</strong> {{ employee.emergency_contact_relationship|default:"Not Set" }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hierarchy Information -->
+        {% if employee.reports_to %}
+        <div class="row mb-4">
+          <div class="col-12">
+            <h6 class="mb-3">Hierarchy Information</h6>
+            <div class="card bg-light">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <h6 class="card-title">Reports To</h6>
+                    <div class="d-flex align-items-center">
+                      <div class="avatar avatar-sm me-2">
+                        <div class="avatar-initial rounded-circle bg-info text-white">
+                          {{ employee.reports_to.first_name.0 }}
+                        </div>
+                      </div>
+                      <div>
+                        <div class="fw-medium">{{ employee.reports_to.full_name }}</div>
+                        <small class="text-muted">{{ employee.reports_to.get_role_display }}</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <h6 class="card-title">Direct Reports</h6>
+                    {% with direct_reports=employee.direct_reports.all %}
+                      {% if direct_reports %}
+                        <div class="list-group list-group-flush">
+                          {% for report in direct_reports %}
+                            <div class="list-group-item px-0 d-flex align-items-center">
+                              <div class="avatar avatar-sm me-2">
+                                <div class="avatar-initial rounded-circle bg-success text-white">
+                                  {{ report.first_name.0 }}
+                                </div>
+                              </div>
+                              <div class="flex-grow-1">
+                                <div class="fw-medium">{{ report.full_name }}</div>
+                                <small class="text-muted">{{ report.get_role_display }}</small>
+                              </div>
+                            </div>
+                          {% endfor %}
+                        </div>
+                      {% else %}
+                        <p class="text-muted mb-0">No direct reports</p>
+                      {% endif %}
+                    {% endwith %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- System Information -->
+        <div class="row">
+          <div class="col-12">
+            <h6 class="mb-3">System Information</h6>
+            <div class="card bg-light">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-3">
+                    <p class="mb-1"><strong>Username:</strong> {{ request.user.username }}</p>
+                  </div>
+                  <div class="col-md-3">
+                    <p class="mb-1"><strong>Created:</strong> {{ employee.created_at|date:"M d, Y H:i" }}</p>
+                  </div>
+                  <div class="col-md-3">
+                    <p class="mb-1"><strong>Last Updated:</strong> {{ employee.updated_at|date:"M d, Y H:i" }}</p>
+                  </div>
+                  <div class="col-md-3">
+                    <p class="mb-1"><strong>User Account:</strong> 
+                      {% if employee.user %}
+                        <span class="badge bg-label-success">Active</span>
+                      {% else %}
+                        <span class="badge bg-label-danger">Not Created</span>
+                      {% endif %}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <!-- No Employee Profile -->
+        <div class="text-center py-5">
+          <i class="bx bx-user-x fs-1 text-muted mb-3 d-block"></i>
+          <h5 class="text-muted">No Employee Profile Found</h5>
+          <p class="text-muted mb-4">You don't have an employee profile assigned to your account yet.</p>
+          <p class="text-muted">Please contact your administrator to get your employee profile set up.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+{% endblock %}
+
+<style>
+.bg-label-primary { background-color: #e7e7ff !important; color: #696cff !important; }
+.bg-label-secondary { background-color: #6c757d !important; color: #ffffff !important; }
+.bg-label-official { background-color: #fff4dd !important; color: #ffab00 !important; }
+
+.border {
+  border: 1px solid #dee2e6 !important;
+}
+</style>

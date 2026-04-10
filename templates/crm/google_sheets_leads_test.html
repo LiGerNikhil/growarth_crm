@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Sheets Leads Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .lead-card { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 8px; }
+        .lead-name { font-weight: bold; font-size: 18px; color: #333; }
+        .lead-email { color: #666; margin: 5px 0; }
+        .lead-phone { color: #666; }
+        .source-badge { background: #e3f2fd; color: #1976d2; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+        .stats { background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>📊 Google Sheets Leads Management</h1>
+    
+    <div class="stats">
+        <h3>📈 Statistics</h3>
+        <p><strong>Total Google Sheets Leads:</strong> {{ google_leads }}</p>
+        <p><strong>New Leads:</strong> {{ new_leads }}</p>
+        <p><strong>Contacted Leads:</strong> {{ contacted_leads }}</p>
+        <p><strong>Qualified Leads:</strong> {{ qualified_leads }}</p>
+    </div>
+    
+    <h2>📋 Google Sheets Leads List</h2>
+    
+    {% if leads %}
+        {% for lead in leads %}
+        <div class="lead-card">
+            <div class="lead-name">{{ lead.name }}</div>
+            <div class="lead-email">📧 {{ lead.email }}</div>
+            <div class="lead-phone">📱 {{ lead.phone|default:"Not Provided" }}</div>
+            <div class="lead-phone">💼 Type: {{ lead.get_lead_type_display }}</div>
+            <div class="lead-phone">📊 Status: {{ lead.get_status_display }}</div>
+            <div class="source-badge">🔗 Google Sheets</div>
+            <div class="lead-phone">📅 Created: {{ lead.created_at|date:"M d, Y H:i" }}</div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="lead-card">
+            <h3>❌ No Google Sheets Leads Found</h3>
+            <p>There are no Google Sheets leads in the database.</p>
+        </div>
+    {% endif %}
+    
+    <div style="margin-top: 30px;">
+        <a href="/leads/" style="background: #667eea; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">👥 View Manual Leads</a>
+        <a href="/upload/csv/" style="background: #764ba2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-left: 10px;">📤 Upload New Leads</a>
+    </div>
+</body>
+</html>

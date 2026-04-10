@@ -1,0 +1,323 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Team Members - Team Management{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+          <i class="bx bx-group me-2"></i>My Team Members
+        </h5>
+      </div>
+      <div class="card-body">
+        <!-- Statistics Cards -->
+        <div class="d-flex flex-wrap gap-3 mb-4 justify-content-center">
+          <div class="flex-fill">
+            <div class="card bg-primary text-white h-100">
+              <div class="card-body p-2">
+                <div class="d-flex flex-column align-items-center text-center">
+                  <div class="avatar avatar-sm mb-2">
+                    <div class="avatar-initial rounded-circle bg-white text-primary">
+                      <i class="bx bx-group fs-4"></i>
+                    </div>
+                  </div>
+                  <div>
+                    <h5 class="mb-0 fw-bold">{{ total_members }}</h5>
+                    <small class="mb-0">Total Members</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="flex-fill">
+            <a href="?status=active" class="text-decoration-none">
+              <div class="card bg-success text-white h-100">
+                <div class="card-body p-2">
+                  <div class="d-flex flex-column align-items-center text-center">
+                    <div class="avatar avatar-sm mb-2">
+                      <div class="avatar-initial rounded-circle bg-white text-success">
+                        <i class="bx bx-user-check fs-4"></i>
+                      </div>
+                    </div>
+                    <div>
+                      <h5 class="mb-0 fw-bold">{{ status_counts.active }}</h5>
+                      <small class="mb-0">Active</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="flex-fill">
+            <a href="?status=on_leave" class="text-decoration-none">
+              <div class="card bg-info text-white h-100">
+                <div class="card-body p-2">
+                  <div class="d-flex flex-column align-items-center text-center">
+                    <div class="avatar avatar-sm mb-2">
+                      <span class="avatar-initial rounded-circle bg-white text-info">L</span>
+                    </div>
+                    <div>
+                      <h5 class="mb-0 fw-bold">{{ status_counts.on_leave }}</h5>
+                      <small class="mb-0">On Leave</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="flex-fill">
+            <a href="?status=inactive" class="text-decoration-none">
+              <div class="card bg-warning text-white h-100">
+                <div class="card-body p-2">
+                  <div class="d-flex flex-column align-items-center text-center">
+                    <div class="avatar avatar-sm mb-2">
+                      <div class="avatar-initial rounded-circle bg-white text-warning">
+                        <i class="bx bx-user-x fs-4"></i>
+                      </div>
+                    </div>
+                    <div>
+                      <h5 class="mb-0 fw-bold">{{ status_counts.inactive }}</h5>
+                      <small class="mb-0">Inactive</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <div class="card border-0 shadow-sm">
+              <div class="card-body p-3">
+                <form method="get" class="d-flex gap-3 flex-wrap align-items-center">
+                  <div class="flex-grow-1">
+                    <select name="status" class="form-select">
+                      <option value="">All Status</option>
+                      <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                      <option value="on_leave" {% if status_filter == 'on_leave' %}selected{% endif %}>On Leave</option>
+                      <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                  </div>
+                  <div class="flex-grow-1">
+                    <input type="text" name="search" class="form-control" value="{{ search_query }}" placeholder="Search by name, email, employee ID...">
+                  </div>
+                  <div class="d-flex gap-2 align-items-center">
+                    <button type="submit" class="btn btn-primary rounded-pill">
+                      <i class="bx bx-filter me-1"></i>Apply Filter
+                    </button>
+                    {% if status_filter or search_query %}
+                      <a href="{% url 'accounts:team_members' %}" class="btn btn-outline-secondary rounded-pill">
+                        <i class="bx bx-x"></i> Clear
+                      </a>
+                    {% endif %}
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Team Members Table -->
+        {% if page_obj %}
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th>Employee</th>
+                  <th>Employee ID</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Position</th>
+                  <th>Status</th>
+                  <th>Joined</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for member in page_obj %}
+                  <tr>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="avatar avatar-sm bg-label-primary rounded-circle me-2">
+                          <span>{{ member.first_name.0 }}{{ member.last_name.0 }}</span>
+                        </div>
+                        <div>
+                          <div class="fw-medium">{{ member.get_full_name }}</div>
+                          <small class="text-muted">{{ member.role|title }}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge bg-light text-dark">{{ member.employee_id|default:"-" }}</span>
+                    </td>
+                    <td>
+                      <span class="text-muted">{{ member.email|default:"-" }}</span>
+                    </td>
+                    <td>
+                      <span class="text-muted">{{ member.phone|default:"-" }}</span>
+                    </td>
+                    <td>
+                      <span class="text-muted">{{ member.position|default:"-" }}</span>
+                    </td>
+                    <td>
+                      {% if member.employment_status == 'active' %}
+                        <span class="badge bg-label-success">Active</span>
+                      {% elif member.employment_status == 'on_leave' %}
+                        <span class="badge bg-label-info">On Leave</span>
+                      {% elif member.employment_status == 'inactive' %}
+                        <span class="badge bg-label-warning">Inactive</span>
+                      {% else %}
+                        <span class="badge bg-label-secondary">{{ member.employment_status|title }}</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <div>
+                        <div>{{ member.date_joined|date:"M d, Y" }}</div>
+                        <small class="text-muted">{{ member.date_joined|time:"g:i A" }}</small>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="dropdown">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                          <i class="bx bx-dots-horizontal-rounded"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                          <li>
+                            <a class="dropdown-item" href="{% url 'accounts:employee_detail' member.pk %}">
+                              <i class="bx bx-eye me-2"></i>View Profile
+                            </a>
+                          </li>
+                          {% if member.email %}
+                            <li>
+                              <a class="dropdown-item" href="mailto:{{ member.email }}">
+                                <i class="bx bx-envelope me-2"></i>Send Email
+                              </a>
+                            </li>
+                          {% endif %}
+                          {% if member.phone %}
+                            <li>
+                              <a class="dropdown-item" href="tel:{{ member.phone }}">
+                                <i class="bx bx-phone me-2"></i>Call
+                              </a>
+                            </li>
+                          {% endif %}
+                        </ul>
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          {% if page_obj.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+              <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+                      <i class="bx bx-chevron-left"></i>
+                    </a>
+                  </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                  {% if page_obj.number == num %}
+                    <li class="page-item active">
+                      <span class="page-link">{{ num }}</span>
+                    </li>
+                  {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ num }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+                    </li>
+                  {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">
+                      <i class="bx bx-chevron-right"></i>
+                    </a>
+                  </li>
+                {% endif %}
+              </ul>
+            </nav>
+          {% endif %}
+        {% else %}
+          <div class="text-center py-5">
+            <i class="bx bx-group fs-1 text-muted mb-3"></i>
+            <h6 class="mb-2">No Team Members Found</h6>
+            <p class="text-muted">
+              {% if status_filter or search_query %}
+                No team members found matching your criteria.
+              {% else %}
+                You don't have any team members assigned to you yet.
+              {% endif %}
+            </p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+}
+
+.avatar-sm {
+  width: 2rem;
+  height: 2rem;
+  font-size: 0.875rem;
+}
+
+.avatar-xl {
+  width: 3rem;
+  height: 3rem;
+  font-size: 1.25rem;
+}
+
+.avatar-initial {
+  font-weight: 600;
+}
+
+.bg-label-primary {
+  background-color: #e7e7ff !important;
+  color: #696cff !important;
+}
+
+.bg-label-secondary {
+  background-color: #f5f5f9 !important;
+  color: #82868b !important;
+}
+
+.bg-label-success {
+  background-color: #e8fadf !important;
+  color: #71dd37 !important;
+}
+
+.bg-label-warning {
+  background-color: #fff4de !important;
+  color: #ffab00 !important;
+}
+
+.bg-label-danger {
+  background-color: #ffdede !important;
+  color: #ff3e1d !important;
+}
+
+.bg-label-info {
+  background-color: #d7f5ff !important;
+  color: #03c3ec !important;
+}
+</style>
+{% endblock %}

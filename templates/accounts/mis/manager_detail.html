@@ -1,0 +1,262 @@
+{% extends "base/layout.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}MIS Report Details - {{ mis_report.app_id }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'accounts:mis_dashboard' %}">MIS Dashboard</a></li>
+        <li class="breadcrumb-item active">Report Details</li>
+      </ol>
+    </nav>
+
+    <!-- Report Details Card -->
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+          <i class="bx bx-file-text me-2"></i>MIS Report Details
+        </h5>
+        <div class="d-flex gap-2">
+          <a href="{% url 'accounts:mis_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bx bx-arrow-back me-1"></i>Back to Dashboard
+          </a>
+          {% if employee.is_admin or employee.is_superadmin or employee.is_manager %}
+            <a href="{% url 'accounts:mis_manager_edit' mis_report.pk %}" class="btn btn-warning">
+              <i class="bx bx-edit me-1"></i>Edit Report
+            </a>
+            <!-- Delete button hidden for managers - only admins can delete -->
+            <!--
+            <a href="{% url 'accounts:mis_admin_delete' mis_report.pk %}" class="btn btn-danger" 
+               onclick="return confirm('Are you sure you want to delete this MIS report?')">
+              <i class="bx bx-trash me-1"></i>Delete Report
+            </a>
+            -->
+          {% endif %}
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <!-- Application Information -->
+          <div class="col-md-6">
+            <h6 class="text-primary mb-3">
+              <i class="bx bx-file me-2"></i>Application Information
+            </h6>
+            <table class="table table-sm table-borderless">
+              <tr>
+                <td width="30%"><strong>Application ID:</strong></td>
+                <td>{{ mis_report.app_id }}</td>
+              </tr>
+              <tr>
+                <td><strong>Customer Name:</strong></td>
+                <td>{{ mis_report.customer_name }}</td>
+              </tr>
+              <tr>
+                <td><strong>Application Date:</strong></td>
+                <td>{{ mis_report.login_date|date:"d M Y" }}</td>
+              </tr>
+              <tr>
+                <td><strong>Product:</strong></td>
+                <td>
+                  <span class="badge bg-info">{{ mis_report.get_product_display }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Loan Amount:</strong></td>
+                <td class="fw-bold text-success">₹{{ mis_report.login_amount|intcomma }}</td>
+              </tr>
+              <tr>
+                <td><strong>Disbursed Amount:</strong></td>
+                <td class="fw-bold text-primary">
+                  {% if mis_report.disbursed_amount %}
+                    ₹{{ mis_report.disbursed_amount|intcomma }}
+                  {% else %}
+                    <span class="text-muted">Not Disbursed</span>
+                  {% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Tenure:</strong></td>
+                <td>{{ mis_report.tanure }} months</td>
+              </tr>
+              <tr>
+                <td><strong>Status:</strong></td>
+                <td>
+                  {% if mis_report.status == 'pending' %}
+                    <span class="badge bg-warning">Pending</span>
+                  {% elif mis_report.status == 'approved' %}
+                    <span class="badge bg-info">Approved</span>
+                  {% elif mis_report.status == 'rejected' %}
+                    <span class="badge bg-danger">Rejected</span>
+                  {% elif mis_report.status == 'disbursed' %}
+                    <span class="badge bg-success">Disbursed</span>
+                  {% elif mis_report.status == 'not_interested' %}
+                    <span class="badge bg-secondary">Not Interested</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% if mis_report.current_status %}
+              <tr>
+                <td><strong>Current Status:</strong></td>
+                <td>{{ mis_report.current_status }}</td>
+              </tr>
+              {% endif %}
+            </table>
+          </div>
+
+          <!-- Customer & Bank Information -->
+          <div class="col-md-6">
+            <h6 class="text-primary mb-3">
+              <i class="bx bx-user me-2"></i>Customer & Bank Information
+            </h6>
+            <table class="table table-sm table-borderless">
+              <tr>
+                <td width="30%"><strong>Customer Type:</strong></td>
+                <td>
+                  <span class="badge bg-light text-dark">{{ mis_report.get_customer_type_display }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Company Name:</strong></td>
+                <td>{{ mis_report.company_name|default:"N/A" }}</td>
+              </tr>
+              <tr>
+                <td><strong>Bank:</strong></td>
+                <td>{{ mis_report.bank }}</td>
+              </tr>
+              <tr>
+                <td><strong>Location:</strong></td>
+                <td>{{ mis_report.location }}</td>
+              </tr>
+              {% if mis_report.banker_name %}
+              <tr>
+                <td><strong>Banker Name:</strong></td>
+                <td>{{ mis_report.banker_name }}</td>
+              </tr>
+              {% endif %}
+              {% if mis_report.banker_no %}
+              <tr>
+                <td><strong>Banker Contact:</strong></td>
+                <td>{{ mis_report.banker_no }}</td>
+              </tr>
+              {% endif %}
+            </table>
+          </div>
+        </div>
+
+        <!-- Team Information -->
+        <div class="row mt-4">
+          <div class="col-12">
+            <h6 class="text-primary mb-3">
+              <i class="bx bx-group me-2"></i>Team Information
+            </h6>
+            <div class="row">
+              <div class="col-md-4">
+                <table class="table table-sm table-borderless">
+                  <tr>
+                    <td><strong>Team Leader:</strong></td>
+                    <td>{{ mis_report.team_leader.get_full_name }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>TL Email:</strong></td>
+                    <td>{{ mis_report.team_leader.email }}</td>
+                  </tr>
+                </table>
+              </div>
+              <div class="col-md-4">
+                <table class="table table-sm table-borderless">
+                  {% if mis_report.team_leader.employee.reports_to %}
+                  <tr>
+                    <td><strong>Manager:</strong></td>
+                    <td>{{ mis_report.team_leader.employee.reports_to.get_full_name }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Manager Email:</strong></td>
+                    <td>{{ mis_report.team_leader.employee.reports_to.user.email }}</td>
+                  </tr>
+                  {% endif %}
+                </table>
+              </div>
+              <div class="col-md-4">
+                <table class="table table-sm table-borderless">
+                  <tr>
+                    <td><strong>Created By:</strong></td>
+                    <td>{{ mis_report.created_by.get_full_name|default:"System" }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Created At:</strong></td>
+                    <td>{{ mis_report.created_at|date:"d M Y H:i" }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Last Updated:</strong></td>
+                    <td>{{ mis_report.updated_at|date:"d M Y H:i" }}</td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Financial Summary -->
+        <div class="row mt-4">
+          <div class="col-12">
+            <h6 class="text-primary mb-3">
+              <i class="bx bx-chart me-2"></i>Financial Summary
+            </h6>
+            <div class="row">
+              <div class="col-md-3">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="card-title text-muted mb-2">Login Amount</h6>
+                    <h4 class="text-success mb-0">₹{{ mis_report.login_amount|intcomma }}</h4>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="card-title text-muted mb-2">Disbursed Amount</h6>
+                    <h4 class="text-primary mb-0">
+                      {% if mis_report.disbursed_amount %}
+                        ₹{{ mis_report.disbursed_amount|intcomma }}
+                      {% else %}
+                        <span class="text-muted">₹0</span>
+                      {% endif %}
+                    </h4>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="card-title text-muted mb-2">Difference</h6>
+                    <h4 class="text-warning mb-0">
+                      {% if mis_report.disbursed_amount %}
+                        ₹{{ mis_report.login_amount|add:mis_report.disbursed_amount|intcomma }}
+                      {% else %}
+                        <span class="text-muted">₹0</span>
+                      {% endif %}
+                    </h4>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6 class="card-title text-muted mb-2">Tenure</h6>
+                    <h4 class="text-info mb-0">{{ mis_report.tanure }} months</h4>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

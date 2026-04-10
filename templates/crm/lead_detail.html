@@ -1,0 +1,306 @@
+{% extends "base/layout.html" %}
+
+{% block title %}{{ lead.name }} - Lead Details{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Lead Details - {{ lead.name }}</h5>
+        <div class="d-flex gap-2">
+          <a href="{% url 'crm:lead_update' lead.pk %}" class="btn btn-outline-primary">
+            <i class="bx bx-edit me-1"></i>Edit
+          </a>
+          <a href="{% url 'crm:sync_with_google_sheets' lead.pk %}" class="btn btn-success">
+            <i class="bx bx-cloud-upload me-1"></i>Sync to Google Sheets
+          </a>
+          <a href="{% url 'crm:leads' %}" class="btn btn-secondary">
+            <i class="bx bx-arrow-back me-1"></i>Back to Leads
+          </a>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <!-- Lead Information -->
+          <div class="col-md-8">
+            <div class="card mb-3">
+              <div class="card-header">
+                <h6 class="card-title mb-0">Lead Information</h6>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <p class="mb-2"><strong>Name:</strong> {{ lead.name }}</p>
+                    <p class="mb-2"><strong>Email:</strong> {{ lead.email }}</p>
+                    <p class="mb-2"><strong>Phone:</strong> {{ lead.phone|default:"-" }}</p>
+                    <p class="mb-2"><strong>Status:</strong> 
+                      <span class="badge bg-label-{{ lead.status|default:"secondary" }}">
+                        {{ lead.get_status_display }}
+                      </span>
+                    </p>
+                  </div>
+                  <div class="col-md-6">
+                    <p class="mb-2"><strong>Source:</strong> {{ lead.get_source_display }}</p>
+                    <p class="mb-2"><strong>Created:</strong> {{ lead.created_at|date:"M d, Y H:i" }}</p>
+                    <p class="mb-2"><strong>Days Active:</strong> {{ lead.days_since_creation }} days</p>
+                    {% if lead.synced_with_google %}
+                      <p class="mb-2"><strong>Google Sheets:</strong> 
+                        <span class="badge bg-label-success"><i class="bx bx-check"></i> Synced</span>
+                      </p>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Loan Information -->
+            <div class="card mb-3">
+              <div class="card-header">
+                <h6 class="card-title mb-0">Loan Information</h6>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <p class="mb-2"><strong>Loan Type:</strong> {{ lead.loan_type|default:"-" }}</p>
+                    <p class="mb-2"><strong>Loan Amount:</strong> 
+                      {% if lead.loan_amount %}
+                        ${{ lead.loan_amount|floatformat:0 }}
+                      {% else %}
+                        -
+                      {% endif %}
+                    </p>
+                  </div>
+                  <div class="col-md-6">
+                    <p class="mb-2"><strong>Employment Status:</strong> {{ lead.employment_status|default:"-" }}</p>
+                    <p class="mb-2"><strong>Monthly Income:</strong> 
+                      {% if lead.monthly_income %}
+                        ${{ lead.monthly_income|floatformat:0 }}
+                      {% else %}
+                        -
+                      {% endif %}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Message -->
+            {% if lead.message %}
+            <div class="card mb-3">
+              <div class="card-header">
+                <h6 class="card-title mb-0">Message</h6>
+              </div>
+              <div class="card-body">
+                <p class="mb-0">{{ lead.message|linebreaks }}</p>
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Internal Notes -->
+            <div class="card mb-3">
+              <div class="card-header">
+                <h6 class="card-title mb-0">Internal Notes</h6>
+              </div>
+              <div class="card-body">
+                {% if lead.notes %}
+                  <p class="mb-0">{{ lead.notes|linebreaks }}</p>
+                {% else %}
+                  <p class="text-muted mb-0">No internal notes added yet.</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Sidebar -->
+          <div class="col-md-4">
+            <!-- Quick Actions -->
+            <div class="card mb-3">
+              <div class="card-header">
+                <h6 class="card-title mb-0">Quick Actions</h6>
+              </div>
+              <div class="card-body">
+                <div class="d-grid gap-2">
+                  <a href="{% url 'crm:lead_update' lead.pk %}" class="btn btn-outline-primary">
+                    <i class="bx bx-edit me-1"></i>Edit Lead
+                  </a>
+                  <a href="{% url 'crm:sync_with_google_sheets' lead.pk %}" class="btn btn-success">
+                    <i class="bx bx-cloud-upload me-1"></i>Sync to Google Sheets
+                  </a>
+                  <button class="btn btn-outline-info" onclick="window.location.href='mailto:{{ lead.email }}'">
+                    <i class="bx bx-envelope me-1"></i>Send Email
+                  </button>
+                  {% if lead.phone %}
+                  <button class="btn btn-outline-success" onclick="window.location.href='tel:{{ lead.phone }}'">
+                    <i class="bx bx-phone me-1"></i>Call Lead
+                  </button>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Status Timeline -->
+            <div class="card mb-3">
+              <div class="card-header">
+                <h6 class="card-title mb-0">Status Timeline</h6>
+              </div>
+              <div class="card-body">
+                <div class="timeline">
+                  <div class="timeline-item">
+                    <div class="timeline-point timeline-point-primary"></div>
+                    <div class="timeline-content">
+                      <h6 class="mb-1">Lead Created</h6>
+                      <p class="text-muted mb-0">{{ lead.created_at|date:"M d, Y H:i" }}</p>
+                    </div>
+                  </div>
+                  {% for activity in activities %}
+                  <div class="timeline-item">
+                    <div class="timeline-point timeline-point-{{ activity.activity_type }}"></div>
+                    <div class="timeline-content">
+                      <h6 class="mb-1">{{ activity.get_activity_type_display }}</h6>
+                      <p class="text-muted mb-0">{{ activity.description }}</p>
+                      <small class="text-muted">{{ activity.created_at|date:"M d, Y H:i" }}</small>
+                    </div>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activities Section -->
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h6 class="card-title mb-0">Activities & Notes</h6>
+              </div>
+              <div class="card-body">
+                <!-- Add Activity Form -->
+                <div class="mb-4">
+                  <h6 class="mb-3">Add Activity</h6>
+                  <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                      <div class="col-md-3">
+                        <label class="form-label">Activity Type</label>
+                        {{ form.activity_type }}
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Description</label>
+                        {{ form.description }}
+                      </div>
+                      <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary d-block">
+                          <i class="bx bx-plus me-1"></i>Add Activity
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+
+                <!-- Activities List -->
+                {% if activities %}
+                <div class="table-responsive">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Created By</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for activity in activities %}
+                      <tr>
+                        <td>{{ activity.created_at|date:"M d, Y H:i" }}</td>
+                        <td>
+                          <span class="badge bg-label-{{ activity.activity_type }}">
+                            {{ activity.get_activity_type_display }}
+                          </span>
+                        </td>
+                        <td>{{ activity.description }}</td>
+                        <td>{{ activity.created_by|default:"System" }}</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                  <i class="bx bx-note fs-1 text-muted mb-2"></i>
+                  <p class="text-muted">No activities recorded yet.</p>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.timeline {
+  position: relative;
+  padding-left: 30px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #e9ecef;
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+.timeline-point {
+  position: absolute;
+  left: -23px;
+  top: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+}
+
+.timeline-point-primary {
+  background: #696cff;
+}
+
+.timeline-point-call {
+  background: #71dd37;
+}
+
+.timeline-point-email {
+  background: #03c3ec;
+}
+
+.timeline-point-meeting {
+  background: #ffab00;
+}
+
+.timeline-point-note {
+  background: #8592a3;
+}
+
+.timeline-point-status_change {
+  background: #696cff;
+}
+
+.timeline-content {
+  margin-left: 10px;
+}
+</style>
+{% endblock %}

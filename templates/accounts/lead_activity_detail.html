@@ -1,0 +1,237 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Lead Activity Detail - Admin{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+          <i class="bx bx-history me-2"></i>Lead Activity Detail
+        </h5>
+        <a href="{% url 'accounts:lead_activity_logs' %}" class="btn btn-outline-secondary">
+          <i class="bx bx-arrow-left me-1"></i>Back to Activity Logs
+        </a>
+      </div>
+      <div class="card-body">
+        
+        <!-- Activity Summary -->
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="card border-primary">
+              <div class="card-body text-center">
+                <i class="bx bx-tag fs-2 text-primary mb-2"></i>
+                <h6 class="mb-1">Activity ID</h6>
+                <p class="mb-0 fw-bold text-primary">{{ activity.id }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card border-success">
+              <div class="card-body text-center">
+                <i class="bx bx-bolt fs-2 text-success mb-2"></i>
+                <h6 class="mb-1">Action Type</h6>
+                <p class="mb-0 fw-bold text-success">{{ activity.get_action_type_display }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card border-info">
+              <div class="card-body text-center">
+                <i class="bx bx-user fs-2 text-info mb-2"></i>
+                <h6 class="mb-1">Performed By</h6>
+                <p class="mb-0 fw-bold text-info">{{ activity.user.get_full_name }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card border-warning">
+              <div class="card-body text-center">
+                <i class="bx bx-time fs-2 text-warning mb-2"></i>
+                <h6 class="mb-1">Date/Time</h6>
+                <p class="mb-0 fw-bold text-warning">{{ activity.created_at|date:"M d, Y H:i" }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lead Information -->
+        {% if activity.lead %}
+          <div class="card mb-4">
+            <div class="card-header">
+              <h6 class="mb-0">
+                <i class="bx bx-target-lock me-2"></i>Lead Information
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="d-flex align-items-center mb-3">
+                    <div class="avatar avatar-md bg-label-primary rounded-circle me-3">
+                      <span>{{ activity.lead.first_name.0 }}{{ activity.lead.last_name.0 }}</span>
+                    </div>
+                    <div>
+                      <h6 class="mb-1">{{ activity.lead.get_full_name }}</h6>
+                      <p class="mb-0 text-muted">ID: {{ activity.lead.pk }}</p>
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <strong>Email:</strong> {{ activity.lead.email|default:"-" }}
+                  </div>
+                  <div class="mb-3">
+                    <strong>Phone:</strong> {{ activity.lead.phone|default:"-" }}
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <strong>Company:</strong> {{ activity.lead.company|default:"-" }}
+                  </div>
+                  <div class="mb-3">
+                    <strong>Status:</strong> 
+                    <span class="badge bg-{{ 
+                      'success' if activity.lead.status == 'new' else
+                      'info' if activity.lead.status == 'contacted' else
+                      'warning' if activity.lead.status == 'interested' else
+                      'danger' if activity.lead.status == 'not_interested' else
+                      'dark' if activity.lead.status == 'not_eligible' else
+                      'secondary' if activity.lead.status == 'follow_up' else
+                      'primary' if activity.lead.status == 'converted' else
+                      'light text-dark'
+                    }}">
+                      {{ activity.lead.get_status_display }}
+                    </span>
+                  </div>
+                  <div class="mb-3">
+                    <strong>Source:</strong> {{ activity.lead.source|default:"-" }}
+                  </div>
+                  <div class="mb-3">
+                    <strong>Assigned To:</strong> 
+                    {% if activity.lead.assigned_to %}
+                      {{ activity.lead.assigned_to.get_full_name }}
+                    {% else %}
+                      <span class="text-muted">Unassigned</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- Activity Details -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h6 class="mb-0">
+              <i class="bx bx-info-circle me-2"></i>Activity Details
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <strong>Old Value:</strong>
+                  {% if activity.old_value %}
+                    <div class="p-2 bg-light rounded">
+                      {{ activity.old_value }}
+                    </div>
+                  {% else %}
+                    <span class="text-muted">No previous value</span>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <strong>New Value:</strong>
+                  {% if activity.new_value %}
+                    <div class="p-2 bg-primary text-white rounded">
+                      {{ activity.new_value }}
+                    </div>
+                  {% else %}
+                    <span class="text-muted">No new value</span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            
+            {% if activity.description %}
+              <div class="mt-3">
+                <strong>Description:</strong>
+                <div class="p-3 bg-light rounded mt-2">
+                  {{ activity.description|linebreaks }}
+                </div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Technical Details -->
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0">
+              <i class="bx bx-cog me-2"></i>Technical Details
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <strong>IP Address:</strong>
+                  {% if activity.ip_address %}
+                    <code class="p-2 bg-light rounded">{{ activity.ip_address }}</code>
+                  {% else %}
+                    <span class="text-muted">Not recorded</span>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <strong>User Agent:</strong>
+                  {% if activity.user_agent %}
+                    <div class="p-2 bg-light rounded">
+                      <small>{{ activity.user_agent }}</small>
+                    </div>
+                  {% else %}
+                    <span class="text-muted">Not recorded</span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <strong>Created At:</strong>
+                  <div>{{ activity.created_at|date:"F d, Y" }}</div>
+                  <small class="text-muted">{{ activity.created_at|time:"g:i:s A" }}</small>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <strong>IST Time:</strong>
+                  <div>{{ activity.get_created_at_ist }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex gap-2 mt-4">
+          {% if activity.lead %}
+            <a href="{% url 'accounts:lead_detail' activity.lead.pk %}" 
+               class="btn btn-primary" target="_blank">
+              <i class="bx bx-target-lock me-1"></i>View Lead
+            </a>
+          {% endif %}
+          <a href="{% url 'accounts:lead_activity_logs' %}" 
+             class="btn btn-outline-secondary">
+            <i class="bx bx-history me-1"></i>Back to Logs
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

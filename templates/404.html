@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Not Found</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #0a0000; /* Deep Blood Red/Black */
+            cursor: crosshair;
+        }
+
+        canvas {
+            display: block;
+            filter: contrast(1.4) brightness(0.9);
+        }
+
+        #ui-layer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+            z-index: 10;
+            font-family: 'Georgia', serif;
+        }
+
+        h1 {
+            color: #ff0000;
+            font-size: 5vw;
+            margin: 0;
+            text-shadow: 0 0 30px rgba(255,0,0,0.8);
+            letter-spacing: 20px;
+            opacity: 0.6;
+        }
+
+        #warning {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            color: #8b0000;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-left: 3px solid #ff0000;
+            padding-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="ui-layer">
+        <h1>ERROR-404</h1>
+    </div>
+    <div id="warning">Biological Hazard: Experimental Specimen Red-X</div>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let mouse = { x: 0, y: 0, active: false, speed: 0 };
+        let lastMouse = { x: 0, y: 0 };
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        window.addEventListener('mousemove', e => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            mouse.active = true;
+            mouse.speed = Math.sqrt(Math.pow(mouse.x - lastMouse.x, 2) + Math.pow(mouse.y - lastMouse.y, 2));
+            lastMouse.x = mouse.x;
+            lastMouse.y = mouse.y;
+        });
+
+        resize();
+
+        class DragonSegment {
+            constructor(dist) {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.angle = 0;
+                this.dist = dist;
+            }
+
+            update(targetX, targetY, index, isHead) {
+                const dx = targetX - this.x;
+                const dy = targetY - this.y;
+                this.angle = Math.atan2(dy, dx);
+                
+                let friction = isHead ? 0.12 : 0.4;
+                const wave = Math.sin(Date.now() * 0.004 + index * 0.4) * (index * 0.8);
+                
+                const realTargetX = targetX - Math.cos(this.angle) * this.dist;
+                const realTargetY = targetY - Math.sin(this.angle) * this.dist;
+
+                this.x += (realTargetX - this.x) * friction;
+                this.y += (realTargetY - this.y) * friction + (wave * 0.05);
+            }
+
+            draw(index, total) {
+                const isHead = index === 0;
+                const sizeFactor = 1 - (index / total);
+                
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+
+                if (isHead) {
+                    this.drawHead();
+                } else {
+                    this.drawBody(index, sizeFactor);
+                }
+
+                // Add Legs to specific segments
+                if (index === 8 || index === 25) {
+                    this.drawLegs(index, sizeFactor);
+                }
+
+                ctx.restore();
+            }
+
+            drawHead() {
+                ctx.shadowBlur = 25;
+                ctx.shadowColor = '#ff0000';
+                
+                // Bone Structure (Skull)
+                ctx.fillStyle = '#eee'; 
+                ctx.beginPath();
+                ctx.moveTo(45, 0); // Snout
+                ctx.lineTo(20, -12); // Brow
+                ctx.lineTo(-10, -15); // Back skull
+                ctx.lineTo(-10, 15);
+                ctx.lineTo(20, 12);
+                ctx.closePath();
+                ctx.fill();
+
+                // Fleshy bits
+                ctx.fillStyle = '#600';
+                ctx.fillRect(0, -8, 15, 16);
+
+                // Horns (Bony)
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                for(let side of [-1, 1]) {
+                    ctx.beginPath();
+                    ctx.moveTo(-5, side * 10);
+                    ctx.quadraticCurveTo(-20, side * 30, -50, side * 40);
+                    ctx.stroke();
+                }
+
+                // Crimson Glow Eyes
+                ctx.shadowColor = '#ff0000';
+                ctx.fillStyle = '#ff0000';
+                ctx.beginPath();
+                ctx.arc(22, -6, 4, 0, Math.PI * 2);
+                ctx.arc(22, 6, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            drawBody(index, sizeFactor) {
+                const boneColor = `rgba(230, 230, 230, ${0.9 * sizeFactor})`;
+                const featherColor = `rgba(150, 0, 0, ${0.6 * sizeFactor})`;
+
+                // 1. Feathers / Mane (Drawn first to be under bone)
+                ctx.fillStyle = featherColor;
+                for(let i = 0; i < 6; i++) {
+                    let angleOffset = (i / 6) * Math.PI - Math.PI/2;
+                    ctx.beginPath();
+                    ctx.rotate(angleOffset);
+                    ctx.moveTo(0,0);
+                    ctx.ellipse(0, -25 * sizeFactor, 4 * sizeFactor, 15 * sizeFactor, 0, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.rotate(-angleOffset);
+                }
+
+                // 2. Vertebrae (Bone)
+                ctx.fillStyle = boneColor;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = 'red';
+                
+                // Central Bone
+                ctx.beginPath();
+                ctx.roundRect(-8 * sizeFactor, -8 * sizeFactor, 16 * sizeFactor, 16 * sizeFactor, 4);
+                ctx.fill();
+
+                // Ribs
+                ctx.strokeStyle = boneColor;
+                ctx.lineWidth = 3 * sizeFactor;
+                ctx.beginPath();
+                ctx.moveTo(0, -5); ctx.lineTo(-10 * sizeFactor, -30 * sizeFactor);
+                ctx.moveTo(0, 5); ctx.lineTo(-10 * sizeFactor, 30 * sizeFactor);
+                ctx.stroke();
+            }
+
+            drawLegs(index, sizeFactor) {
+                const time = Date.now() * 0.008;
+                const boneColor = '#ddd';
+
+                for (let side of [-1, 1]) {
+                    ctx.save();
+                    // Movement logic for legs
+                    const legSwing = Math.sin(time + index) * 0.5;
+                    
+                    ctx.strokeStyle = boneColor;
+                    ctx.lineWidth = 5 * sizeFactor;
+                    ctx.lineJoin = 'round';
+
+                    ctx.beginPath();
+                    ctx.moveTo(0, side * 10); // Shoulder
+                    // Joint 1
+                    const j1x = Math.cos(legSwing) * 30 * sizeFactor;
+                    const j1y = side * 40 * sizeFactor + Math.sin(legSwing) * 20;
+                    ctx.lineTo(j1x, j1y);
+                    // Joint 2 (Claw)
+                    const j2x = j1x + Math.sin(legSwing) * 20;
+                    const j2y = j1y + side * 20;
+                    ctx.lineTo(j2x, j2y);
+                    ctx.stroke();
+
+                    // Claws
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath();
+                    ctx.arc(j2x, j2y, 4 * sizeFactor, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+        }
+
+        const segments = [];
+        const numSegments = 55;
+        const segmentDist = 15;
+
+        for (let i = 0; i < numSegments; i++) {
+            segments.push(new DragonSegment(segmentDist));
+        }
+
+        function animate() {
+            // Dark "Meat" Atmosphere
+            ctx.fillStyle = "rgba(10, 0, 0, 0.18)";
+            ctx.fillRect(0, 0, width, height);
+
+            // Auto-orbit if no mouse
+            let tX = mouse.active ? mouse.x : width / 2 + Math.cos(Date.now() * 0.0005) * (width/3);
+            let tY = mouse.active ? mouse.y : height / 2 + Math.sin(Date.now() * 0.0005) * (height/3);
+
+            let targetX = tX;
+            let targetY = tY;
+
+            // Update all segments
+            for (let i = 0; i < segments.length; i++) {
+                segments[i].update(targetX, targetY, i, i === 0);
+                targetX = segments[i].x;
+                targetY = segments[i].y;
+            }
+
+            // Draw (Tail to Head)
+            for (let i = segments.length - 1; i >= 0; i--) {
+                segments[i].draw(i, segments.length);
+            }
+
+            // Blood Splatter Glitch
+            if (Math.random() > 0.98) {
+                ctx.fillStyle = "rgba(255, 0, 0, 0.05)";
+                ctx.beginPath();
+                ctx.arc(Math.random()*width, Math.random()*height, Math.random()*100, 0, Math.PI*2);
+                ctx.fill();
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

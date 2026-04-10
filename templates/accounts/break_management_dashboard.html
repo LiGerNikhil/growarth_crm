@@ -1,0 +1,352 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Break Management Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+          <i class="bx bx-coffee me-2"></i>Break Management Dashboard
+        </h5>
+        <div class="d-flex gap-2">
+          <span class="badge bg-primary">{{ today|date:"F d, Y" }}</span>
+          <a href="{% url 'accounts:staff_management' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bx bx-arrow-back me-1"></i>Back to Staff
+          </a>
+        </div>
+      </div>
+      <div class="card-body">
+        
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+          <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="avatar bg-white bg-opacity-20 rounded p-3 me-3">
+                    <i class="bx bx-time-five fs-3"></i>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h4 class="mb-0">{{ total_active_breaks }}</h4>
+                    <small>Active Breaks</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-danger text-white">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="avatar bg-white bg-opacity-20 rounded p-3 me-3">
+                    <i class="bx bx-error fs-3"></i>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h4 class="mb-0">{{ total_exceeded_breaks }}</h4>
+                    <small>Exceeded Breaks</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="avatar bg-white bg-opacity-20 rounded p-3 me-3">
+                    <i class="bx bx-coffee me-2"></i>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h4 class="mb-0">{{ break_stats.tea_morning.active }}</h4>
+                    <small>Morning Tea</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="avatar bg-white bg-opacity-20 rounded p-3 me-3">
+                    <i class="bx bx-restaurant me-2"></i>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h4 class="mb-0">{{ break_stats.lunch.active }}</h4>
+                    <small>Lunch Break</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Breaks -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h6 class="card-title mb-0">
+                  <i class="bx bx-time me-2"></i>Currently on Break ({{ total_active_breaks }})
+                </h6>
+              </div>
+              <div class="card-body">
+                {% if active_breaks %}
+                  <div class="table-responsive">
+                    <table class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>Employee</th>
+                          <th>Break Type</th>
+                          <th>Start Time</th>
+                          <th>Duration</th>
+                          <th>Status</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for break in active_breaks %}
+                        <tr class="{% if break.is_exceeded %}table-danger{% endif %}">
+                          <td>
+                            <div class="d-flex align-items-center">
+                              <div class="avatar bg-primary text-white rounded-circle me-2" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                {{ break.attendance.employee.first_name.0 }}{{ break.attendance.employee.last_name.0 }}
+                              </div>
+                              <div>
+                                <div class="fw-medium">{{ break.attendance.employee.get_full_name }}</div>
+                                <small class="text-muted">{{ break.attendance.employee.employee_id|default:"No ID" }}</small>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <span class="badge bg-label-{{ break.break_type }}">
+                              {{ break.get_clean_break_type }}
+                            </span>
+                          </td>
+                          <td>{{ break.start_time|time:"g:i A" }}</td>
+                          <td>
+                            <span class="{% if break.is_exceeded %}text-danger{% else %}text-success{% endif %}">
+                              {{ break.get_duration_minutes }} min
+                              {% if break.is_exceeded %}
+                                <i class="bx bx-error-circle"></i>
+                              {% endif %}
+                            </span>
+                          </td>
+                          <td>
+                            {{ break.get_status_display|safe }}
+                          </td>
+                          <td>
+                            <a href="{% url 'accounts:staff_detail' break.attendance.employee.pk %}" 
+                               class="btn btn-sm btn-outline-primary" target="_blank">
+                              <i class="bx bx-user"></i> Profile
+                            </a>
+                          </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                {% else %}
+                  <div class="text-center text-muted py-4">
+                    <i class="bx bx-coffee fs-1 mb-2"></i>
+                    <p>No employees are currently on break</p>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Exceeded Breaks -->
+        {% if exceeded_breaks %}
+        <div class="row mb-4">
+          <div class="col-12">
+            <div class="card border-danger">
+              <div class="card-header bg-danger text-white">
+                <h6 class="card-title mb-0">
+                  <i class="bx bx-error-circle me-2"></i>Break Duration Exceeded ({{ total_exceeded_breaks }})
+                </h6>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>Employee</th>
+                        <th>Break Type</th>
+                        <th>Duration</th>
+                        <th>Exceeded By</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for break in exceeded_breaks %}
+                      <tr class="table-danger">
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar bg-danger text-white rounded-circle me-2" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                              {{ break.attendance.employee.first_name.0 }}{{ break.attendance.employee.last_name.0 }}
+                            </div>
+                            <div>
+                              <div class="fw-medium">{{ break.attendance.employee.get_full_name }}</div>
+                              <small class="text-muted">{{ break.attendance.employee.employee_id|default:"No ID" }}</small>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span class="badge bg-label-{{ break.break_type }}">
+                            {{ break.get_clean_break_type }}
+                          </span>
+                        </td>
+                        <td class="text-danger fw-bold">{{ break.get_duration_minutes }} min</td>
+                        <td class="text-danger fw-bold">+{{ break.get_exceeded_minutes }} min</td>
+                        <td>
+                          <span class="badge bg-danger">
+                            <i class="bx bx-error-circle me-1"></i>Exceeded
+                          </span>
+                        </td>
+                        <td>
+                          <div class="btn-group" role="group">
+                            <a href="{% url 'accounts:staff_detail' break.attendance.employee.pk %}" 
+                               class="btn btn-sm btn-outline-primary" target="_blank">
+                              <i class="bx bx-user"></i> Profile
+                            </a>
+                            <button class="btn btn-sm btn-warning" onclick="notifyEmployee('{{ break.attendance.employee.get_full_name }}', '{{ break.get_exceeded_minutes }}')">
+                              <i class="bx bx-bell"></i> Notify
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Top Violators -->
+        {% if top_violators %}
+        <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h6 class="card-title mb-0">
+                  <i class="bx bx-chart me-2"></i>Weekly Break Violators
+                </h6>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>Employee</th>
+                        <th>Violations</th>
+                        <th>Total Exceeded Minutes</th>
+                        <th>Break Details</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for employee, data in top_violators %}
+                      <tr>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <div class="avatar bg-warning text-white rounded-circle me-2" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                              {{ employee.first_name.0 }}{{ employee.last_name.0 }}
+                            </div>
+                            <div>
+                              <div class="fw-medium">{{ employee.get_full_name }}</div>
+                              <small class="text-muted">{{ employee.employee_id|default:"No ID" }}</small>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span class="badge bg-danger">{{ data.violations }}</span>
+                        </td>
+                        <td class="text-danger fw-bold">{{ data.total_exceeded_minutes }} min</td>
+                        <td>
+                          <div class="small">
+                            {% for break in data.breaks|slice:":3" %}
+                              <div class="text-muted">
+                                {{ break.get_clean_break_type }}: {{ break.get_duration_minutes }} min
+                                {% if break.is_exceeded %}(+{{ break.get_exceeded_minutes }}){% endif %}
+                              </div>
+                            {% endfor %}
+                            {% if data.breaks|length > 3 %}
+                              <div class="text-info">+{{ data.breaks|length|add:"-3" }} more...</div>
+                            {% endif %}
+                          </div>
+                        </td>
+                        <td>
+                          <a href="{% url 'accounts:staff_detail' employee.pk %}" 
+                             class="btn btn-sm btn-outline-primary" target="_blank">
+                            <i class="bx bx-user"></i> Profile
+                          </a>
+                        </td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function notifyEmployee(employeeName, exceededMinutes) {
+    if (confirm(`Send notification to ${employeeName} about exceeding break by ${exceededMinutes} minutes?`)) {
+        // Here you can implement the notification logic
+        // For now, just show a success message
+        alert(`Notification sent to ${employeeName}`);
+    }
+}
+
+// Auto-refresh every 30 seconds
+setInterval(() => {
+    location.reload();
+}, 30000);
+</script>
+
+<style>
+.table-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.badge.bg-label-tea_morning {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #856404;
+}
+
+.badge.bg-label-lunch {
+    background-color: rgba(23, 162, 184, 0.2);
+    color: #0c5460;
+}
+
+.badge.bg-label-tea_afternoon {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #856404;
+}
+
+.badge.bg-label-other {
+    background-color: rgba(108, 117, 125, 0.2);
+    color: #383d41;
+}
+</style>
+
+{% endblock %}

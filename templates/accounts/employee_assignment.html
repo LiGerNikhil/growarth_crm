@@ -1,0 +1,339 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Employee Assignment Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+  .badge {
+    font-size: 0.85em;
+    padding: 0.5em 0.8em;
+  }
+  .input-group .btn {
+    border-radius: 0 0.375rem 0.375rem 0;
+  }
+  .card-header {
+    font-weight: 600;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmRemoveModal" tabindex="-1" aria-labelledby="confirmRemoveModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmRemoveModalLabel">
+          <i class="bx bx-error-circle me-2"></i>Confirm Employee Removal
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center py-3">
+          <i class="bx bx-user-x fs-1 text-danger mb-3"></i>
+          <h6 class="mb-2">Are you sure you want to remove this employee?</h6>
+          <p class="text-muted mb-0">
+            <strong id="employeeName"></strong> will be removed from <strong id="teamLeaderName"></strong>'s team.
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bx bx-x me-1"></i>Cancel
+        </button>
+        <button type="button" class="btn btn-danger" id="confirmRemoveBtn">
+          <i class="bx bx-trash me-1"></i>Remove Employee
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function confirmRemoveEmployee(employeeName, teamLeaderName, formAction) {
+    // Set modal content
+    document.getElementById('employeeName').textContent = employeeName;
+    document.getElementById('teamLeaderName').textContent = teamLeaderName;
+    
+    // Set confirm button action
+    document.getElementById('confirmRemoveBtn').onclick = function() {
+        formAction.submit();
+        bootstrap.Modal.getInstance(document.getElementById('confirmRemoveModal')).hide();
+    };
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('confirmRemoveModal'));
+    modal.show();
+}
+</script>
+
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="card-title mb-0">Employee Assignment Dashboard</h5>
+            <p class="text-muted mb-0 mt-1">Manage employee assignments across all managers and team leaders</p>
+          </div>
+          <div class="d-flex gap-2">
+            <span class="badge bg-label-info">{{ total_managers }} Managers</span>
+            <span class="badge bg-label-warning">{{ total_unassigned }} Unassigned</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        
+        <!-- Team Leaders Section -->
+        {% if hierarchy_data %}
+          {% for manager_data in hierarchy_data %}
+          <div class="row mb-4">
+            <div class="col-12">
+              <div class="card">
+                <div class="card-header bg-primary text-white">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                      <div class="avatar avatar-sm me-3">
+                        <div class="avatar-initial rounded-circle bg-white text-primary">
+                          {{ manager_data.manager.first_name.0 }}
+                        </div>
+                      </div>
+                      <div>
+                        <h6 class="mb-0">{{ manager_data.manager.full_name }}</h6>
+                        <small>{{ manager_data.manager.position }} • Manager</small>
+                      </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                      <span class="badge bg-light text-primary">{{ manager_data.team_leaders|length }} Team Leaders</span>
+                      <span class="badge bg-light text-primary">{{ manager_data.total_team_members }} Team Members</span>
+                      <span class="badge bg-warning">{{ manager_data.unassigned_team_members }} Available</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-body">
+                  
+                  {% if manager_data.team_leaders %}
+                    <div class="row">
+                      {% for team_leader_data in manager_data.team_leaders %}
+                      <div class="col-md-6 mb-4">
+                        <div class="card border">
+                          <div class="card-header bg-light">
+                            <div class="d-flex justify-content-between align-items-center">
+                              <div class="d-flex align-items-center">
+                                <div class="avatar avatar-xs me-2">
+                                  <div class="avatar-initial rounded-circle bg-info text-white">
+                                    {{ team_leader_data.team_leader.first_name.0 }}
+                                  </div>
+                                </div>
+                                <div>
+                                  <h6 class="mb-0">
+                                    <a href="{% url 'accounts:team_leader_assignment' team_leader_data.team_leader.pk %}" 
+                                       class="text-decoration-none">
+                                      {{ team_leader_data.team_leader.full_name }}
+                                    </a>
+                                  </h6>
+                                  <small class="text-muted">{{ team_leader_data.team_leader.position }}</small>
+                                </div>
+                              </div>
+                              <span class="badge bg-label-info">{{ team_leader_data.team_member_count }} Members</span>
+                            </div>
+                          </div>
+                          <div class="card-body">
+                            
+                            <!-- Team Members -->
+                            {% if team_leader_data.team_members %}
+                              <div class="mb-3">
+                                <small class="text-muted fw-semibold">Current Team Members:</small>
+                                <div class="mt-2">
+                                  {% for member in team_leader_data.team_members %}
+                                    <div class="d-inline-block me-2 mb-2">
+                                      <span class="badge bg-light text-dark border">
+                                        <i class="bx bx-user me-1"></i>{{ member.full_name }}
+                                        <form method="POST" action="{% url 'accounts:remove_from_team' member.pk %}" 
+                                              class="d-inline ms-1" 
+                                              id="removeForm-{{ member.pk }}">
+                                          {% csrf_token %}
+                                          <button type="button" class="btn btn-sm btn-link text-danger p-0 text-decoration-none"
+                                                 onclick="confirmRemoveEmployee('{{ member.full_name }}', '{{ team_leader_data.team_leader.full_name }}', document.getElementById('removeForm-{{ member.pk }}'))">
+                                            <i class="bx bx-x-circle"></i> Remove
+                                          </button>
+                                        </form>
+                                      </span>
+                                    </div>
+                                  {% endfor %}
+                                </div>
+                              </div>
+                            {% else %}
+                              <div class="mb-3">
+                                <small class="text-muted fw-semibold">No team members assigned yet</small>
+                              </div>
+                            {% endif %}
+                            
+                          </div>
+                        </div>
+                      </div>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <div class="text-center py-4">
+                      <i class="bx bx-user-x text-muted" style="font-size: 2rem;"></i>
+                      <p class="text-muted mb-0">No team leaders assigned to this manager</p>
+                    </div>
+                  {% endif %}
+                  
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-center py-5">
+            <i class="bx bx-user-x text-muted" style="font-size: 3rem;"></i>
+            <h5 class="text-muted mt-3">No Managers Found</h5>
+            <p class="text-muted">There are no managers available or you don't have permission to view them.</p>
+          </div>
+        {% endif %}
+
+        <!-- Quick Assign Section -->
+        {% if all_unassigned_employees %}
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="card bg-light">
+              <div class="card-header">
+                <h6 class="card-title mb-0">Quick Assign Employee to Team Leader</h6>
+                <small class="text-muted">Assign unassigned employees to any team leader</small>
+              </div>
+              <div class="card-body">
+                <form method="POST" action="{% url 'accounts:quick_assign_to_team_leader' %}">
+                  {% csrf_token %}
+                  <div class="row">
+                    <div class="col-md-5">
+                      <label class="form-label">Select Employee</label>
+                      <select name="employee_id" class="form-select" required>
+                        <option value="">Choose an unassigned employee...</option>
+                        {% for employee in all_unassigned_employees %}
+                          <option value="{{ employee.pk }}">{{ employee.full_name }} - {{ employee.position }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-md-5">
+                      <label class="form-label">Select Team Leader</label>
+                      <select name="team_leader_id" class="form-select" required>
+                        <option value="">Choose a team leader...</option>
+                        {% for team_leader in all_team_leaders %}
+                          <option value="{{ team_leader.pk }}">{{ team_leader.full_name }} - {{ team_leader.position }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                      <button type="submit" class="btn btn-primary w-100">
+                        <i class="bx bx-user-plus me-1"></i>Assign
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function assignToTeamLeader(teamLeaderId) {
+    console.log('Assign function called for team leader:', teamLeaderId);
+    
+    const select = document.getElementById('assign-select-' + teamLeaderId);
+    console.log('Found select element:', select);
+    
+    if (!select) {
+        console.error('Select element not found for team leader:', teamLeaderId);
+        alert('Error: Could not find employee selection dropdown');
+        return;
+    }
+    
+    const employeeId = select.value;
+    console.log('Selected employee ID:', employeeId);
+    
+    if (!employeeId) {
+        alert('Please select an employee to assign');
+        return;
+    }
+    
+    if (!confirm('Are you sure you want to assign this employee to the team leader?')) {
+        return;
+    }
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('employee_id', employeeId);
+    formData.append('team_leader_id', teamLeaderId);
+    
+    // Get CSRF token from multiple possible sources
+    let csrfToken = '';
+    const csrfTokenElement = document.querySelector('[name=csrfmiddlewaretoken]') || 
+                           document.querySelector('input[name="csrfmiddlewaretoken"]') ||
+                           document.querySelector('meta[name="csrf-token"]');
+    
+    if (csrfTokenElement) {
+        csrfToken = csrfTokenElement.value || csrfTokenElement.content;
+    }
+    
+    // Fallback: get from cookie
+    if (!csrfToken) {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'csrftoken') {
+                csrfToken = value;
+                break;
+            }
+        }
+    }
+    
+    formData.append('csrfmiddlewaretoken', csrfToken);
+    
+    console.log('Sending request with data:', {
+        employee_id: employeeId,
+        team_leader_id: teamLeaderId,
+        csrf_token: csrfToken ? 'present' : 'missing'
+    });
+    
+    // Send POST request
+    fetch('{% url "accounts:quick_assign_to_team_leader" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        console.log('Response received:', response);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        if (data.success) {
+            // Reload the page to show updated assignments
+            window.location.reload();
+        } else {
+            alert('Error: ' + (data.message || 'Assignment failed'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while assigning the employee: ' + error.message);
+    });
+}
+</script>
+{% endblock %}

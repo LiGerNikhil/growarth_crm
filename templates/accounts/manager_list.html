@@ -1,0 +1,180 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Managers{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Manager Management</h5>
+        <div class="d-flex gap-2">
+          <a href="{% url 'accounts:staff_management' %}" class="btn btn-outline-secondary">
+            <i class="bx bx-group me-1"></i>All Employees
+          </a>
+          {% if request.user.employee.is_superadmin %}
+          <a href="{% url 'accounts:staff_create' %}" class="btn btn-primary">
+            <i class="bx bx-plus me-1"></i>Add Manager
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="card-body">
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+          <div class="col-md-4">
+            <div class="card bg-primary text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ total_managers }}</h4>
+                    <p class="mb-0">Total Managers</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-primary">
+                      <i class="bx bx-user-voice fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card bg-success text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ managers|length }}</h4>
+                    <p class="mb-0">Active Managers</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-success">
+                      <i class="bx bx-check-circle fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card bg-info text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ managers|length }}</h4>
+                    <p class="mb-0">Team Leaders</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-info">
+                      <i class="bx bx-user fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Managers Table -->
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Department</th>
+                <th>Position</th>
+                <th>Team Leaders</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for manager in managers %}
+              <tr>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="avatar avatar-sm me-2">
+                      <div class="avatar-initial rounded-circle bg-label-primary">
+                        {{ manager.first_name.0 }}{{ manager.last_name.0 }}
+                      </div>
+                    </div>
+                    <div>
+                      <div class="fw-medium">{{ manager.full_name }}</div>
+                      <small class="text-muted">{{ manager.employee_id }}</small>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ manager.email }}</td>
+                <td>{{ manager.get_department_display }}</td>
+                <td>{{ manager.position }}</td>
+                <td>
+                  <span class="badge bg-label-info">
+                    {{ manager.team_leaders.count }} Team Leaders
+                  </span>
+                </td>
+                <td>
+                  {% if manager.employment_status == 'active' %}
+                    <span class="badge bg-label-success">Active</span>
+                  {% elif manager.employment_status == 'inactive' %}
+                    <span class="badge bg-label-secondary">Inactive</span>
+                  {% elif manager.employment_status == 'onboarding' %}
+                    <span class="badge bg-label-warning">Onboarding</span>
+                  {% else %}
+                    <span class="badge bg-label-danger">Terminated</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="dropdown">
+                    <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                      <i class="bx bx-dots-horizontal-rounded"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                      <li>
+                        <a class="dropdown-item" href="{% url 'accounts:staff_detail' manager.pk %}">
+                          <i class="bx bx-user me-2"></i>View Details
+                        </a>
+                      </li>
+                      {% if request.user.employee.is_superadmin %}
+                      <li>
+                        <a class="dropdown-item" href="{% url 'accounts:staff_update' manager.pk %}">
+                          <i class="bx bx-edit me-2"></i>Edit Manager
+                        </a>
+                      </li>
+                      <li><hr class="dropdown-divider"></li>
+                      {% if manager.employment_status == 'active' %}
+                      <li>
+                        <a class="dropdown-item text-warning" href="{% url 'accounts:toggle_employee_status' manager.pk %}">
+                          <i class="bx bx-user-x me-2"></i>Deactivate
+                        </a>
+                      </li>
+                      {% else %}
+                      <li>
+                        <a class="dropdown-item text-success" href="{% url 'accounts:toggle_employee_status' manager.pk %}">
+                          <i class="bx bx-user-check me-2"></i>Activate
+                        </a>
+                      </li>
+                      {% endif %}
+                      {% endif %}
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="7" class="text-center py-4">
+                  <div class="text-muted">
+                    <i class="bx bx-user-x fs-1 mb-2 d-block"></i>
+                    No managers found
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

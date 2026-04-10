@@ -1,0 +1,117 @@
+User-agent: *
+Disallow: /
+
+# Disallow all crawlers from accessing the entire site
+# This prevents automated scrapers and bots from accessing any data
+
+# Allow specific search engines (optional - remove if you want to block all)
+# User-agent: Googlebot
+# Allow: /
+# User-agent: Bingbot
+# Allow: /
+
+# Block common scrapers and automation tools
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: Screaming Frog SEO Spider
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: BacklinkCrawler
+Disallow: /
+
+User-agent: LinkdexBot
+Disallow: /
+
+User-agent: GrapeshotCrawler
+Disallow: /
+
+User-agent: Baiduspider
+Disallow: /
+
+User-agent: YandexBot
+Disallow: /
+
+# Block automation and testing tools
+User-agent: Selenium
+Disallow: /
+
+User-agent: WebDriver
+Disallow: /
+
+User-agent: PhantomJS
+Disallow: /
+
+User-agent: HeadlessChrome
+Disallow: /
+
+# Block data extraction tools
+User-agent: DataForSeoBot
+Disallow: /
+
+User-agent: NetpeakSpider
+Disallow: /
+
+User-agent: SerpstatBot
+Disallow: /
+
+# Disallow sensitive areas specifically
+Disallow: /admin/
+Disallow: /accounts/
+Disallow: /api/
+Disallow: /api/v1/
+Disallow: /leads/
+Disallow: /employees/
+Disallow: /reports/
+Disallow: /export/
+Disallow: /download/
+Disallow: /dashboard/
+Disallow: /login/
+Disallow: /register/
+
+# Disallow file uploads and documents
+Disallow: /media/
+Disallow: /static/uploads/
+Disallow: /documents/
+Disallow: /files/
+
+# Disallow search and filter endpoints
+Disallow: /*?search=*
+Disallow: /*?filter=*
+Disallow: /*?q=*
+Disallow: /*?query=*
+
+# Disallow pagination (to prevent scraping all data)
+Disallow: /*?page=*
+Disallow: /*?p=*
+
+# Disallow export and download endpoints
+Disallow: /*.csv$
+Disallow: /*.xlsx$
+Disallow: /*.pdf$
+Disallow: /*.json$
+Disallow: /export/*
+Disallow: /download/*
+
+# Disallow API endpoints
+Disallow: /api/*
+Disallow: /v1/*
+Disallow: /rest/*
+
+# Crawl delay (optional - slows down bots)
+Crawl-delay: 10
+
+# Sitemap (if you have one)
+# Sitemap: https://yourdomain.com/sitemap.xml

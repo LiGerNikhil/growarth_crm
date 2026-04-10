@@ -1,0 +1,133 @@
+{% extends "base/layout.html" %}
+{% load static %}
+{% load lead_filters %}
+
+{% block title %}{{ target_employee.user.get_full_name }}'s Leads{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+  <div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Page Header -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="card-title mb-0">
+              <i class="bx bx-user-voice me-2"></i>
+              {{ target_employee.user.get_full_name }}'s Leads
+            </h4>
+            <div class="d-flex gap-2">
+              <a href="{% url 'accounts:lead_assignment_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bx bx-arrow-back me-1"></i>Back to Dashboard
+              </a>
+              {% if current_employee.is_manager or current_employee.is_team_leader %}
+                <button class="btn btn-primary" onclick="openBulkReassignModal()">
+                  <i class="bx bx-transfer me-1"></i>Bulk Reassign
+                </button>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Employee Information & Statistics -->
+    <div class="row mb-4">
+      <div class="col-lg-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <div class="d-flex align-items-center mb-3">
+              <div class="avatar me-3">
+                {% if target_employee.user.profile_image %}
+                  <img src="{{ target_employee.user.profile_image.url }}" alt="Profile" class="rounded-circle" width="60" height="60">
+                {% else %}
+                  <div class="avatar-initial rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                    {{ target_employee.user.first_name.0 }}{{ target_employee.user.last_name.0 }}
+                  </div>
+                {% endif %}
+              </div>
+              <div>
+                <h5 class="mb-1">{{ target_employee.user.get_full_name }}</h5>
+                <p class="mb-0 text-muted">{{ target_employee.get_role_display }}</p>
+                {% if target_employee.user.phone_numbers.first %}
+                  <small class="text-muted">{{ target_employee.user.phone_numbers.first.phone_number }}</small>
+                {% endif %}
+              </div>
+            </div>
+            
+            <!-- Simple Stats -->
+            <div class="text-center">
+              <h3 class="text-primary">{{ total_leads }}</h3>
+              <p class="text-muted">Total Leads</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Leads Table -->
+      <div class="col-lg-8">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Assigned Leads</h5>
+          </div>
+          <div class="card-body">
+            {% if page_obj %}
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Name</th>
+                      <th>Phone</th>
+                      <th>Status</th>
+                      <th>Assigned At</th>
+                      <th>Created At</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for lead in page_obj %}
+                      <tr>
+                        <td>{{ lead.id }}</td>
+                        <td>{{ lead.get_full_name|default:"-" }}</td>
+                        <td>{{ lead.get_phone_number|default:"-" }}</td>
+                        <td>
+                          <span class="badge bg-{{ lead.status|status_color }}">
+                            {{ lead.get_status_display }}
+                          </span>
+                        </td>
+                        <td>{{ lead.assigned_at|date:"Y-m-d H:i"|default:"-" }}</td>
+                        <td>{{ lead.created_at|date:"Y-m-d H:i" }}</td>
+                        <td>
+                          <!-- View Details Only -->
+                          <a href="{% url 'accounts:lead_assignment_detail' lead.pk %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bx bx-eye me-2"></i>View
+                          </a>
+                        </td>
+                      </tr>
+                    {% empty %}
+                      <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                          <i class="bx bx-inbox" style="font-size: 2rem;"></i>
+                          <p class="mt-3 mb-0">No leads found</p>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="text-center py-5">
+                <i class="bx bx-inbox" style="font-size: 2rem;"></i>
+                <h4 class="mt-3 text-muted">No Leads Available</h4>
+                <p class="text-muted">Unable to load leads. Please try refreshing the page.</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

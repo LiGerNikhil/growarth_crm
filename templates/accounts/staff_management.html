@@ -1,0 +1,415 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Staff Management{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Staff Management</h5>
+        <div class="d-flex gap-2">
+          {% if can_create_employee %}
+            <a href="{% url 'accounts:staff_create' %}" class="btn btn-primary">
+              <i class="bx bx-plus me-1"></i>Add Staff
+            </a>
+          {% endif %}
+          <a href="{% url 'accounts:staff_hierarchy' %}" class="btn btn-outline-info">
+            <i class="bx bx-sitemap me-1"></i>Hierarchy View
+          </a>
+        </div>
+      </div>
+      <div class="card-body">
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="card bg-primary text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ total_employees }}</h4>
+                    <p class="mb-0">Total Staff</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-primary">
+                      <i class="bx bx-group fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-success text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ active_employees }}</h4>
+                    <p class="mb-0">Active Staff</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-success">
+                      <i class="bx bx-check-circle fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-warning text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ leadership_count }}</h4>
+                    <p class="mb-0">Leadership</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-warning">
+                      <i class="bx bx-crown fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-info text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ regular_employees_count }}</h4>
+                    <p class="mb-0">Employees</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-info">
+                      <i class="bx bx-user fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters and Search -->
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <form method="get" class="d-flex gap-2">
+              <input type="text" name="search" class="form-control" placeholder="Search staff..." value="{{ search_query }}">
+              <button type="submit" class="btn btn-outline-secondary">
+                <i class="bx bx-search"></i>
+              </button>
+            </form>
+          </div>
+          <div class="col-md-3">
+            <form method="get" class="d-flex gap-2">
+              <select name="role" class="form-select" onchange="this.form.submit()">
+                <option value="">All Roles</option>
+                {% for role_value, role_label in role_choices %}
+                  <option value="{{ role_value }}" {% if role_filter == role_value %}selected{% endif %}>
+                    {{ role_label }}
+                  </option>
+                {% endfor %}
+              </select>
+              {% if search_query %}
+                <input type="hidden" name="search" value="{{ search_query }}">
+              {% endif %}
+            </form>
+          </div>
+          <div class="col-md-3">
+            <form method="get" class="d-flex gap-2">
+              <select name="status" class="form-select" onchange="this.form.submit()">
+                <option value="">All Status</option>
+                {% for status_value, status_label in status_choices %}
+                  <option value="{{ status_value }}" {% if status_filter == status_value %}selected{% endif %}>
+                    {{ status_label }}
+                  </option>
+                {% endfor %}
+              </select>
+              {% if search_query %}
+                <input type="hidden" name="search" value="{{ search_query }}">
+              {% endif %}
+              {% if role_filter %}
+                <input type="hidden" name="role" value="{{ role_filter }}">
+              {% endif %}
+            </form>
+          </div>
+          <div class="col-md-2">
+            {% if search_query or role_filter or status_filter %}
+              <a href="{% url 'accounts:staff_management' %}" class="btn btn-outline-secondary w-100">
+                <i class="bx bx-refresh me-1"></i>Clear
+              </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Bulk Assignment Section (for Managers) -->
+        {% if current_role == 'manager' or current_role == 'admin' %}
+        <div class="row mb-3">
+          <div class="col-12">
+            <div class="card bg-light">
+              <div class="card-body">
+                <h6 class="card-title mb-3">Bulk Assignment</h6>
+                <div class="row align-items-end">
+                  <div class="col-md-6">
+                    <label class="form-label">Select Team Leader</label>
+                    <select id="bulkTeamLeader" class="form-select">
+                      <option value="">Choose Team Leader</option>
+                      {% for tl in available_team_leaders %}
+                        <option value="{{ tl.id }}">{{ tl.full_name }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="col-md-4">
+                    <button type="button" class="btn btn-success" onclick="bulkAssignEmployees()">
+                      <i class="bx bx-user-plus me-1"></i>Assign Selected
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Staff Table -->
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                {% if current_role == 'manager' or current_role == 'admin' %}
+                <th width="50">
+                  <input type="checkbox" id="selectAll" onchange="toggleAllCheckboxes()">
+                </th>
+                {% endif %}
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Department</th>
+                <th>Reports To</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for employee in employees %}
+              <tr>
+                {% if current_role == 'manager' or current_role == 'admin' %}
+                <td>
+                  <input type="checkbox" class="employee-checkbox" value="{{ employee.id }}" 
+                         {% if employee.role == 'admin' or employee.role == 'superadmin' %}disabled{% endif %}>
+                </td>
+                {% endif %}
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="avatar avatar-sm me-2">
+                      <div class="avatar-initial rounded-circle bg-primary text-white">
+                        {{ employee.first_name.0 }}
+                      </div>
+                    </div>
+                    <div>
+                      <div class="fw-medium">{{ employee.full_name }}</div>
+                      <small class="text-muted">{{ employee.employee_id|default:"ID Pending" }}</small>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ employee.email }}</td>
+                <td>
+                  {% if employee.role == 'superadmin' %}
+                    <span class="badge bg-label-danger">SuperAdmin</span>
+                  {% elif employee.role == 'admin' %}
+                    <span class="badge bg-label-warning">Admin</span>
+                  {% elif employee.role == 'manager' %}
+                    <span class="badge bg-label-info">Manager</span>
+                  {% elif employee.role == 'team_leader' %}
+                    <span class="badge bg-label-primary">Team Leader</span>
+                  {% else %}
+                    <span class="badge bg-label-secondary">Employee</span>
+                  {% endif %}
+                </td>
+                <td>{{ employee.get_department_display }}</td>
+                <td>
+                  {% if employee.reports_to %}
+                    <span class="text-muted">{{ employee.reports_to.full_name }}</span>
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if employee.employment_status == 'active' %}
+                    <span class="badge bg-label-success">Active</span>
+                  {% elif employee.employment_status == 'inactive' %}
+                    <span class="badge bg-label-secondary">Inactive</span>
+                  {% elif employee.employment_status == 'onboarding' %}
+                    <span class="badge bg-label-warning">Onboarding</span>
+                  {% else %}
+                    <span class="badge bg-label-danger">Terminated</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                      Actions
+                    </button>
+                    <ul class="dropdown-menu">
+                      <li>
+                        <a class="dropdown-item" href="{% url 'accounts:staff_detail' employee.pk %}">
+                          <i class="bx bx-eye me-2"></i>View Details
+                        </a>
+                      </li>
+                      {% if employee_data.can_edit %}
+                        <li>
+                          <a class="dropdown-item" href="{% url 'accounts:staff_update' employee.pk %}">
+                            <i class="bx bx-edit me-2"></i>Edit
+                          </a>
+                        </li>
+                        <li>
+                          <a class="dropdown-item" href="{% url 'accounts:assign_phone_number' employee.pk %}">
+                            <i class="bx bx-phone me-2"></i>Assign Phone
+                          </a>
+                        </li>
+                        <li>
+                          <a class="dropdown-item" href="#" onclick="toggleStatus({{ employee.id }})">
+                            <i class="bx bx-power-off me-2"></i>
+                            {% if employee.employment_status == 'active' %}Deactivate{% else %}Activate{% endif %}
+                          </a>
+                        </li>
+                      {% endif %}
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="{% if current_role == 'manager' or current_role == 'admin' %}9{% else %}8{% endif %}" class="text-center py-4">
+                  <i class="bx bx-inbox fs-1 text-muted mb-2 d-block"></i>
+                  <p class="text-muted mb-0">No staff members found</p>
+                  {% if can_create_employee %}
+                    <a href="{% url 'accounts:staff_create' %}" class="btn btn-primary mt-2">
+                      <i class="bx bx-plus me-1"></i>Add Your First Staff Member
+                    </a>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav aria-label="Staff pagination">
+          <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">First</a>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Previous</a>
+              </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+              {% if page_obj.number == num %}
+                <li class="page-item active">
+                  <span class="page-link">{{ num }}</span>
+                </li>
+              {% elif num >= page_range_start and num <= page_range_end %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+                </li>
+              {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Next</a>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Last</a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleAllCheckboxes() {
+  const selectAll = document.getElementById('selectAll');
+  const checkboxes = document.querySelectorAll('.employee-checkbox:not(:disabled)');
+  
+  checkboxes.forEach(checkbox => {
+    checkbox.checked = selectAll.checked;
+  });
+}
+
+function bulkAssignEmployees() {
+  const teamLeaderId = document.getElementById('bulkTeamLeader').value;
+  const selectedEmployees = Array.from(document.querySelectorAll('.employee-checkbox:checked'))
+    .map(cb => cb.value);
+  
+  if (!teamLeaderId) {
+    alert('Please select a team leader');
+    return;
+  }
+  
+  if (selectedEmployees.length === 0) {
+    alert('Please select at least one employee');
+    return;
+  }
+  
+  const formData = new FormData();
+  formData.append('team_leader_id', teamLeaderId);
+  selectedEmployees.forEach(id => formData.append('employee_ids', id));
+  
+  fetch('{% url "accounts:bulk_assign" %}', {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert(data.message);
+      location.reload();
+    } else {
+      alert(data.message);
+    }
+  })
+  .catch(error => {
+    alert('Error: ' + error.message);
+  });
+}
+
+function toggleStatus(employeeId) {
+  fetch(`/accounts/staff/${employeeId}/toggle-status/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert(data.message);
+      location.reload();
+    } else {
+      alert(data.message);
+    }
+  })
+  .catch(error => {
+    alert('Error: ' + error.message);
+  });
+}
+</script>
+
+<!-- CSRF Token for JavaScript -->
+{% csrf_token %}
+{% endblock %}

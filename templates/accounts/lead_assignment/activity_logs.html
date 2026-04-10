@@ -1,0 +1,225 @@
+{% extends "base/layout.html" %}
+{% load static %}
+{% load lead_filters %}
+
+{% block title %}Activity Logs - {{ lead.get_full_name|default:lead.id }}{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+  <div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Page Header -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card mb-4">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="card-title mb-0">
+              <i class="bx bx-history me-2"></i>
+              Activity Logs - {{ lead.get_full_name|default:"Lead" }} #{{ lead.id }}
+            </h4>
+            <div class="d-flex gap-2">
+              <a href="{% url 'accounts:lead_assignment_detail' lead.pk %}" class="btn btn-outline-secondary">
+                <i class="bx bx-arrow-back me-1"></i>Back to Lead Details
+              </a>
+              <a href="{% url 'accounts:lead_assignment_dashboard' %}" class="btn btn-outline-primary">
+                <i class="bx bx-list me-1"></i>Back to Dashboard
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lead Summary -->
+    <div class="row mb-4">
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">
+              <i class="bx bx-user-voice me-2"></i>Lead Summary
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <table class="table table-sm table-borderless">
+                  <tr>
+                    <td><strong>Lead ID:</strong></td>
+                    <td>{{ lead.id }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Name:</strong></td>
+                    <td>{{ lead.get_full_name|default:"-" }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Phone:</strong></td>
+                    <td>{{ lead.get_phone_number|default:"-" }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Status:</strong></td>
+                    <td>
+                      <span class="badge bg-{{ lead.status|status_color }}">
+                        {{ lead.get_status_display }}
+                      </span>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+              <div class="col-md-6">
+                <table class="table table-sm table-borderless">
+                  <tr>
+                    <td><strong>Assigned To:</strong></td>
+                    <td>
+                      {% if lead.assigned_to %}
+                        {{ lead.assigned_to.user.get_full_name }}
+                      {% else %}
+                        <span class="text-muted">Unassigned</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>Assigned At:</strong></td>
+                    <td>{{ lead.assigned_at|date:"Y-m-d H:i"|default:"-" }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Created At:</strong></td>
+                    <td>{{ lead.created_at|date:"Y-m-d H:i" }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Last Contacted:</strong></td>
+                    <td>{{ lead.last_contacted|date:"Y-m-d H:i"|default:"Never" }}</td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+            {% if lead.notes %}
+              <div class="mt-3">
+                <h6>Current Notes:</h6>
+                <div class="alert alert-info">
+                  {{ lead.notes|linebreaks }}
+                </div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">
+              <i class="bx bx-chart me-2"></i>Activity Statistics
+            </h5>
+          </div>
+          <div class="card-body">
+            {% with activity_logs.count as total_activities %}
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span>Total Activities:</span>
+                  <span class="badge bg-primary">{{ total_activities }}</span>
+                </div>
+              </div>
+              
+              {% regroup activity_logs by action as action_list %}
+              {% for action in action_list %}
+                <div class="mb-2">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-capitalize">{{ action.grouper|replace_spaces:" " }}:</span>
+                    <span class="badge bg-{{ action.grouper|action_color }}">
+                      {{ action.list|length }}
+                    </span>
+                  </div>
+                </div>
+              {% endfor %}
+            {% endwith %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activity Logs -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">
+              <i class="bx bx-history me-2"></i>Detailed Activity History
+            </h5>
+          </div>
+          <div class="card-body">
+            {% if activity_logs %}
+              <div class="table-responsive">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Date & Time</th>
+                      <th>Action</th>
+                      <th>Performed By</th>
+                      <th>Description</th>
+                      <th>Details</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for log in activity_logs %}
+                      <tr>
+                        <td>{{ log.created_at|date:"Y-m-d H:i" }}</td>
+                        <td>
+                          <span class="badge bg-{{ log.action|action_color }}">
+                            {{ log.get_action_display }}
+                          </span>
+                        </td>
+                        <td>{{ log.employee.user.get_full_name }}</td>
+                        <td>{{ log.description }}</td>
+                        <td>
+                          {% if log.old_data or log.new_data %}
+                            <button class="btn btn-sm btn-outline-info" onclick="toggleActivityDetails({{ log.id }})">
+                              <i class="bx bx-info-circle me-1"></i>View Details
+                            </button>
+                            <div id="activity-details-{{ log.id }}" class="mt-2" style="display: none;">
+                              {% if log.old_data %}
+                                <div class="mb-2">
+                                  <strong>Previous Data:</strong>
+                                  <pre class="bg-light p-2 rounded">{{ log.old_data|pprint }}</pre>
+                                </div>
+                              {% endif %}
+                              {% if log.new_data %}
+                                <div>
+                                  <strong>New Data:</strong>
+                                  <pre class="bg-light p-2 rounded">{{ log.new_data|pprint }}</pre>
+                                </div>
+                              {% endif %}
+                            </div>
+                          {% else %}
+                            <span class="text-muted">No details</span>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="text-center text-muted py-4">
+                <i class="bx bx-history" style="font-size: 3rem;"></i>
+                <p class="mt-3">No activity logs found for this lead.</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleActivityDetails(logId) {
+  const detailsDiv = document.getElementById(`activity-details-${logId}`);
+  if (detailsDiv.style.display === 'none') {
+    detailsDiv.style.display = 'block';
+  } else {
+    detailsDiv.style.display = 'none';
+  }
+}
+</script>
+{% endblock %}

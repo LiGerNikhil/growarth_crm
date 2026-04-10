@@ -1,0 +1,364 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Excel Batches - Batch Management{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+          <i class="bx bx-list-ul me-2"></i>Excel Batches
+        </h5>
+        <div class="d-flex gap-2">
+          <a href="{% url 'accounts:excel_upload' %}" class="btn btn-primary">
+            <i class="bx bx-plus me-1"></i>Upload New Batch
+          </a>
+          <a href="{% url 'accounts:staff_management' %}" class="btn btn-outline-secondary">
+            <i class="bx bx-arrow-left me-1"></i>Back to Employees
+          </a>
+        </div>
+      </div>
+      <div class="card-body">
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="card bg-primary text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ total_batches }}</h4>
+                    <p class="mb-0">Total Batches</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-primary">
+                      <i class="bx bx-file fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-success text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">
+                      {% for batch in page_obj %}
+                        {% if batch.status == 'completed' %}
+                          {% if forloop.first %}1{% else %}{{ forloop.counter }}{% endif %}
+                        {% endif %}
+                      {% endfor %}
+                    </h4>
+                    <p class="mb-0">Completed</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-success">
+                      <i class="bx bx-check-circle fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-warning text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">
+                      {% for batch in page_obj %}
+                        {% if batch.status == 'pending' or batch.status == 'processing' %}
+                          {% if forloop.first %}1{% else %}{{ forloop.counter }}{% endif %}
+                        {% endif %}
+                      {% endfor %}
+                    </h4>
+                    <p class="mb-0">Pending/Processing</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-warning">
+                      <i class="bx bx-time-five fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-danger text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">
+                      {% for batch in page_obj %}
+                        {% if batch.status == 'failed' or batch.status == 'cancelled' %}
+                          {% if forloop.first %}1{% else %}{{ forloop.counter }}{% endif %}
+                        {% endif %}
+                      {% endfor %}
+                    </h4>
+                    <p class="mb-0">Failed/Cancelled</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-danger">
+                      <i class="bx bx-x-circle fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <form method="get" class="d-flex gap-2">
+              <select name="status" class="form-select" onchange="this.form.submit()">
+                <option value="">All Status</option>
+                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="processing" {% if status_filter == 'processing' %}selected{% endif %}>Processing</option>
+                <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>Failed</option>
+                <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+              </select>
+              {% if status_filter %}
+                <a href="{% url 'accounts:excel_batch_list' %}" class="btn btn-outline-secondary">
+                  <i class="bx bx-x"></i> Clear
+                </a>
+              {% endif %}
+            </form>
+          </div>
+        </div>
+
+        <!-- Batches Table -->
+        {% if page_obj %}
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th>Batch Name</th>
+                  <th>Status</th>
+                  <th>Progress</th>
+                  <th>Total Rows</th>
+                  <th>Created By</th>
+                  <th>Created At</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for batch in page_obj %}
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="avatar avatar-sm bg-label-secondary rounded-circle me-2">
+                        <i class="bx bx-file"></i>
+                      </div>
+                      <div>
+                        <div class="fw-medium">{{ batch.batch_name }}</div>
+                        <small class="text-muted">{{ batch.excel_file.name|slice:"-15:" }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    {% if batch.status == 'pending' %}
+                      <span class="badge bg-label-warning">Pending</span>
+                    {% elif batch.status == 'processing' %}
+                      <span class="badge bg-label-info">Processing</span>
+                    {% elif batch.status == 'completed' %}
+                      <span class="badge bg-label-success">Completed</span>
+                    {% elif batch.status == 'failed' %}
+                      <span class="badge bg-label-danger">Failed</span>
+                    {% elif batch.status == 'cancelled' %}
+                      <span class="badge bg-label-secondary">Cancelled</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if batch.total_rows > 0 %}
+                      <div class="progress" style="height: 6px;">
+                        <div class="progress-bar" 
+                             style="width: {{ batch.progress_percentage }}%; 
+                                    background-color: {% if batch.status == 'completed' %}#71dd37{% elif batch.status == 'failed' %}#ff3e1d{% elif batch.status == 'processing' %}#696cff{% else %}#ffab00{% endif %};">
+                        </div>
+                      </div>
+                      <small class="text-muted">{{ batch.processed_rows }}/{{ batch.total_rows }}</small>
+                    {% else %}
+                      <span class="text-muted">-</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="badge bg-light text-dark">{{ batch.total_rows|default:0 }}</span>
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="avatar avatar-xs bg-label-primary rounded-circle me-2">
+                        <span>{{ batch.created_by.first_name.0 }}{{ batch.created_by.last_name.0 }}</span>
+                      </div>
+                      <span class="text-muted">{{ batch.created_by.get_full_name }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div>
+                      <div>{{ batch.created_at|date:"M d, Y" }}</div>
+                      <small class="text-muted">{{ batch.created_at|time:"g:i A" }}</small>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="dropdown">
+                      <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="bx bx-dots-horizontal-rounded"></i>
+                      </button>
+                      <ul class="dropdown-menu">
+                        <li>
+                          <a class="dropdown-item" href="{% url 'accounts:excel_batch_detail' batch.pk %}">
+                            <i class="bx bx-eye me-2"></i>View Details
+                          </a>
+                        </li>
+                        {% if batch.status == 'completed' %}
+                          <li>
+                            <a class="dropdown-item" href="{{ batch.excel_file.url }}" download>
+                              <i class="bx bx-download me-2"></i>Download File
+                            </a>
+                          </li>
+                        {% endif %}
+                        <li>
+                          <a class="dropdown-item text-danger" href="{% url 'accounts:delete_excel_batch' batch.pk %}">
+                            <i class="bx bx-trash me-2"></i>Delete Batch
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          {% if page_obj.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+              <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                      <i class="bx bx-chevron-left"></i>
+                    </a>
+                  </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                  {% if page_obj.number == num %}
+                    <li class="page-item active">
+                      <span class="page-link">{{ num }}</span>
+                    </li>
+                  {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ num }}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+                    </li>
+                  {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                      <i class="bx bx-chevron-right"></i>
+                    </a>
+                  </li>
+                {% endif %}
+              </ul>
+            </nav>
+          {% endif %}
+        {% else %}
+          <div class="text-center py-5">
+            <i class="bx bx-file fs-1 text-muted mb-3"></i>
+            <h6 class="mb-2">No Excel Batches Found</h6>
+            <p class="text-muted">
+              {% if status_filter %}
+                No batches found with the selected status. 
+                <a href="{% url 'accounts:excel_batch_list' %}">Clear filter</a> to see all batches.
+              {% else %}
+                No Excel batches have been uploaded yet. Upload your first batch to get started.
+              {% endif %}
+            </p>
+            {% if not status_filter %}
+              <a href="{% url 'accounts:excel_upload' %}" class="btn btn-primary">
+                <i class="bx bx-plus me-1"></i>Upload First Batch
+              </a>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.progress {
+  background-color: #f0f0f0;
+}
+
+.progress-bar {
+  transition: width 0.3s ease;
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+}
+
+.avatar-xs {
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 0.75rem;
+}
+
+.avatar-sm {
+  width: 2rem;
+  height: 2rem;
+  font-size: 0.875rem;
+}
+
+.avatar-xl {
+  width: 3rem;
+  height: 3rem;
+  font-size: 1.25rem;
+}
+
+.avatar-initial {
+  font-weight: 600;
+}
+
+.bg-label-primary {
+  background-color: #e7e7ff !important;
+  color: #696cff !important;
+}
+
+.bg-label-secondary {
+  background-color: #f5f5f9 !important;
+  color: #82868b !important;
+}
+
+.bg-label-success {
+  background-color: #e8fadf !important;
+  color: #71dd37 !important;
+}
+
+.bg-label-warning {
+  background-color: #fff4de !important;
+  color: #ffab00 !important;
+}
+
+.bg-label-danger {
+  background-color: #ffdede !important;
+  color: #ff3e1d !important;
+}
+
+.bg-label-info {
+  background-color: #d7f5ff !important;
+  color: #03c3ec !important;
+}
+</style>
+{% endblock %}

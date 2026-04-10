@@ -1,0 +1,381 @@
+{% extends "base/layout.html" %}
+
+{% block title %}{{ status_filter|title }} Leads - Lead Management{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+          <h5 class="card-title mb-0">
+            <i class="bx bx-filter me-2"></i>{{ status_filter|title }} Leads
+          </h5>
+          <p class="text-muted mb-0">
+            {% if page_obj.paginator.count == 1 %}
+              Showing 1 lead
+            {% else %}
+              Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }} leads
+            {% endif %}
+          </p>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="{% url 'accounts:lead_list' %}" class="btn btn-outline-secondary">
+            <i class="bx bx-arrow-back me-1"></i>Back to All Leads
+          </a>
+          {% if user.employee.is_superadmin or user.employee.is_admin %}
+            <a href="{% url 'accounts:assign_leads' %}" class="btn btn-primary">
+              <i class="bx bx-user-plus me-1"></i>Assign Leads
+            </a>
+            <!-- <a href="{% url 'accounts:unassign_leads' %}" class="btn btn-warning">
+              <i class="bx bx-user-x me-1"></i>Unassign Leads
+            </a> -->
+            <a href="{% url 'accounts:delete_leads' %}" class="btn btn-danger">
+              <i class="bx bx-trash me-1"></i>Delete Leads
+            </a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="card-body">
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+          <div class="col">
+            <div class="card bg-primary text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ page_obj.paginator.count }}</h4>
+                    <p class="mb-0">Total Leads</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-primary">
+                      <i class="bx bx-user-voice fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card {% if status_filter == 'new' %}bg-primary text-white{% else %}bg-success text-white{% endif %}">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ status_counts.new }}</h4>
+                    <p class="mb-0">New</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle {% if status_filter == 'new' %}bg-white text-primary{% else %}bg-white text-success{% endif %}">
+                      <i class="bx bx-user-plus fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card {% if status_filter == 'contacted' %}bg-primary text-white{% else %}bg-info text-white{% endif %}">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ status_counts.contacted }}</h4>
+                    <p class="mb-0">Contacted</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <span class="avatar-initial rounded-circle {% if status_filter == 'contacted' %}bg-white text-primary{% else %}bg-white text-info{% endif %}">C</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card {% if status_filter == 'interested' %}bg-primary text-white{% else %}bg-warning text-white{% endif %}">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ status_counts.interested }}</h4>
+                    <p class="mb-0">Interested</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle {% if status_filter == 'interested' %}bg-white text-primary{% else %}bg-white text-warning{% endif %}">
+                      <i class="bx bx-heart fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card {% if status_filter == 'not_interested' %}bg-primary text-white{% else %}bg-danger text-white{% endif %}">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ status_counts.not_interested }}</h4>
+                    <p class="mb-0">Not Interested</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <span class="avatar-initial rounded-circle {% if status_filter == 'not_interested' %}bg-white text-primary{% else %}bg-white text-danger{% endif %}">NI</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card {% if status_filter == 'not_eligible' %}bg-primary text-white{% else %}bg-light{% endif %}">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ status_counts.not_eligible }}</h4>
+                    <p class="mb-0">Not Eligible</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <span class="avatar-initial rounded-circle {% if status_filter == 'not_eligible' %}bg-white text-primary{% else %}bg-dark text-white{% endif %}">NE</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card {% if status_filter == 'follow_up' %}bg-primary text-white{% else %}bg-info text-white{% endif %}">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ status_counts.follow_up }}</h4>
+                    <p class="mb-0">Follow Up</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <span class="avatar-initial rounded-circle {% if status_filter == 'follow_up' %}bg-white text-primary{% else %}bg-white text-info{% endif %}">FU</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card {% if status_filter == 'converted' %}bg-primary text-white{% else %}bg-success text-white{% endif %}">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ status_counts.converted }}</h4>
+                    <p class="mb-0">Converted</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle {% if status_filter == 'converted' %}bg-white text-primary{% else %}bg-white text-success{% endif %}">
+                      <i class="bx bx-check-circle fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="d-flex gap-2 align-items-center">
+              <label class="form-label mb-0">Quick Filter:</label>
+              <div class="btn-group" role="group">
+                {% for status_value, status_label in lead_status_choices %}
+                  <a href="{% url 'accounts:leads_by_status' status_value %}" 
+                     class="btn {% if status_filter == status_value %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    {{ status_label }}
+                  </a>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Leads Table -->
+        {% if page_obj %}
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Company</th>
+                  <th>Assigned To</th>
+                  <th>Status</th>
+                  <th>Batch</th>
+                  <th>Last Updated</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for lead in page_obj %}
+                  <tr>
+                    <td>
+                      <strong>{{ lead.first_name }} {{ lead.last_name }}</strong>
+                    </td>
+                    <td>
+                      {% if lead.email %}
+                        <a href="mailto:{{ lead.email }}" class="text-decoration-none">{{ lead.email }}</a>
+                      {% else %}
+                        -
+                      {% endif %}
+                    </td>
+                    <td>{{ lead.phone|default:"-" }}</td>
+                    <td>{{ lead.company|default:"-" }}</td>
+                    <td>
+                      {% if lead.assigned_to %}
+                        <span class="badge bg-light text-dark">{{ lead.assigned_to.full_name }}</span>
+                      {% else %}
+                        <span class="badge bg-secondary">Unassigned</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if lead.status == 'new' %}
+                        <span class="badge bg-success">New</span>
+                      {% elif lead.status == 'contacted' %}
+                        <span class="badge bg-info">Contacted</span>
+                      {% elif lead.status == 'interested' %}
+                        <span class="badge bg-warning">Interested</span>
+                      {% elif lead.status == 'not_interested' %}
+                        <span class="badge bg-danger">Not Interested</span>
+                      {% elif lead.status == 'not_eligible' %}
+                        <span class="badge bg-dark">Not Eligible</span>
+                      {% elif lead.status == 'converted' %}
+                        <span class="badge bg-primary">Converted</span>
+                      {% elif lead.status == 'follow_up' %}
+                        <span class="badge bg-secondary">Follow Up</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if lead.batch_row and lead.batch_row.batch %}
+                        <small>{{ lead.batch_row.batch.batch_name }}</small>
+                      {% else %}
+                        -
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if lead.last_updated %}
+                        <small>{{ lead.last_updated|date:"M d, Y H:i" }}</small>
+                      {% else %}
+                        <small class="text-muted">Never</small>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <div class="btn-group" role="group">
+                        <a href="{% url 'accounts:lead_detail' lead.id %}" 
+                           class="btn btn-sm btn-outline-primary" 
+                           title="View Details">
+                          <i class="bx bx-show"></i>
+                        </a>
+                        {% if user.employee.is_superadmin or user.employee.is_admin %}
+                          <a href="{% url 'accounts:lead_detail' lead.id %}#update-section" 
+                             class="btn btn-sm btn-outline-secondary" 
+                             title="Update Lead">
+                            <i class="bx bx-edit"></i>
+                          </a>
+                        {% endif %}
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          {% if page_obj.has_other_pages %}
+            <nav aria-label="Lead pagination">
+              <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                      <i class="bx bx-chevron-left"></i>
+                    </a>
+                  </li>
+                {% else %}
+                  <li class="page-item disabled">
+                    <span class="page-link"><i class="bx bx-chevron-left"></i></span>
+                  </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                  {% if page_obj.number == num %}
+                    <li class="page-item active">
+                      <span class="page-link">{{ num }}</span>
+                    </li>
+                  {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                  {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                      <i class="bx bx-chevron-right"></i>
+                    </a>
+                  </li>
+                {% else %}
+                  <li class="page-item disabled">
+                    <span class="page-link"><i class="bx bx-chevron-right"></i></span>
+                  </li>
+                {% endif %}
+              </ul>
+            </nav>
+          {% endif %}
+        {% else %}
+          <div class="text-center py-5">
+            <i class="bx bx-search fs-1 text-muted mb-3"></i>
+            <h5 class="text-muted">No {{ status_filter }} leads found</h5>
+            <p class="text-muted">Try adjusting your filters or check back later</p>
+            <a href="{% url 'accounts:lead_list' %}" class="btn btn-primary">
+              <i class="bx bx-arrow-back me-1"></i>Back to All Leads
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.avatar-xl {
+  width: 3rem;
+  height: 3rem;
+}
+
+.avatar-initial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.card {
+  transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.btn-group .btn {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.badge {
+  font-size: 0.75rem;
+}
+
+.table th {
+  border-top: none;
+  font-weight: 600;
+  color: #495057;
+}
+
+.pagination .page-link {
+  padding: 0.5rem 0.75rem;
+}
+</style>
+{% endblock %}

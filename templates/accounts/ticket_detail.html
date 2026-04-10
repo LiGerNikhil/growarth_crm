@@ -1,0 +1,362 @@
+{% extends 'base/layout.html' %}
+{% load static %}
+
+{% block title %}{{ ticket.ticket_number }} - {{ ticket.subject }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <!-- Left Side - Ticket Details -->
+    <div class="col-lg-8">
+      <div class="card mb-4">
+        <div class="card-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <h4 class="card-title mb-0">
+              <span class="badge bg-secondary me-2">{{ ticket.ticket_number }}</span>
+              {{ ticket.subject }}
+            </h4>
+            <div class="d-flex gap-2 align-items-center">
+              <!-- Status Badge -->
+              <span class="badge {% if ticket.status == 'open' %}bg-danger{% elif ticket.status == 'in_progress' %}bg-warning{% elif ticket.status == 'resolved' %}bg-success{% else %}bg-secondary{% endif %}">
+                {{ ticket.get_status_display }}
+              </span>
+              
+              <!-- Priority Badge -->
+              {% if ticket.priority == 'high' %}
+                <span class="badge bg-danger">
+                  <i class="bx bx-up-arrow-circle"></i> High
+                </span>
+              {% elif ticket.priority == 'medium' %}
+                <span class="badge bg-warning">
+                  <i class="bx bx-minus-circle"></i> Medium
+                </span>
+              {% else %}
+                <span class="badge bg-secondary">
+                  <i class="bx bx-down-arrow-circle"></i> Low
+                </span>
+              {% endif %}
+              
+              <!-- Status Dropdown for Admin/HR/Manager -->
+              {% if can_update_status %}
+              <form method="post" action="{% url 'accounts:update_ticket_status' ticket.ticket_id %}" style="display: inline;">
+                {% csrf_token %}
+                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                  <option value="open" {% if ticket.status == 'open' %}selected{% endif %}>Open</option>
+                  <option value="in_progress" {% if ticket.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                  <option value="resolved" {% if ticket.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                  <option value="closed" {% if ticket.status == 'closed' %}selected{% endif %}>Closed</option>
+                </select>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        
+        <div class="card-body">
+          <!-- Ticket Information -->
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <strong>Created By:</strong> {{ ticket.employee.full_name }}
+            </div>
+            <div class="col-md-6">
+              <strong>Category:</strong> 
+              <span class="badge bg-info">{{ ticket.get_category_display }}</span>
+            </div>
+            <div class="col-md-6 mt-2">
+              <strong>Created At:</strong> {{ ticket.created_at|date:"M d, Y H:i" }}
+            </div>
+            <div class="col-md-6 mt-2">
+              <strong>Last Updated:</strong> {{ ticket.updated_at|date:"M d, Y H:i" }}
+            </div>
+            {% if ticket.resolved_at %}
+            <div class="col-md-6 mt-2">
+              <strong>Resolved At:</strong> {{ ticket.resolved_at|date:"M d, Y H:i" }}
+            </div>
+            {% endif %}
+          </div>
+          
+          <!-- Description -->
+          <div class="mb-4">
+            <h6>Description:</h6>
+            <div class="p-3 bg-light rounded">
+              {{ ticket.description|linebreaks }}
+            </div>
+          </div>
+          
+          <!-- Attachment -->
+          {% if ticket.attachment %}
+          <div class="mb-4">
+            <h6>Attachment:</h6>
+            <a href="{{ ticket.attachment.url }}" class="btn btn-outline-sm btn-outline-primary" target="_blank">
+              <i class="bx bx-download"></i> Download Attachment
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    
+    <!-- Right Side - Comments Timeline -->
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="bx bx-conversation me-2"></i>Activity Timeline
+          </h5>
+        </div>
+        
+        <div class="card-body">
+          <!-- Add Comment Form -->
+          {% if can_comment %}
+          <div class="mb-4">
+            <form method="post" action="{% url 'accounts:add_ticket_comment' ticket.ticket_id %}">
+              {% csrf_token %}
+              <div class="mb-3">
+                <label class="form-label">Add Comment:</label>
+                <textarea name="message" class="form-control" rows="3" placeholder="Type your comment here..." required></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i class="bx bx-send me-1"></i>Post Comment
+              </button>
+            </form>
+          </div>
+          {% endif %}
+          
+          <!-- Comments Timeline -->
+          <div class="timeline">
+            {% for comment in ticket.comments.all %}
+            <div class="timeline-item">
+              <div class="timeline-marker {% if comment.is_admin_reply %}bg-primary{% else %}bg-secondary{% endif %}">
+                <i class="bx {% if comment.is_admin_reply %}bx-shield{% else %}bx-user{% endif %}"></i>
+              </div>
+              
+              <div class="timeline-content">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div>
+                    <strong>{{ comment.author.full_name }}</strong>
+                    {% if comment.is_admin_reply %}
+                    <span class="badge bg-primary ms-1">Admin</span>
+                    {% endif %}
+                  </div>
+                  <small class="text-muted">{{ comment.created_at|date:"M d, Y H:i" }}</small>
+                </div>
+                
+                <div class="p-3 bg-light rounded">
+                  {{ comment.message|linebreaks }}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+            
+            {% if not ticket.comments.exists %}
+            <div class="text-center py-3">
+              <i class="bx bx-message-square-detail fs-1 text-muted"></i>
+              <p class="text-muted mt-2">No comments yet. Be the first to respond!</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.timeline {
+  position: relative;
+  padding-left: 30px;
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -25px;
+  top: 30px;
+  width: 2px;
+  height: calc(100% + 10px);
+  background: #e9ecef;
+}
+
+.timeline-item:last-child::before {
+  display: none;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: -35px;
+  top: 5px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 10px;
+}
+
+.timeline-content {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+</style>
+
+<script>
+function updateTicketStatus(ticketId, newStatus) {
+  console.log('updateTicketStatus called for:', ticketId, 'newStatus:', newStatus);
+  
+  if (confirm(`Change ticket status to: ${newStatus}?`)) {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    const tokenValue = csrfToken ? csrfToken.value : '';
+    
+    console.log('CSRF token found:', tokenValue ? 'yes' : 'no');
+    
+    fetch(`/accounts/tickets/${ticketId}/update-status/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': tokenValue
+      },
+      body: 'status=' + newStatus + '&csrfmiddlewaretoken=' + tokenValue
+    })
+    .then(response => {
+      console.log('Response status:', response.status);
+      return response.json();
+    })
+    .then(data => {
+      console.log('Response data:', data);
+      if (data.success) {
+        // Update status badge
+        const statusBadge = document.querySelector('.card-header .badge');
+        if (statusBadge) {
+          statusBadge.className = `badge ${data.status_badge_class}`;
+          statusBadge.textContent = data.status;
+        }
+        
+        // Update dropdown
+        const statusSelect = document.getElementById('status-select');
+        if (statusSelect) {
+          statusSelect.value = newStatus;
+        }
+        
+        // Show success message
+        showSuccessMessage('Ticket status updated successfully!');
+      } else {
+        alert('Error: ' + (data.error || 'Unknown error'));
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Error updating ticket status');
+    });
+}
+
+function showSuccessMessage(message) {
+  console.log('showSuccessMessage called with:', message);
+  
+  const alertDiv = document.createElement('div');
+  alertDiv.className = 'alert alert-success alert-dismissible fade show';
+  alertDiv.innerHTML = 
+    '<strong>Success!</strong> ' + message +
+    '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+  
+  const container = document.querySelector('.card-body');
+  if (container) {
+    container.insertBefore(alertDiv, container.firstChild);
+  }
+  
+  setTimeout(function() {
+    if (alertDiv && alertDiv.parentNode) {
+      alertDiv.remove();
+    }
+  }, 3000);
+}
+
+// Handle comment form submission
+document.addEventListener('DOMContentLoaded', function() {
+  const commentForm = document.getElementById('comment-form');
+  if (commentForm) {
+    commentForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      console.log('Comment form submitted');
+      
+      const formData = new FormData(this);
+      console.log('Form data:', Object.fromEntries(formData));
+      
+      fetch(this.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+      })
+      .then(data => {
+        console.log('Response data:', data);
+        if (data.success) {
+          // Add comment to timeline
+          const timeline = document.querySelector('.timeline');
+          if (timeline) {
+            const newComment = createCommentElement(data.comment);
+            timeline.insertBefore(newComment, timeline.firstChild);
+          }
+          
+          // Clear form
+          const textarea = this.querySelector('textarea');
+          if (textarea) {
+            textarea.value = '';
+          }
+          
+          // Show success message
+          showSuccessMessage('Comment added successfully!');
+        } else {
+          console.error('Error response:', data);
+          alert('Error: ' + (data.error || 'Unknown error'));
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error adding comment');
+      });
+    });
+  }
+});
+
+function createCommentElement(comment) {
+  console.log('createCommentElement called with:', comment);
+  
+  const div = document.createElement('div');
+  div.className = 'timeline-item';
+  
+  var adminBadge = comment.is_admin_reply ? '<span class="badge bg-primary ms-1">Admin</span>' : '';
+  
+  div.innerHTML = 
+    '<div class="timeline-marker ' + (comment.is_admin_reply ? 'bg-primary' : 'bg-secondary') + '">' +
+      '<i class="bx ' + (comment.is_admin_reply ? 'bx-shield' : 'bx-user') + '"></i>' +
+    '</div>' +
+    '<div class="timeline-content">' +
+      '<div class="d-flex justify-content-between align-items-start mb-2">' +
+        '<div>' +
+          '<strong>' + comment.author + '</strong>' +
+          adminBadge +
+        '</div>' +
+        '<small class="text-muted">' + comment.created_at + '</small>' +
+      '</div>' +
+      '<div class="p-3 bg-light rounded">' + comment.message.replace(/\n/g, '<br>') + '</div>' +
+    '</div>';
+  
+  return div;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,305 @@
+{% extends "base/layout.html" %}
+{% load static %}
+
+{% block title %}{% if candidate %}Schedule Interview - {{ candidate.full_name }}{% else %}Schedule Interview{% endif %}{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+  <div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Page Header -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+              <h4 class="card-title mb-0">
+                <i class="bx bx-calendar-plus me-2"></i>
+                Schedule Interview
+              </h4>
+              {% if candidate %}
+                <p class="text-muted mb-0 mt-1">Candidate: {{ candidate.full_name }}</p>
+              {% endif %}
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+              {% if candidate %}
+                <a href="{% url 'accounts:edit_candidate' candidate.pk %}" class="btn btn-outline-primary">
+                  <i class="bx bx-edit me-1"></i>Edit Candidate
+                </a>
+              {% endif %}
+              <a href="{% url 'accounts:interview_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bx bx-arrow-back me-1"></i>Back to Dashboard
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schedule Interview Form -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">
+              <i class="bx bx-calendar me-2"></i>
+              Interview Details
+            </h5>
+          </div>
+          <div class="card-body">
+            {% if candidate %}
+              <!-- Candidate Preview -->
+              <div class="row mb-4">
+                <div class="col-12">
+                  <div class="alert alert-info">
+                    <div class="d-flex align-items-center">
+                      <div class="flex-grow-1">
+                        <h6 class="mb-1">Candidate Information</h6>
+                        <p class="mb-0">
+                          <strong>{{ candidate.full_name }}</strong> - {{ candidate.position_applied }}
+                          {% if candidate.email %} | {{ candidate.email }}{% endif %}
+                          {% if candidate.phone %} | {{ candidate.phone }}{% endif %}
+                        </p>
+                      </div>
+                      <div class="flex-shrink-0">
+                        {% if candidate.resume %}
+                          <a href="{{ candidate.resume.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="bx bx-file me-1"></i>View Resume
+                          </a>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+
+            <form method="POST">
+              {% csrf_token %}
+              
+              <!-- Basic Interview Information -->
+              <div class="row mb-4">
+                <div class="col-12">
+                  <h6 class="text-primary mb-3">
+                    <i class="bx bx-info-circle me-2"></i>Basic Information
+                  </h6>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                  <label for="{{ form.candidate.id_for_label }}" class="form-label">Candidate *</label>
+                  {{ form.candidate }}
+                  {% if form.candidate.errors %}
+                    <div class="text-danger small">{{ form.candidate.errors }}</div>
+                  {% endif %}
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                  <label for="{{ form.interview_type.id_for_label }}" class="form-label">Interview Type *</label>
+                  {{ form.interview_type }}
+                  {% if form.interview_type.errors %}
+                    <div class="text-danger small">{{ form.interview_type.errors }}</div>
+                  {% endif %}
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                  <label for="{{ form.title.id_for_label }}" class="form-label">Interview Title *</label>
+                  {{ form.title }}
+                  {% if form.title.errors %}
+                    <div class="text-danger small">{{ form.title.errors }}</div>
+                  {% endif %}
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                  <label for="{{ form.duration.id_for_label }}" class="form-label">Duration (minutes)</label>
+                  {{ form.duration }}
+                  {% if form.duration.errors %}
+                    <div class="text-danger small">{{ form.duration.errors }}</div>
+                  {% endif %}
+                </div>
+                
+                <div class="col-12 mb-3">
+                  <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                  {{ form.description }}
+                  {% if form.description.errors %}
+                    <div class="text-danger small">{{ form.description.errors }}</div>
+                  {% endif %}
+                  <small class="text-muted">Interview description, topics to cover, etc.</small>
+                </div>
+              </div>
+
+              <!-- Scheduling -->
+              <div class="row mb-4">
+                <div class="col-12">
+                  <h6 class="text-primary mb-3">
+                    <i class="bx bx-calendar-event me-2"></i>Scheduling
+                  </h6>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                  <label for="{{ form.scheduled_date.id_for_label }}" class="form-label">Date & Time *</label>
+                  {{ form.scheduled_date }}
+                  {% if form.scheduled_date.errors %}
+                    <div class="text-danger small">{{ form.scheduled_date.errors }}</div>
+                  {% endif %}
+                  <small class="text-muted">Select date and time for the interview</small>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                  <label for="{{ form.location.id_for_label }}" class="form-label">Location *</label>
+                  {{ form.location }}
+                  {% if form.location.errors %}
+                    <div class="text-danger small">{{ form.location.errors }}</div>
+                  {% endif %}
+                  <small class="text-muted">Meeting room, office address, or video call link</small>
+                </div>
+                
+                <div class="col-12 mb-3">
+                  <label for="{{ form.interview_link.id_for_label }}" class="form-label">Video Call Link</label>
+                  {{ form.interview_link }}
+                  {% if form.interview_link.errors %}
+                    <div class="text-danger small">{{ form.interview_link.errors }}</div>
+                  {% endif %}
+                  <small class="text-muted">Google Meet, Zoom, Teams, etc. (for online interviews)</small>
+                </div>
+              </div>
+
+              <!-- Interviewers -->
+              <div class="row mb-4">
+                <div class="col-12">
+                  <h6 class="text-primary mb-3">
+                    <i class="bx bx-group me-2"></i>Interviewers
+                  </h6>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                  <label for="{{ form.primary_interviewer.id_for_label }}" class="form-label">Primary Interviewer *</label>
+                  {{ form.primary_interviewer }}
+                  {% if form.primary_interviewer.errors %}
+                    <div class="text-danger small">{{ form.primary_interviewer.errors }}</div>
+                  {% endif %}
+                  <small class="text-muted">Main interviewer responsible for the interview</small>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                  <label for="{{ form.interviewers.id_for_label }}" class="form-label">Additional Interviewers</label>
+                  {{ form.interviewers }}
+                  {% if form.interviewers.errors %}
+                    <div class="text-danger small">{{ form.interviewers.errors }}</div>
+                  {% endif %}
+                  <small class="text-muted">Other interviewers (panel members, technical experts, etc.)</small>
+                </div>
+              </div>
+
+              <!-- Form Actions -->
+              <div class="row">
+                <div class="col-12">
+                  <div class="d-flex justify-content-between">
+                    <div>
+                      <a href="{% url 'accounts:interview_dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="bx bx-arrow-back me-1"></i>Cancel
+                      </a>
+                    </div>
+                    <div>
+                      <button type="reset" class="btn btn-outline-warning me-2">
+                        <i class="bx bx-refresh me-1"></i>Reset Form
+                      </button>
+                      <button type="submit" class="btn btn-primary">
+                        <i class="bx bx-calendar-check me-1"></i>Schedule Interview
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Tips -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card border-info">
+          <div class="card-header bg-info text-white">
+            <h6 class="card-title mb-0">
+              <i class="bx bx-info-circle me-2"></i>
+              Interview Scheduling Tips
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <h6 class="text-info">Before Scheduling:</h6>
+                <ul class="mb-3">
+                  <li>Review candidate's resume and qualifications</li>
+                  <li>Confirm interviewer availability</li>
+                  <li>Prepare interview questions and evaluation criteria</li>
+                  <li>Set up video call link if it's an online interview</li>
+                </ul>
+              </div>
+              <div class="col-md-6">
+                <h6 class="text-info">Best Practices:</h6>
+                <ul class="mb-0">
+                  <li>Schedule interviews during business hours</li>
+                  <li>Allow buffer time between interviews</li>
+                  <li>Send calendar invites to all interviewers</li>
+                  <li>Share interview details with candidate in advance</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .form-control, .form-select {
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    padding: 10px 15px;
+  }
+  
+  .form-control:focus, .form-select:focus {
+    border-color: #696cff;
+    box-shadow: 0 0 0 0.2rem rgba(105, 108, 255, 0.25);
+  }
+  
+  .form-label {
+    font-weight: 600;
+    color: #566a7f;
+    margin-bottom: 0.5rem;
+  }
+  
+  .text-primary {
+    color: #696cff !important;
+  }
+  
+  .text-info {
+    color: #71dd37 !important;
+  }
+</style>
+
+<script>
+  // Add form field styling
+  document.addEventListener('DOMContentLoaded', function() {
+    const formControls = document.querySelectorAll('.form-control, .form-select');
+    formControls.forEach(element => {
+      element.classList.add('form-control');
+    });
+    
+    // Set minimum date to today
+    const scheduledDateInput = document.getElementById('{{ form.scheduled_date.id_for_label }}');
+    if (scheduledDateInput) {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      
+      scheduledDateInput.min = `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+  });
+</script>
+{% endblock %}

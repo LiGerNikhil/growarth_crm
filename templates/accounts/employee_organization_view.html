@@ -1,0 +1,1089 @@
+{% extends 'base/layout.html' %}
+{% load static %}
+
+{% block page_css %}
+<style>
+/* Organization View Styles - Light Theme */
+.organization-container {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  min-height: 100vh;
+  padding: 1rem 0;
+}
+
+.main-header {
+  border-radius: 15px;
+  background: linear-gradient(135deg, #878febff 0%, #007bffff 100%);
+  border-bottom: 1px solid #e9ecef;
+  padding: 2rem 0;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.header-content {
+  text-align: center;
+}
+
+.main-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.main-header p {
+  font-size: 1.1rem;
+  color: #6c757d;
+  margin: 0;
+}
+
+.stats-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e9ecef;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.stat-card.active {
+  border-color: #007bff;
+  background: linear-gradient(135deg, #f8f9ff 0%, #e6f3ff 100%);
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.15);
+}
+
+.stat-card.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #007bff, #0056b3);
+  border-radius: 15px 15px 0 0;
+}
+
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #007bff;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.95rem;
+  color: #6c757d;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.search-section {
+  background: white;
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e9ecef;
+  margin-bottom: 2rem;
+}
+
+.search-form {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.search-input {
+  flex: 1;
+  padding: 0.875rem 1.25rem;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: #f8f9fa;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  background: white;
+}
+
+.search-btn {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+  border: none;
+  padding: 0.875rem 2rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.search-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+}
+
+.employee-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.employee-card {
+  background: white;
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.employee-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #007bff, #0056b3);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.employee-card:hover::before {
+  transform: scaleX(1);
+}
+
+.employee-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.employee-avatar {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+}
+
+.employee-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.employee-role {
+  font-size: 0.95rem;
+  color: #007bff;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.employee-role::before {
+  content: '👤';
+  font-size: 1rem;
+}
+
+.employee-department {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.employee-department::before {
+  content: '🏢';
+  font-size: 1rem;
+}
+
+.employee-status {
+  display: inline-block;
+  padding: 0.375rem 0.875rem;
+  border-radius: 25px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 1rem;
+}
+
+.status-active {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.employee-id {
+  font-size: 0.85rem;
+  color: #adb5bd;
+  font-family: 'Courier New', monospace;
+  background: #f8f9fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+/* Current Employee Styles */
+.current-employee-card {
+  border: 2px solid #007bff !important;
+  background: linear-gradient(135deg, #f8f9ff 0%, #e6f3ff 100%) !important;
+  position: relative;
+}
+
+.current-employee-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #007bff, #0056b3);
+  border-radius: 15px 15px 0 0;
+}
+
+.current-employee-avatar {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+  position: relative;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px #007bff;
+}
+
+.current-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #007bff;
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+.no-results {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #6c757d;
+}
+
+.no-results i {
+  font-size: 4rem;
+  color: #dee2e6;
+  margin-bottom: 1.5rem;
+}
+
+.no-results h4 {
+  font-size: 1.5rem;
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .employee-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+  
+  .stats-section {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .main-header h1 {
+    font-size: 2.2rem;
+  }
+  
+  .stats-section {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .stat-card {
+    padding: 1.5rem;
+  }
+  
+  .stat-number {
+    font-size: 2rem;
+  }
+  
+  .employee-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .organization-container {
+    padding: 0.5rem 0;
+  }
+  
+  .main-header {
+    padding: 1.5rem 0;
+  }
+  
+  .main-header h1 {
+    font-size: 2rem;
+  }
+  
+  .search-form {
+    flex-direction: column;
+    max-width: none;
+  }
+  
+  .search-btn {
+    width: 100%;
+  }
+  
+  .employee-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .stats-section {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .stat-card {
+    padding: 1.25rem;
+  }
+  
+  .stat-number {
+    font-size: 1.75rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .main-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .main-header p {
+    font-size: 1rem;
+  }
+  
+  .search-section,
+  .stat-card,
+  .employee-card {
+    padding: 1rem;
+  }
+  
+  .employee-avatar {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+  }
+  
+  .current-badge {
+    top: -6px;
+    right: -6px;
+    font-size: 0.5rem;
+    padding: 1px 4px;
+  }
+  
+  .employee-name {
+    font-size: 1.1rem;
+  }
+  
+  .stats-section {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .stat-number {
+    font-size: 1.5rem;
+  }
+  
+  .stat-label {
+    font-size: 0.85rem;
+  }
+}
+
+/* Animation Classes */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.employee-card {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.employee-card:nth-child(1) { animation-delay: 0.1s; }
+.employee-card:nth-child(2) { animation-delay: 0.2s; }
+.employee-card:nth-child(3) { animation-delay: 0.3s; }
+.employee-card:nth-child(4) { animation-delay: 0.4s; }
+.employee-card:nth-child(5) { animation-delay: 0.5s; }
+.employee-card:nth-child(6) { animation-delay: 0.6s; }
+}
+
+/* Team Hierarchy Styles */
+.team-hierarchy-section {
+  margin-bottom: 2rem;
+}
+
+.hierarchy-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.hierarchy-level {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.level-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.hierarchy-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.hierarchy-card {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.hierarchy-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  border-color: #007bff;
+  background: linear-gradient(135deg, #f8f9ff 0%, #e6f3ff 100%);
+}
+
+.hierarchy-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-right: 1rem;
+  flex-shrink: 0;
+}
+
+.hierarchy-info {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.hierarchy-name {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 0.25rem;
+}
+
+.hierarchy-role {
+  font-size: 0.875rem;
+  color: #6c757d;
+  margin-bottom: 0.25rem;
+}
+
+.hierarchy-department {
+  font-size: 0.8rem;
+  color: #8898aa;
+}
+
+.hierarchy-actions {
+  margin-left: 0.5rem;
+  color: #6c757d;
+  transition: color 0.3s ease;
+}
+
+.hierarchy-card:hover .hierarchy-actions {
+  color: #007bff;
+}
+
+.manager-card {
+  border-left: 4px solid #007bff;
+}
+
+.manager-card .hierarchy-avatar {
+  background: #007bff;
+}
+
+.team-lead-card {
+  border-left: 4px solid #28a745;
+}
+
+.team-lead-card .hierarchy-avatar {
+  background: #28a745;
+}
+
+.team-member-card {
+  border-left: 4px solid #17a2b8;
+}
+
+.team-member-card .hierarchy-avatar {
+  background: #17a2b8;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hierarchy-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .hierarchy-card {
+    padding: 0.75rem;
+  }
+  
+  .hierarchy-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 0.875rem;
+  }
+  
+  .hierarchy-name {
+    font-size: 0.9rem;
+  }
+  
+  .hierarchy-role {
+    font-size: 0.8rem;
+  }
+}
+
+/* Employee Details Modal */
+.employee-details-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  position: relative;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.btn-close:hover {
+  background: #f8f9fa;
+  color: #dc3545;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.loading-spinner {
+  text-align: center;
+  padding: 2rem;
+}
+
+.loading-spinner i {
+  font-size: 2rem;
+  color: #007bff;
+  margin-bottom: 1rem;
+}
+
+.employee-detail-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+.detail-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 600;
+  color: white;
+  flex-shrink: 0;
+}
+
+.detail-avatar.manager-avatar {
+  background: #007bff;
+}
+
+.detail-avatar.team_leader-avatar {
+  background: #28a745;
+}
+
+.detail-avatar.employee-avatar {
+  background: #17a2b8;
+}
+
+.detail-info {
+  flex-grow: 1;
+}
+
+.detail-info h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.detail-info p {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.detail-role {
+  font-weight: 600;
+  color: #495057;
+}
+
+.detail-department {
+  color: #6c757d;
+}
+
+.detail-email {
+  font-family: monospace;
+  background: #f8f9fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.detail-phone {
+  font-weight: 600;
+}
+
+.detail-status.active {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.detail-status.inactive {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-content {
+    width: 95%;
+    margin: 1rem;
+  }
+  
+  .employee-detail-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .detail-avatar {
+    margin-bottom: 1rem;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="organization-container">
+  <div class="container-fluid">
+    
+    <!-- Main Header -->
+    <div class="main-header">
+      <div class="container">
+        <div class="header-content">
+          <h1><i class="bx bx-group me-3"></i>Organization Members</h1>
+          <p>Connect with your colleagues across the organization</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      
+      <!-- Statistics Section -->
+      <div class="stats-section">
+        <div class="stat-card {% if not request.GET.role %}active{% endif %}" data-role="all" onclick="filterByRole('all')">
+          <div class="stat-number">{% if not request.GET.role %}{{ filtered_count }}{% else %}{{ total_count }}{% endif %}</div>
+          <div class="stat-label">Total Members</div>
+        </div>
+        <div class="stat-card {% if request.GET.role == 'manager' %}active{% endif %}" data-role="manager" onclick="filterByRole('manager')">
+          <div class="stat-number">{% if request.GET.role == 'manager' %}{{ filtered_count }}{% else %}{{ manager_count }}{% endif %}</div>
+          <div class="stat-label">Managers</div>
+        </div>
+        <div class="stat-card {% if request.GET.role == 'team_leader' %}active{% endif %}" data-role="team_leader" onclick="filterByRole('team_leader')">
+          <div class="stat-number">{% if request.GET.role == 'team_leader' %}{{ filtered_count }}{% else %}{{ team_leader_count }}{% endif %}</div>
+          <div class="stat-label">Team Leaders</div>
+        </div>
+        <div class="stat-card {% if request.GET.role == 'employee' %}active{% endif %}" data-role="employee" onclick="filterByRole('employee')">
+          <div class="stat-number">{% if request.GET.role == 'employee' %}{{ filtered_count }}{% else %}{{ employee_count }}{% endif %}</div>
+          <div class="stat-label">Employees</div>
+        </div>
+      </div>
+
+      <!-- Personal Team Hierarchy Section -->
+      <div class="team-hierarchy-section mb-4">
+        <div class="card">
+          <div class="card-header">
+            <h6 class="card-title mb-0">
+              <i class="bx bx-pyramid me-2"></i>Your Team Hierarchy
+            </h6>
+          </div>
+          <div class="card-body">
+            {% if manager or team_lead or team_members %}
+              <div class="hierarchy-container">
+                <!-- Manager -->
+                {% if manager %}
+                  <div class="hierarchy-level">
+                    <div class="level-label">Your Manager</div>
+                    <div class="hierarchy-cards">
+                      <div class="hierarchy-card manager-card" onclick="showEmployeeDetails('{{ manager.id }}')">
+                        <div class="hierarchy-avatar bg-primary text-white">
+                          {{ manager.first_name.0 }}{{ manager.last_name.0 }}
+                        </div>
+                        <div class="hierarchy-info">
+                          <div class="hierarchy-name">{{ manager.get_full_name }}</div>
+                          <div class="hierarchy-role">{{ manager.get_role_display }}</div>
+                          <div class="hierarchy-department">{{ manager.get_department_display }}</div>
+                        </div>
+                        <div class="hierarchy-actions">
+                          <i class="bx bx-chevron-right"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                {% endif %}
+
+                <!-- Team Leader -->
+                {% if team_lead %}
+                  <div class="hierarchy-level">
+                    <div class="level-label">Your Team Leader</div>
+                    <div class="hierarchy-cards">
+                      <div class="hierarchy-card team-lead-card" onclick="showEmployeeDetails('{{ team_lead.id }}')">
+                        <div class="hierarchy-avatar bg-success text-white">
+                          {{ team_lead.first_name.0 }}{{ team_lead.last_name.0 }}
+                        </div>
+                        <div class="hierarchy-info">
+                          <div class="hierarchy-name">{{ team_lead.get_full_name }}</div>
+                          <div class="hierarchy-role">{{ team_lead.get_role_display }}</div>
+                          <div class="hierarchy-department">{{ team_lead.get_department_display }}</div>
+                        </div>
+                        <div class="hierarchy-actions">
+                          <i class="bx bx-chevron-right"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                {% endif %}
+
+                <!-- Team Members -->
+                {% if team_members %}
+                  <div class="hierarchy-level">
+                    <div class="level-label">Your Team Members ({{ team_members.count }})</div>
+                    <div class="hierarchy-cards">
+                      {% for member in team_members %}
+                        <div class="hierarchy-card team-member-card" onclick="showEmployeeDetails('{{ member.id }}')">
+                          <div class="hierarchy-avatar bg-info text-white">
+                            {{ member.first_name.0 }}{{ member.last_name.0 }}
+                          </div>
+                          <div class="hierarchy-info">
+                            <div class="hierarchy-name">{{ member.get_full_name }}</div>
+                            <div class="hierarchy-role">{{ member.get_role_display }}</div>
+                            <div class="hierarchy-department">{{ member.get_department_display }}</div>
+                          </div>
+                          <div class="hierarchy-actions">
+                            <i class="bx bx-chevron-right"></i>
+                          </div>
+                        </div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                {% endif %}
+              </div>
+            {% else %}
+              <div class="text-center text-muted py-4">
+                <i class="bx bx-user-x fs-1 mb-2"></i>
+                <p>No team hierarchy assigned</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Search Section -->
+      <div class="search-section">
+        <form method="get" class="search-form" id="searchForm">
+          <input type="hidden" name="role" id="roleInput" value="{{ request.GET.role }}">
+          <input type="text" name="search" class="search-input" placeholder="Search by name, department, or role..." value="{{ search_query }}">
+          <button type="submit" class="search-btn">
+            <i class="bx bx-search me-2"></i> Search
+          </button>
+        </form>
+      </div>
+
+      <!-- Employee Grid -->
+      <div class="employee-grid">
+        {% for employee in employees %}
+        <div class="employee-card {% if employee.id == current_employee.id %}current-employee-card{% endif %}">
+          <div class="employee-avatar {% if employee.id == current_employee.id %}current-employee-avatar{% endif %}">
+            {{ employee.first_name.0 }}{{ employee.last_name.0 }}
+            {% if employee.id == current_employee.id %}
+            <div class="current-badge">YOU</div>
+            {% endif %}
+          </div>
+          <div class="employee-name">{{ employee.get_full_name }}</div>
+          <div class="employee-role">{{ employee.get_role_display }}</div>
+          <div class="employee-department">{{ employee.get_department_display }}</div>
+          <div class="employee-status status-active">{{ employee.employment_status }}</div>
+          <div class="employee-id">ID: {{ employee.employee_id }}</div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+          <div class="no-results">
+            <i class="bx bx-search"></i>
+            <h4>No employees found</h4>
+            <p>Try adjusting your search criteria</p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function filterByRole(role) {
+  // Update active state of stat cards
+  document.querySelectorAll('.stat-card').forEach(card => {
+    card.classList.remove('active');
+  });
+  document.querySelector(`[data-role="${role}"]`).classList.add('active');
+  
+  // Update hidden input and submit form
+  const roleInput = document.getElementById('roleInput');
+  const searchInput = document.querySelector('.search-input');
+  
+  // Build new URL
+  const params = new URLSearchParams();
+  
+  if (role !== 'all') {
+    params.set('role', role);
+  }
+  
+  if (searchInput.value.trim()) {
+    params.set('search', searchInput.value.trim());
+  }
+  
+  // Navigate to new URL
+  const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+  window.location.href = newUrl;
+}
+
+function showEmployeeDetails(employeeId) {
+  // Create modal to show employee details
+  const modal = document.createElement('div');
+  modal.className = 'employee-details-modal';
+  modal.innerHTML = `
+    <div class="modal-backdrop" onclick="closeEmployeeDetails()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Employee Details</h5>
+        <button class="btn-close" onclick="closeEmployeeDetails()">
+          <i class="bx bx-x"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="loading-spinner">
+          <i class="bx bx-loader-alt bx-spin"></i>
+          <p>Loading employee details...</p>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Fetch employee details
+  fetch(`/accounts/employee-details/${employeeId}/`)
+    .then(response => response.json())
+    .then(data => {
+      const modalBody = modal.querySelector('.modal-body');
+      modalBody.innerHTML = `
+        <div class="employee-detail-card">
+          <div class="detail-avatar ${data.role}-avatar">
+            ${data.first_name[0]}${data.last_name[0]}
+          </div>
+          <div class="detail-info">
+            <h4>${data.first_name} ${data.last_name}</h4>
+            <p class="detail-role">${data.role_display}</p>
+            <p class="detail-department">${data.department_display}</p>
+            <p class="detail-email">${data.email}</p>
+            <p class="detail-phone">${data.phone || 'No phone assigned'}</p>
+            <p class="detail-status ${data.employment_status}">
+              Status: ${data.employment_status}
+            </p>
+          </div>
+        </div>
+      `;
+    })
+    .catch(error => {
+      console.error('Error fetching employee details:', error);
+      const modalBody = modal.querySelector('.modal-body');
+      modalBody.innerHTML = '<p class="text-danger">Error loading employee details</p>';
+    });
+}
+
+function closeEmployeeDetails() {
+  const modal = document.querySelector('.employee-details-modal');
+  if (modal) {
+    modal.remove();
+  }
+}
+
+// Add hover effect for stat cards
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.stat-card').forEach(card => {
+    card.addEventListener('mouseenter', function() {
+      if (!this.classList.contains('active')) {
+        this.style.transform = 'translateY(-5px) scale(1.02)';
+      }
+    });
+    
+    card.addEventListener('mouseleave', function() {
+      if (!this.classList.contains('active')) {
+        this.style.transform = 'translateY(0) scale(1)';
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

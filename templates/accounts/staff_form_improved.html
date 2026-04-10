@@ -1,0 +1,703 @@
+{% extends "base/layout.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Page Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h4 class="fw-bold mb-1">{{ title }}</h4>
+          <p class="text-muted mb-0">Fill in the information below to {% if action == 'Create' %}add a new{% else %}update the{% endif %} staff member</p>
+        </div>
+        <a href="{% url 'accounts:staff_management' %}" class="btn btn-outline-secondary">
+          <i class="bx bx-arrow-back me-1"></i>Back to Staff
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress Steps -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="progress-steps">
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="step active" id="step1">
+            <div class="step-icon">
+              <i class="bx bx-user"></i>
+            </div>
+            <div class="step-text">
+              <small class="d-block">Basic Info</small>
+            </div>
+          </div>
+          <div class="step-line"></div>
+          <div class="step" id="step2">
+            <div class="step-icon">
+              <i class="bx bx-briefcase"></i>
+            </div>
+            <div class="step-text">
+              <small class="d-block">Job Details</small>
+            </div>
+          </div>
+          <div class="step-line"></div>
+          <div class="step" id="step3">
+            <div class="step-icon">
+              <i class="bx bx-dollar"></i>
+            </div>
+            <div class="step-text">
+              <small class="d-block">Compensation</small>
+            </div>
+          </div>
+          <div class="step-line"></div>
+          <div class="step" id="step4">
+            <div class="step-icon">
+              <i class="bx bx-phone"></i>
+            </div>
+            <div class="step-text">
+              <small class="d-block">Contact</small>
+            </div>
+          </div>
+          {% if action == 'Create' %}
+          <div class="step-line"></div>
+          <div class="step" id="step5">
+            <div class="step-icon">
+              <i class="bx bx-lock"></i>
+            </div>
+            <div class="step-text">
+              <small class="d-block">Account</small>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <form method="post" id="staffForm" class="staff-form">
+    {% csrf_token %}
+    
+    <!-- Step 1: Basic Information -->
+    <div class="form-section active" id="section1">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom">
+          <h6 class="card-title mb-0">
+            <i class="bx bx-user text-primary me-2"></i>Basic Information
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-user me-1"></i>First Name <span class="text-danger">*</span>
+              </label>
+              {{ form.first_name }}
+              {% if form.first_name.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.first_name.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="col-md-6 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-user me-1"></i>Last Name <span class="text-danger">*</span>
+              </label>
+              {{ form.last_name }}
+              {% if form.last_name.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.last_name.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="col-md-6 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-envelope me-1"></i>Email Address <span class="text-danger">*</span>
+              </label>
+              {{ form.email }}
+              {% if form.email.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.email.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="col-md-6 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-phone me-1"></i>Phone Number
+              </label>
+              {{ form.phone }}
+              {% if form.phone.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.phone.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Job Details -->
+    <div class="form-section" id="section2">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom">
+          <h6 class="card-title mb-0">
+            <i class="bx bx-briefcase text-primary me-2"></i>Job Details
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-briefcase me-1"></i>Employee Type
+              </label>
+              {{ form.employee_type }}
+              {% if form.employee_type.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.employee_type.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="col-md-4 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-building me-1"></i>Department
+              </label>
+              {{ form.department }}
+              {% if form.department.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.department.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="col-md-4 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-briefcase me-1"></i>Position
+              </label>
+              {{ form.position }}
+              {% if form.position.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.position.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="col-md-4 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-user-voice me-1"></i>Role <span class="text-danger">*</span>
+              </label>
+              {{ form.role }}
+              {% if form.role.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.role.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="col-md-4 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-user-check me-1"></i>Reports To
+              </label>
+              {{ form.reports_to }}
+              {% if form.reports_to.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.reports_to.errors.0 }}
+                </div>
+              {% endif %}
+              <small class="text-muted">Select the manager or team leader this person reports to</small>
+            </div>
+            <div class="col-md-4 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-user me-1"></i>Manager (Legacy)
+              </label>
+              {{ form.manager }}
+              {% if form.manager.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.manager.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Employment Details -->
+    <div class="form-section" id="section3">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom">
+          <h6 class="card-title mb-0">
+            <i class="bx bx-calendar text-primary me-2"></i>Employment Details
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-calendar me-1"></i>Hire Date <span class="text-danger">*</span>
+              </label>
+              {{ form.hire_date }}
+              {% if form.hire_date.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.hire_date.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="col-md-4 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-calendar-check me-1"></i>Start Date <span class="text-danger">*</span>
+              </label>
+              {{ form.start_date }}
+              {% if form.start_date.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.start_date.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="col-md-4 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-calendar-x me-1"></i>Probation End Date
+              </label>
+              {{ form.probation_end_date }}
+              {% if form.probation_end_date.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.probation_end_date.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Compensation -->
+    <div class="form-section" id="section4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom">
+          <h6 class="card-title mb-0">
+            <i class="bx bx-dollar text-primary me-2"></i>Compensation
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-dollar me-1"></i>Base Salary
+              </label>
+              {{ form.salary }}
+              {% if form.salary.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.salary.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="col-md-6 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-percentage me-1"></i>Bonus Percentage
+              </label>
+              {{ form.bonus_percentage }}
+              {% if form.bonus_percentage.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.bonus_percentage.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5: Personal Information -->
+    <div class="form-section" id="section5">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom">
+          <h6 class="card-title mb-0">
+            <i class="bx bx-user text-primary me-2"></i>Personal Information
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-cake me-1"></i>Date of Birth
+              </label>
+              {{ form.date_of_birth }}
+              {% if form.date_of_birth.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.date_of_birth.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="col-md-8 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-home me-1"></i>Address
+              </label>
+              {{ form.address }}
+              {% if form.address.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.address.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="col-md-3 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-building me-1"></i>City
+              </label>
+              {{ form.city }}
+              {% if form.city.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.city.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="col-md-3 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-map me-1"></i>State
+              </label>
+              {{ form.state }}
+              {% if form.state.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.state.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="col-md-3 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-mailbox me-1"></i>Postal Code
+              </label>
+              {{ form.postal_code }}
+              {% if form.postal_code.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.postal_code.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="col-md-3 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-globe me-1"></i>Country
+              </label>
+              {{ form.country }}
+              {% if form.country.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.country.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6: Emergency Contact -->
+    <div class="form-section" id="section6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom">
+          <h6 class="card-title mb-0">
+            <i class="bx bx-phone-call text-primary me-2"></i>Emergency Contact
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-user me-1"></i>Contact Name
+              </label>
+              {{ form.emergency_contact_name }}
+              {% if form.emergency_contact_name.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.emergency_contact_name.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="col-md-4 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-phone me-1"></i>Contact Phone
+              </label>
+              {{ form.emergency_contact_phone }}
+              {% if form.emergency_contact_phone.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.emergency_contact_phone.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="col-md-4 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-user me-1"></i>Relationship
+              </label>
+              {{ form.emergency_contact_relationship }}
+              {% if form.emergency_contact_relationship.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.emergency_contact_relationship.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 7: Account Information (for new staff) -->
+    {% if action == 'Create' %}
+    <div class="form-section" id="section7">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom">
+          <h6 class="card-title mb-0">
+            <i class="bx bx-lock text-primary me-2"></i>Account Information
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-lock me-1"></i>Password <span class="text-danger">*</span>
+              </label>
+              {{ form.password }}
+              {% if form.password.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.password.errors.0 }}
+                </div>
+              {% endif %}
+              <small class="text-muted">{{ form.password.help_text }}</small>
+            </div>
+            <div class="col-md-6 mb-4">
+              <label class="form-label fw-semibold">
+                <i class="bx bx-lock me-1"></i>Confirm Password <span class="text-danger">*</span>
+              </label>
+              {{ form.confirm_password }}
+              {% if form.confirm_password.errors %}
+                <div class="text-danger small mt-1">
+                  <i class="bx bx-error-circle me-1"></i>{{ form.confirm_password.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Form Errors -->
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger mb-4">
+        <i class="bx bx-error-circle me-2"></i>
+        {% for error in form.non_field_errors %}
+          <p class="mb-0">{{ error }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Navigation Buttons -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="d-flex justify-content-between">
+          <button type="button" class="btn btn-outline-secondary" id="prevBtn" onclick="changeStep(-1)" style="display: none;">
+            <i class="bx bx-chevron-left me-1"></i>Previous
+          </button>
+          <div></div>
+          <button type="button" class="btn btn-primary" id="nextBtn" onclick="changeStep(1)">
+            Next<i class="bx bx-chevron-right ms-1"></i>
+          </button>
+          <button type="submit" class="btn btn-success" id="submitBtn" style="display: none;">
+            <i class="bx bx-save me-1"></i>{{ action }} Staff Member
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<style>
+/* Progress Steps */
+.progress-steps {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.step-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: #6c757d;
+  transition: all 0.3s ease;
+  margin-bottom: 0.5rem;
+}
+
+.step.active .step-icon {
+  background: linear-gradient(135deg, #696cff 0%, #5f61e6 100%);
+  color: white;
+  box-shadow: 0 0.25rem 0.5rem rgba(105, 108, 255, 0.25);
+}
+
+.step.completed .step-icon {
+  background: #71dd37;
+  color: white;
+}
+
+.step-text {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+.step.active .step-text {
+  color: #696cff;
+  font-weight: 600;
+}
+
+.step-line {
+  flex: 1;
+  height: 2px;
+  background: #e9ecef;
+  margin: 0 1rem;
+  margin-top: 1.5rem;
+}
+
+/* Form Sections */
+.form-section {
+  display: none;
+}
+
+.form-section.active {
+  display: block;
+}
+
+/* Form Controls */
+.form-control, .form-select {
+  border: 2px solid #e9ecef;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: #696cff;
+  box-shadow: 0 0 0 0.2rem rgba(105, 108, 255, 0.25);
+}
+
+.form-label {
+  color: #4e5965;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Cards */
+.card {
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  border-radius: 0.75rem 0.75rem 0 0 !important;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%) !important;
+}
+
+/* Buttons */
+.btn {
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #696cff 0%, #5f61e6 100%);
+  box-shadow: 0 0.25rem 0.5rem rgba(105, 108, 255, 0.25);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(105, 108, 255, 0.35);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #71dd37 0%, #5fc92e 100%);
+  box-shadow: 0 0.25rem 0.5rem rgba(113, 221, 55, 0.25);
+}
+
+.btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(113, 221, 55, 0.35);
+}
+
+.btn-outline-secondary {
+  border: 2px solid #e9ecef;
+  color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+  background: #6c757d;
+  border-color: #6c757d;
+  transform: translateY(-2px);
+}
+
+/* Alert */
+.alert {
+  border-radius: 0.5rem;
+  border: none;
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.075);
+}
+
+.alert-danger {
+  background: linear-gradient(135deg, #ff3e1d 0%, #ff6b6b 100%);
+  color: white;
+}
+</style>
+
+<script>
+let currentStep = 1;
+const totalSteps = {% if action == 'Create' %}7{% else %}6{% endif %};
+
+function showStep(step) {
+  // Hide all sections
+  for (let i = 1; i <= totalSteps; i++) {
+    document.getElementById('section' + i).style.display = 'none';
+    document.getElementById('step' + i).classList.remove('active', 'completed');
+  }
+  
+  // Show current section
+  document.getElementById('section' + step).style.display = 'block';
+  document.getElementById('step' + step).classList.add('active');
+  
+  // Mark previous steps as completed
+  for (let i = 1; i < step; i++) {
+    document.getElementById('step' + i).classList.add('completed');
+  }
+  
+  // Update buttons
+  document.getElementById('prevBtn').style.display = step === 1 ? 'none' : 'inline-flex';
+  document.getElementById('nextBtn').style.display = step === totalSteps ? 'none' : 'inline-flex';
+  document.getElementById('submitBtn').style.display = step === totalSteps ? 'inline-flex' : 'none';
+}
+
+function changeStep(direction) {
+  const newStep = currentStep + direction;
+  if (newStep >= 1 && newStep <= totalSteps) {
+    currentStep = newStep;
+    showStep(currentStep);
+  }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+  showStep(1);
+});
+</script>
+{% endblock %}

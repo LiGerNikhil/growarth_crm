@@ -1,0 +1,380 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="{% static '/' %}">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+  <title>Login | Growarth Capita Consultants LLP</title>
+  <meta name="description" content="Login to Growarth Dashboard" />
+
+  <link rel="shortcut icon" type="image/x-icon" href="{% static 'img/favicon/favicon.ico' %}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'vendor/fonts/iconify-icons.css' %}" />
+  <link rel="stylesheet" href="{% static 'vendor/css/core.css' %}" />
+  <link rel="stylesheet" href="{% static 'vendor/css/pages/page-auth.css' %}" />
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      font-family: 'Public Sans', sans-serif;
+      overflow: hidden;
+      /* Super Deep Perspective for 3D */
+      perspective: 3000px; 
+      min-height: 100vh;
+      margin: 0;
+    }
+    
+    h4 { color: #0e97ffff; }
+
+    /* Messages Styling */
+    .message-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      min-width: 300px;
+    }
+
+    .toast-error {
+      background-color: #ff3e1d;
+      color: #fff;
+      border-radius: 8px;
+      padding: 15px 20px;
+      box-shadow: 0 10px 20px rgba(255, 62, 29, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      animation: slideInRight 0.5s ease;
+    }
+
+    /* --- THE EXTREME 3D TOSS ANIMATION --- */
+    .authentication-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .authentication-inner {
+      width: 100%;
+      max-width: 450px;
+      /* Zaroori: children ko 3D space mein rakhne ke liye */
+      transform-style: preserve-3d;
+    }
+
+    .card {
+      border: none;
+      border-radius: 1.5rem;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      
+      /* State 0: Gayab aur screen ke bahut door niche corner mein */
+      opacity: 0;
+      
+      /* Animation: 1.8 seconds ka cinematic entry */
+      animation: extreme3DToss 1.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+      animation-delay: 0.1s;
+    }
+
+    @keyframes extreme3DToss {
+      0% {
+        opacity: 0;
+        /* Screen ke bottom-right se start hoga, flipped state mein */
+        transform: translate3d(1200px, 800px, -2000px) rotateX(120deg) rotateY(-90deg) rotateZ(45deg) scale(0.2);
+      }
+      50% {
+        opacity: 1;
+        /* Screen ke beech mein aate waqt thoda 'overshoot' karega user ki taraf */
+        transform: translate3d(-50px, -30px, 400px) rotateX(-20deg) rotateY(20deg) rotateZ(-10deg) scale(1.1);
+      }
+      75% {
+        /* Halka sa wapas peeche jayega bounce ke liye */
+        transform: translate3d(20px, 10px, -100px) rotateX(10deg) rotateY(-10deg) rotateZ(5deg) scale(0.95);
+      }
+      100% {
+        opacity: 1;
+        /* Final Perfect Position */
+        transform: translate3d(0, 0, 0) rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1);
+      }
+    }
+
+    /* Card Content Entrance */
+    .card-body {
+      padding: 2.5rem !important;
+      transform-style: preserve-3d;
+    }
+
+    /* Content fields ek-ek karke neeche se upar aayenge */
+    .card-body > * {
+      opacity: 0;
+      transform: translateZ(50px) translateY(20px);
+      animation: contentRise 0.8s ease-out forwards;
+    }
+
+    .card-body > div:nth-child(1) { animation-delay: 1.2s; } /* Logo */
+    .card-body > h4 { animation-delay: 1.4s; }             /* Heading */
+    .card-body > p { animation-delay: 1.5s; }              /* Text */
+    .card-body > form { animation-delay: 1.6s; }           /* Form */
+    .card-body > p.text-center { animation-delay: 1.8s; }  /* Footer links */
+
+    @keyframes contentRise {
+      to {
+        opacity: 1;
+        transform: translateZ(0) translateY(0);
+      }
+    }
+
+    /* Form Styles */
+    .form-label {
+      font-weight: 600;
+      color: #566a7f;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+    }
+
+    .btn-primary {
+      padding: 0.8rem;
+      font-weight: 600;
+      border-radius: 0.5rem;
+      background: linear-gradient(135deg, #696cff 0%, #3f42e3 100%);
+      border: none;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .btn-primary:hover {
+      transform: scale(1.03) translateY(-3px);
+      box-shadow: 0 10px 20px rgba(105, 108, 255, 0.4);
+    }
+
+    .help-section {
+      background-color: #f8f9fa;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    @media (max-width: 576px) {
+      .card-body { padding: 1.5rem !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="message-container">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="toast-error mb-3" id="errorToast">
+          <div class="d-flex align-items-center">
+            <i class="bx bx-error-circle me-2 fs-4"></i>
+            <span class="fw-semibold">{{ message }}</span>
+          </div>
+          <i class="bx bx-x cursor-pointer fs-4" onclick="this.parentElement.remove()"></i>
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+
+  <div class="authentication-wrapper authentication-basic">
+    <div class="authentication-inner">
+      <div class="card">
+        <div class="card-body">
+          <div class="app-brand justify-content-center mb-4">
+            <a href="#" class="app-brand-link">
+              <span class="app-brand-logo demo">
+                <img src="{% static 'img/logo.jpeg' %}" alt="Growarth Capita" width="140" style="object-fit: contain;">
+              </span>
+            </a>
+          </div>
+          
+          <h4 class="mb-2 text-center fw-bold">Welcome Back! 👋</h4>
+          <p class="mb-4 text-center text-muted">Please sign-in to your account</p>
+
+          <form id="formAuthentication" class="mb-3" action="{% url 'accounts:login' %}" method="POST">
+            {% csrf_token %}
+            <!-- Hidden fields for geolocation -->
+            <input type="hidden" id="latitude" name="latitude">
+            <input type="hidden" id="longitude" name="longitude">
+            
+            <div class="mb-3">
+              <label for="email" class="form-label">Email or Username</label>
+              <input type="text" class="form-control" id="email" name="email" placeholder="Enter credentials" autofocus required />
+            </div>
+            
+            <div class="mb-3 form-password-toggle">
+              <label class="form-label" for="password">Password</label>
+              <div class="input-group input-group-merge">
+                <input type="password" id="password" class="form-control" name="password" placeholder="············" required />
+                <span class="input-group-text cursor-pointer" onclick="togglePassword()">
+                  <i class="bx bx-hide text-muted" id="toggleIcon"></i>
+                </span>
+              </div>
+            </div>
+
+            <!-- Location Status Indicator -->
+            <div class="mb-3">
+              <div class="d-flex align-items-center">
+                <i class="bx bx-map-pin text-muted me-2" id="locationIcon"></i>
+                <span class="small text-muted" id="locationStatus">Checking location access...</span>
+              </div>
+            </div>
+
+            <div class="mb-4 d-flex justify-content-between align-items-center">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="remember-me" name="remember_me" />
+                <label class="form-check-label text-muted" for="remember-me" style="font-size: 0.85rem;"> Remember Me </label>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <button class="btn btn-primary d-grid w-100" type="submit" id="loginBtn">Sign in</button>
+            </div>
+          </form>
+
+          <p class="text-center mb-4">
+            <span class="d-block text-muted small">Forgot your password?</span>
+            <a href="{% url 'accounts:password_change_request' %}" class="text-primary fw-bold text-decoration-none">
+              Request a Change
+            </a>
+          </p>
+
+          <div class="help-section text-center">
+            <p class="text-muted small mb-2">Need technical assistance?</p>
+            <div class="d-flex align-items-center justify-content-center">
+              <i class="bx bx-envelope me-2 text-primary"></i>
+              <a href="mailto:tech.helpdesk@growarthcapita.com" class="text-dark fw-semibold small text-decoration-none">
+                tech.helpdesk@growarthcapita.com
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <p class="text-center mt-4 text-muted small">
+        &copy; 2026 Growarth Capita Consultants LLP
+      </p>
+    </div>
+  </div>
+
+  <script src="{% static 'vendor/libs/jquery/jquery.js' %}"></script>
+  <script src="{% static 'vendor/libs/popper/popper.js' %}"></script>
+  <script src="{% static 'vendor/js/bootstrap.js' %}"></script>
+  
+  <script>
+    // Geolocation functionality
+    let userLocation = null;
+    
+    function updateLocationStatus(status, isError = false) {
+      const statusElement = document.getElementById('locationStatus');
+      const iconElement = document.getElementById('locationIcon');
+      
+      statusElement.textContent = status;
+      
+      if (isError) {
+        statusElement.className = 'small text-danger';
+        iconElement.className = 'bx bx-map-pin text-danger me-2';
+      } else {
+        statusElement.className = 'small text-muted';
+        iconElement.className = 'bx bx-map-pin text-muted me-2';
+      }
+    }
+    
+    function getLocation() {
+      if (!navigator.geolocation) {
+        updateLocationStatus('Geolocation is not supported by this browser', true);
+        return;
+      }
+      
+      updateLocationStatus('Requesting location access...');
+      
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          userLocation = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          };
+          
+          // Update hidden form fields
+          document.getElementById('latitude').value = userLocation.latitude;
+          document.getElementById('longitude').value = userLocation.longitude;
+          
+          updateLocationStatus('Location access granted ✓');
+        },
+        function(error) {
+          let errorMessage = 'Location access denied';
+          
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = 'Location access denied. Please enable location services.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = 'Location information is unavailable.';
+              break;
+            case error.TIMEOUT:
+              errorMessage = 'Location request timed out.';
+              break;
+            case error.UNKNOWN_ERROR:
+              errorMessage = 'An unknown error occurred.';
+              break;
+          }
+          
+          updateLocationStatus(errorMessage, true);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000 // 5 minutes
+        }
+      );
+    }
+    
+    function togglePassword() {
+      const passwordInput = document.getElementById('password');
+      const toggleIcon = document.getElementById('toggleIcon');
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.classList.replace('bx-hide', 'bx-show');
+      } else {
+        passwordInput.type = 'password';
+        toggleIcon.classList.replace('bx-show', 'bx-hide');
+      }
+    }
+    
+    // Handle form submission
+    document.getElementById('formAuthentication').addEventListener('submit', function(e) {
+      const loginBtn = document.getElementById('loginBtn');
+      
+      // Check if we have location data
+      if (!userLocation) {
+        // Try to get location one more time
+        getLocation();
+        
+        // Show warning but allow submission (server will handle validation)
+        updateLocationStatus('Location may be required for login', true);
+      }
+      
+      // Disable button to prevent multiple submissions
+      loginBtn.disabled = true;
+      loginBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin me-2"></i>Signing in...';
+      
+      // Re-enable after 10 seconds in case of error
+      setTimeout(function() {
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = 'Sign in';
+      }, 10000);
+    });
+    
+    // Get location on page load
+    getLocation();
+    
+    // Auto-hide error messages
+    setTimeout(function() {
+      $('#errorToast').fadeOut('slow', function() {
+        $(this).remove();
+      });
+    }, 6000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,209 @@
+{% extends 'base/layout.html' %}
+{% load static %}
+
+{% block title %}Support Tickets{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <!-- Header Card -->
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h4 class="card-title mb-0">
+            <i class="bx bx-support me-2"></i>Support Tickets
+          </h4>
+          <div class="d-flex gap-2">
+            <a href="{% url 'accounts:ticket_create' %}" class="btn btn-primary">
+              <i class="bx bx-plus me-1"></i>Create Ticket
+            </a>
+          </div>
+        </div>
+        
+        <!-- Summary Cards -->
+        <div class="row mt-3">
+          <div class="col-md-3">
+            <div class="card bg-primary text-white">
+              <div class="card-body">
+                <h5 class="card-title">Total Tickets</h5>
+                <h3 class="mb-0">{{ total_tickets }}</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-danger text-white">
+              <div class="card-body">
+                <h5 class="card-title">Open</h5>
+                <h3 class="mb-0">{{ open_tickets }}</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-warning text-white">
+              <div class="card-body">
+                <h5 class="card-title">In Progress</h5>
+                <h3 class="mb-0">{{ in_progress_tickets }}</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-success text-white">
+              <div class="card-body">
+                <h5 class="card-title">Resolved</h5>
+                <h3 class="mb-0">{{ resolved_tickets }}</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Filters -->
+      <div class="card-body">
+        <form method="get" class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label">Search</label>
+            <input type="text" name="search" class="form-control" 
+                   value="{{ request.GET.search }}" placeholder="Search tickets...">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select">
+              <option value="">All Status</option>
+              <option value="open" {% if request.GET.status == 'open' %}selected{% endif %}>Open</option>
+              <option value="in_progress" {% if request.GET.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+              <option value="resolved" {% if request.GET.status == 'resolved' %}selected{% endif %}>Resolved</option>
+              <option value="closed" {% if request.GET.status == 'closed' %}selected{% endif %}>Closed</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Category</label>
+            <select name="category" class="form-select">
+              <option value="">All Categories</option>
+              <option value="technical" {% if request.GET.category == 'technical' %}selected{% endif %}>Technical</option>
+              <option value="hr" {% if request.GET.category == 'hr' %}selected{% endif %}>HR</option>
+              <option value="payroll" {% if request.GET.category == 'payroll' %}selected{% endif %}>Payroll</option>
+              <option value="infrastructure" {% if request.GET.category == 'infrastructure' %}selected{% endif %}>Infrastructure</option>
+              <option value="other" {% if request.GET.category == 'other' %}selected{% endif %}>Other</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">&nbsp;</label>
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-outline-primary">
+                <i class="bx bx-search"></i> Filter
+              </button>
+              <a href="{% url 'accounts:ticket_list' %}" class="btn btn-outline-secondary">
+                <i class="bx bx-refresh"></i> Clear
+              </a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Tickets Table -->
+    <div class="card">
+      <div class="card-body">
+        {% if tickets %}
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Ticket ID</th>
+                <th>Subject</th>
+                <th>Category</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Created By</th>
+                <th>Created At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ticket in tickets %}
+              <tr>
+                <td>
+                  <span class="badge bg-secondary">{{ ticket.ticket_number }}</span>
+                  <!-- Debug: {{ ticket.ticket_id }} -->
+                </td>
+                <td>
+                  <a href="{% if ticket.ticket_id %}{% url 'accounts:ticket_detail' ticket.ticket_id %}{% else %}#{% endif %}" class="text-decoration-none">
+                    {{ ticket.subject|truncatechars:50 }}
+                  </a>
+                </td>
+                <td>
+                  <span class="badge bg-info">{{ ticket.get_category_display }}</span>
+                </td>
+                <td>
+                  {% if ticket.priority == 'high' %}
+                    <span class="badge bg-danger">
+                      <i class="bx bx-up-arrow-circle"></i> {{ ticket.get_priority_display }}
+                    </span>
+                  {% elif ticket.priority == 'medium' %}
+                    <span class="badge bg-warning">
+                      <i class="bx bx-minus-circle"></i> {{ ticket.get_priority_display }}
+                    </span>
+                  {% else %}
+                    <span class="badge bg-secondary">
+                      <i class="bx bx-down-arrow-circle"></i> {{ ticket.get_priority_display }}
+                    </span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="badge {% if ticket.status == 'open' %}bg-danger{% elif ticket.status == 'in_progress' %}bg-warning{% elif ticket.status == 'resolved' %}bg-success{% else %}bg-secondary{% endif %}">
+                    {{ ticket.get_status_display }}
+                  </span>
+                </td>
+                <td>{{ ticket.employee.full_name }}</td>
+                <td>{{ ticket.created_at|date:"M d, Y H:i" }}</td>
+                <td>
+                  <a href="{% if ticket.ticket_id %}{% url 'accounts:ticket_detail' ticket.ticket_id %}{% else %}#{% endif %}" class="btn btn-sm btn-outline-primary">
+                    <i class="bx bx-show"></i> View
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav aria-label="Page navigation" class="mt-4">
+          <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{{ request.GET.urlencode|add:'&' }}">Previous</a>
+              </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+              <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}{{ request.GET.urlencode|add:'&' }}">{{ num }}</a>
+              </li>
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{{ request.GET.urlencode|add:'&' }}">Next</a>
+              </li>
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{{ request.GET.urlencode|add:'&' }}">Last</a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+        {% endif %}
+        
+        {% else %}
+        <div class="text-center py-5">
+          <i class="bx bx-support fs-1 text-muted"></i>
+          <h5 class="text-muted mt-3">No support tickets found</h5>
+          <p class="text-muted">Create a new ticket to get started.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

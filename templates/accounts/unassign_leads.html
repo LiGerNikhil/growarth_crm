@@ -1,0 +1,338 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Unassign Leads - Lead Management{% endblock %}
+
+{% block content %}
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmUnassignModal" tabindex="-1" aria-labelledby="confirmUnassignModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-white">
+        <h5 class="modal-title" id="confirmUnassignModalLabel">
+          <i class="bx bx-user-x me-2"></i>Confirm Lead Unassignment
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center py-3">
+          <i class="bx bx-user-x fs-1 text-warning mb-3"></i>
+          <h6 class="mb-2">Are you sure you want to unassign leads?</h6>
+          <p class="text-muted mb-2">
+            You are about to unassign <strong id="leadCount">0</strong> lead(s) from <strong id="employeeName">Employee</strong>.
+          </p>
+          <div class="alert alert-info py-2">
+            <i class="bx bx-info-circle me-1"></i>
+            <strong>Note:</strong> These leads will become available for reassignment to other employees.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="bx bx-x me-1"></i>Cancel
+        </button>
+        <button type="button" class="btn btn-warning" id="confirmUnassignBtn">
+          <i class="bx bx-user-x me-1"></i>Unassign Leads
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function confirmUnassignment() {
+    const checkboxes = document.querySelectorAll('.lead-checkbox:checked');
+    const employeeSelect = document.getElementById('employee_id');
+    
+    if (checkboxes.length === 0) {
+        alert('Please select at least one lead to unassign.');
+        return false;
+    }
+    
+    const employeeName = employeeSelect.options[employeeSelect.selectedIndex].text;
+    
+    // Show modal instead of browser confirm
+    showUnassignModal(checkboxes.length, employeeName);
+    return false; // Prevent form submission until modal confirms
+}
+
+function showUnassignModal(count, employeeName) {
+    // Update modal content
+    document.getElementById('leadCount').textContent = count;
+    document.getElementById('employeeName').textContent = employeeName;
+
+    // Set up confirm button
+    document.getElementById('confirmUnassignBtn').onclick = function() {
+        document.getElementById('unassignLeadsForm').submit();
+        bootstrap.Modal.getInstance(document.getElementById('confirmUnassignModal')).hide();
+    };
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('confirmUnassignModal'));
+    modal.show();
+}
+</script>
+
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+          <i class="bx bx-user-x me-2"></i>Unassign Leads from Employees
+        </h5>
+        <a href="{% url 'accounts:lead_list' %}" class="btn btn-outline-secondary">
+          <i class="bx bx-arrow-left me-1"></i>Back to Leads
+        </a>
+      </div>
+      <div class="card-body">
+        <form method="post" id="unassignLeadsForm">
+          {% csrf_token %}
+          
+          <!-- Employee Selection -->
+          <div class="row mb-4">
+            <div class="col-md-4">
+              <label for="employee_id" class="form-label">
+                <i class="bx bx-user me-1"></i>Select Employee
+              </label>
+              <select name="employee_id" id="employee_id" class="form-select" required onchange="loadEmployeeLeads()">
+                <option value="">Choose an employee...</option>
+                {% for employee in employees %}
+                  <option value="{{ employee.pk }}">
+                    {{ employee.get_full_name }} - {{ employee.get_role_display }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label for="datasource" class="form-label">
+                <i class="bx bx-filter me-1"></i>Filter by Datasource
+              </label>
+              <select name="datasource" id="datasource" class="form-select" onchange="window.location.href='?datasource=' + this.value">
+                <option value="">All Datasources</option>
+                {% for datasource in datasources %}
+                  <option value="{{ datasource }}" {% if datasource == selected_datasource %}selected{% endif %}>
+                    {{ datasource }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">
+                <i class="bx bx-info-circle me-1"></i>Instructions
+              </label>
+              <div class="alert alert-warning">
+                <small>
+                  Select an employee to view their assigned leads. 
+                  Filter by datasource to see employees with leads from specific batches.
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Employee Leads Display -->
+          <div id="employee-leads-section" style="display: none;">
+            <div class="mb-4">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <label class="form-label mb-0">
+                  <i class="bx bx-user-voice me-1"></i>Select Leads to Unassign
+                  <span class="badge bg-warning ms-2" id="selected-count">0 selected</span>
+                </label>
+                <div>
+                  <button type="button" class="btn btn-sm btn-outline-warning" onclick="selectAll()">
+                    Select All
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll()">
+                    Deselect All
+                  </button>
+                </div>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-hover" id="leads-table">
+                  <thead class="table-light">
+                    <tr>
+                      <th width="50">
+                        <input type="checkbox" id="select-all-checkbox" onchange="toggleAll()">
+                      </th>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Phone</th>
+                      <th>Company</th>
+                      <th>Status</th>
+                      <th>Assigned Date</th>
+                    </tr>
+                  </thead>
+                  <tbody id="leads-tbody">
+                    <!-- Leads will be loaded here via JavaScript -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-flex justify-content-between">
+              <div>
+                <small class="text-muted" id="total-leads-info"></small>
+              </div>
+              <button type="submit" class="btn btn-warning" onclick="return confirmUnassignment()">
+                <i class="bx bx-user-x me-2"></i>Unassign Selected Leads
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+}
+
+.avatar-sm {
+  width: 2rem;
+  height: 2rem;
+  font-size: 0.875rem;
+}
+
+.bg-label-primary {
+  background-color: #e7e7ff !important;
+  color: #696cff !important;
+}
+</style>
+
+<script>
+function loadEmployeeLeads() {
+    const employeeSelect = document.getElementById('employee_id');
+    const leadsSection = document.getElementById('employee-leads-section');
+    const leadsTbody = document.getElementById('leads-tbody');
+    const totalLeadsInfo = document.getElementById('total-leads-info');
+    
+    if (!employeeSelect.value) {
+        leadsSection.style.display = 'none';
+        return;
+    }
+    
+    // Show loading state
+    leadsSection.style.display = 'block';
+    leadsTbody.innerHTML = '<tr><td colspan="7" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
+    
+    // Fetch employee leads
+    fetch(`/accounts/api/employee-leads/${employeeSelect.value}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.leads && data.leads.length > 0) {
+                leadsTbody.innerHTML = data.leads.map(lead => `
+                    <tr>
+                        <td>
+                            <input type="checkbox" name="lead_ids" value="${lead.id}" class="lead-checkbox" onchange="updateSelectedCount()">
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar avatar-sm bg-label-primary rounded-circle me-2">
+                                    <span>${lead.first_name ? lead.first_name[0].toUpperCase() : 'U'}${lead.last_name ? lead.last_name[0].toUpperCase() : 'U'}</span>
+                                </div>
+                                <div>
+                                    <div class="fw-medium">${lead.first_name || lead.last_name || 'Unknown'}</div>
+                                    ${lead.position ? `<small class="text-muted">${lead.position}</small>` : ''}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="text-muted">${lead.email || '-'}</span>
+                        </td>
+                        <td>
+                            <span class="text-muted">${lead.phone || '-'}</span>
+                        </td>
+                        <td>
+                            <span class="text-muted">${lead.company || '-'}</span>
+                        </td>
+                        <td>
+                            ${getStatusBadge(lead.status)}
+                        </td>
+                        <td>
+                            <div>
+                                <div>${lead.assigned_at ? new Date(lead.assigned_at).toLocaleDateString() : '-'}</div>
+                                <small class="text-muted">${lead.assigned_at ? new Date(lead.assigned_at).toLocaleTimeString() : ''}</small>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+                
+                totalLeadsInfo.textContent = `Total assigned leads: ${data.leads.length}`;
+            } else {
+                leadsTbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No leads assigned to this employee.</td></tr>';
+                totalLeadsInfo.textContent = 'Total assigned leads: 0';
+            }
+            
+            updateSelectedCount();
+        })
+        .catch(error => {
+            console.error('Error loading leads:', error);
+            leadsTbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error loading leads. Please try again.</td></tr>';
+        });
+}
+
+function getStatusBadge(status) {
+    const statusMap = {
+        'new': '<span class="badge bg-label-success">New</span>',
+        'contacted': '<span class="badge bg-label-info">Contacted</span>',
+        'interested': '<span class="badge bg-label-warning">Interested</span>',
+        'not_interested': '<span class="badge bg-label-danger">Not Interested</span>',
+        'not_eligible': '<span class="badge bg-label-dark">Not Eligible</span>',
+        'follow_up': '<span class="badge bg-label-secondary">Follow Up</span>',
+        'converted': '<span class="badge bg-label-primary">Converted</span>',
+        'file_login': '<span class="badge bg-label-secondary">File Login</span>',
+        'amount_disbursed': '<span class="badge bg-label-warning">Amount Disbursed</span>'
+    };
+    return statusMap[status] || '<span class="badge bg-light text-dark">' + status + '</span>';
+}
+
+function updateSelectedCount() {
+    const checkboxes = document.querySelectorAll('.lead-checkbox:checked');
+    const count = checkboxes.length;
+    document.getElementById('selected-count').textContent = count + ' selected';
+    
+    // Update select all checkbox
+    const allCheckboxes = document.querySelectorAll('.lead-checkbox');
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    selectAllCheckbox.checked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
+}
+
+function toggleAll() {
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    const checkboxes = document.querySelectorAll('.lead-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+    
+    updateSelectedCount();
+}
+
+function selectAll() {
+    const checkboxes = document.querySelectorAll('.lead-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    updateSelectedCount();
+}
+
+function deselectAll() {
+    const checkboxes = document.querySelectorAll('.lead-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    updateSelectedCount();
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    updateSelectedCount();
+});
+</script>
+{% endblock %}

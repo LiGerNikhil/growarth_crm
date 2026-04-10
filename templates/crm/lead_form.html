@@ -1,0 +1,156 @@
+{% extends "base/layout.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">{{ title }}</h5>
+      </div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          
+          <!-- Basic Information -->
+          <div class="card mb-3">
+            <div class="card-header">
+              <h6 class="card-title mb-0">Basic Information</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Full Name *</label>
+                  {{ form.name }}
+                  {% if form.name.errors %}
+                    <div class="text-danger">{{ form.name.errors }}</div>
+                  {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Email *</label>
+                  {{ form.email }}
+                  {% if form.email.errors %}
+                    <div class="text-danger">{{ form.email.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Phone</label>
+                  {{ form.phone }}
+                  {% if form.phone.errors %}
+                    <div class="text-danger">{{ form.phone.errors }}</div>
+                  {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Status</label>
+                  {{ form.status }}
+                  {% if form.status.errors %}
+                    <div class="text-danger">{{ form.status.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Source</label>
+                  {{ form.source }}
+                  {% if form.source.errors %}
+                    <div class="text-danger">{{ form.source.errors }}</div>
+                  {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Assigned To</label>
+                  {{ form.assigned_to }}
+                  {% if form.assigned_to.errors %}
+                    <div class="text-danger">{{ form.assigned_to.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Loan Information -->
+          <div class="card mb-3">
+            <div class="card-header">
+              <h6 class="card-title mb-0">Loan Information</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Loan Type</label>
+                  {{ form.loan_type }}
+                  {% if form.loan_type.errors %}
+                    <div class="text-danger">{{ form.loan_type.errors }}</div>
+                  {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Loan Amount</label>
+                  {{ form.loan_amount }}
+                  {% if form.loan_amount.errors %}
+                    <div class="text-danger">{{ form.loan_amount.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Employment Status</label>
+                  {{ form.employment_status }}
+                  {% if form.employment_status.errors %}
+                    <div class="text-danger">{{ form.employment_status.errors }}</div>
+                  {% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Monthly Income</label>
+                  {{ form.monthly_income }}
+                  {% if form.monthly_income.errors %}
+                    <div class="text-danger">{{ form.monthly_income.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Additional Information -->
+          <div class="card mb-3">
+            <div class="card-header">
+              <h6 class="card-title mb-0">Additional Information</h6>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label class="form-label">Message</label>
+                {{ form.message }}
+                {% if form.message.errors %}
+                  <div class="text-danger">{{ form.message.errors }}</div>
+                {% endif %}
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Internal Notes</label>
+                {{ form.notes }}
+                {% if form.notes.errors %}
+                  <div class="text-danger">{{ form.notes.errors }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="d-flex justify-content-between">
+            <a href="{% url 'crm:lead_detail' lead.pk %}" class="btn btn-secondary">
+              <i class="bx bx-arrow-back me-1"></i>Cancel
+            </a>
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary">
+                <i class="bx bx-save me-1"></i>Save Changes
+              </button>
+              <a href="{% url 'crm:sync_with_google_sheets' lead.pk %}" class="btn btn-success">
+                <i class="bx bx-cloud-upload me-1"></i>Sync to Google Sheets
+              </a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

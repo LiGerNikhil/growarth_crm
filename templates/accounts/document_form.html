@@ -1,0 +1,167 @@
+{% extends 'base/layout.html' %}
+{% load static %}
+
+{% block title %}Upload Document - {{ employee.full_name }}{% endblock %}
+
+{% block content %}
+  <div class="row">
+    <div class="col-12">
+      <!-- Employee Info Card -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <a href="{% url 'accounts:document_list' employee.id %}" class="btn btn-outline-secondary btn-sm me-3">
+              <i class="bx bx-arrow-back"></i>
+            </a>
+            <div class="avatar-lg bg-primary rounded-circle d-flex align-items-center justify-content-center me-3">
+              <span class="text-white fw-bold fs-4">{{ employee.first_name.0 }}{{ employee.last_name.0 }}</span>
+            </div>
+            <div>
+              <h4 class="card-title mb-1">Upload Document</h4>
+              <p class="text-muted mb-0">For: {{ employee.full_name }} • {{ employee.position|default:"No Position" }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload Form -->
+      <div class="card">
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data" id="documentForm">
+            {% csrf_token %}
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="{{ form.document_type.id_for_label }}" class="form-label">Document Type</label>
+                  {{ form.document_type }}
+                  {% if form.document_type.errors %}
+                    <div class="text-danger">{{ form.document_type.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="{{ form.title.id_for_label }}" class="form-label">Title</label>
+                  {{ form.title }}
+                  {% if form.title.errors %}
+                    <div class="text-danger">{{ form.title.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-12">
+                <div class="mb-3">
+                  <label for="{{ form.file.id_for_label }}" class="form-label">File</label>
+                  {{ form.file }}
+                  {% if form.file.errors %}
+                    <div class="text-danger">{{ form.file.errors }}</div>
+                  {% endif %}
+                  <small class="form-text text-muted">
+                    Supported formats: PDF, DOC, DOCX, JPG, JPEG, PNG
+                  </small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bank Details Fields (Initially Hidden) -->
+            <div id="bankDetailsSection" style="display: none;">
+              <hr>
+              <h5 class="mb-3">Bank Details</h5>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="{{ form.bank_name.id_for_label }}" class="form-label">Bank Name</label>
+                    {{ form.bank_name }}
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="{{ form.account_number.id_for_label }}" class="form-label">Account Number</label>
+                    {{ form.account_number }}
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="{{ form.ifsc_code.id_for_label }}" class="form-label">IFSC Code</label>
+                    {{ form.ifsc_code }}
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="{{ form.branch_name.id_for_label }}" class="form-label">Branch Name</label>
+                    {{ form.branch_name }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between">
+              <a href="{% url 'accounts:document_list' employee.id %}" class="btn btn-outline-secondary">
+                <i class="bx bx-x me-1"></i>Cancel
+              </a>
+              <button type="submit" class="btn btn-primary">
+                <i class="bx bx-upload me-1"></i>Upload Document
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const documentTypeSelect = document.getElementById('document_type');
+    const bankDetailsSection = document.getElementById('bankDetailsSection');
+    const bankDetailsFields = document.querySelectorAll('.bank-details-field');
+
+    function toggleBankDetails() {
+        if (documentTypeSelect.value === 'bank_details') {
+            bankDetailsSection.style.display = 'block';
+            bankDetailsFields.forEach(field => {
+                field.style.display = 'block';
+            });
+        } else {
+            bankDetailsSection.style.display = 'none';
+            bankDetailsFields.forEach(field => {
+                field.style.display = 'none';
+            });
+        }
+    }
+
+    // Initial check
+    toggleBankDetails();
+
+    // Listen for changes
+    documentTypeSelect.addEventListener('change', toggleBankDetails);
+
+    // Form validation
+    const form = document.getElementById('documentForm');
+    form.addEventListener('submit', function(e) {
+        const fileInput = document.querySelector('input[type="file"]');
+        const titleInput = document.querySelector('input[name="title"]');
+        
+        if (!fileInput.files.length) {
+            e.preventDefault();
+            alert('Please select a file to upload.');
+            fileInput.focus();
+            return false;
+        }
+        
+        if (!titleInput.value.trim()) {
+            e.preventDefault();
+            alert('Please enter a document title.');
+            titleInput.focus();
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

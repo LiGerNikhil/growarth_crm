@@ -1,0 +1,136 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="{% static '/' %}">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+  <title>Logged Out | CRM System</title>
+  <meta name="description" content="You have been successfully logged out of CRM System" />
+
+  <!-- Favicon -->
+  <link rel="shortcut icon" type="image/x-icon" href="{% static 'img/favicon/favicon.ico' %}" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="{% static 'vendor/fonts/iconify-icons.css' %}" />
+
+  <!-- Core CSS -->
+  <link rel="stylesheet" href="{% static 'vendor/css/core.css' %}" />
+  <link rel="stylesheet" href="{% static 'vendor/css/pages/page-auth.css' %}" />
+
+  <!-- Page CSS -->
+  <style>
+    .authentication-wrapper {
+      background-color: #f5f5f9;
+      min-height: 100vh;
+    }
+    .authentication-inner {
+      padding: 2rem;
+    }
+    .app-brand-link {
+      text-decoration: none;
+    }
+    .logout-icon {
+      font-size: 4rem;
+      color: #696cff;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Content -->
+  <div class="container-xxl">
+    <div class="authentication-wrapper authentication-basic container-p-y">
+      <div class="authentication-inner">
+        <!-- Logout Card -->
+        <div class="card">
+          <div class="card-body text-center">
+            <!-- Logo -->
+            <div class="app-brand justify-content-center mb-4">
+              <a href="#" class="app-brand-link gap-2">
+                <span class="app-brand-logo demo">
+                  <img src="{% static 'img/logo.jpeg' %}" alt="Growarth Capita" width="100" height="100" style="object-fit: contain;">
+                </span>
+
+              </a>
+            </div>
+            <!-- /Logo -->
+
+
+            <h4 class="mb-2">You've been logged out! 👋</h4>
+            <p class="mb-4">Thank you for using CRM System. You have been successfully logged out.</p>
+
+            {% if messages %}
+              {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible" role="alert">
+                  {{ message }}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              {% endfor %}
+            {% endif %}
+
+            <div class="mb-4">
+              <div class="alert alert-success" role="alert">
+                <i class='bx bx-check-circle me-2'></i>
+                You have been successfully logged out of your account.
+              </div>
+            </div>
+
+            <div class="d-flex gap-2 justify-content-center">
+              <a href="{% url 'accounts:login' %}" class="btn btn-primary">
+                <i class='bx bx-log-in me-1'></i>
+                Sign In Again
+              </a>
+              <a href="#" class="btn btn-outline-secondary" onclick="window.history.back(); return false;">
+                <i class='bx bx-arrow-back me-1'></i>
+                Go Back
+              </a>
+            </div>
+
+            <div class="mt-4">
+              <p class="text-muted small mb-0">
+                For security reasons, please close your browser window when you're done.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Core JS -->
+  <script src="{% static 'vendor/libs/jquery/jquery.js' %}"></script>
+  <script src="{% static 'vendor/libs/popper/popper.js' %}"></script>
+  <script src="{% static 'vendor/js/bootstrap.js' %}"></script>
+  
+  <!-- Custom JavaScript -->
+  <script>
+    // Auto-hide alerts after 5 seconds
+    setTimeout(function() {
+      const alerts = document.querySelectorAll('.alert');
+      alerts.forEach(function(alert) {
+        const bsAlert = new bootstrap.Alert(alert);
+        bsAlert.close();
+      });
+    }, 5000);
+
+    // Redirect to login after 30 seconds if user is inactive
+    let redirectTimer = setTimeout(function() {
+      window.location.href = "{% url 'accounts:login' %}";
+    }, 30000);
+
+    // Clear timer if user interacts with the page
+    document.addEventListener('click', function() {
+      clearTimeout(redirectTimer);
+    });
+
+    document.addEventListener('keypress', function() {
+      clearTimeout(redirectTimer);
+    });
+  </script>
+</body>
+</html>

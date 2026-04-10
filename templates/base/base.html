@@ -1,0 +1,89 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en" class="layout-menu-fixed" data-assets-path="{% static '/' %}" data-framework="django">
+<head>
+    <title>{% block title %}Dashboard{% endblock %} | CRM System</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <meta name="description" content="CRM System" />
+    
+    <!-- Favicon -->
+    <link rel="shortcut icon" type="image/x-icon" href="{% static 'img/favicon/favicon.ico' %}" />
+
+    <!-- Include the styles partial -->
+    {% include "base/partials/styles.html" %}
+
+    {% block vendor_css %}{% endblock vendor_css %}
+    <!--Page CSS-->
+    {% block page_css %}{% endblock page_css %}
+    
+    <!-- Custom Logo CSS -->
+    <style>
+        /* Sidebar logo responsive styling */
+        .app-brand-logo img {
+            max-width: 100%;
+            height: auto;
+            transition: all 0.3s ease;
+        }
+        
+        /* Adjust app-brand container for larger logo */
+        .app-brand {
+            padding: 1rem 0.5rem;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            .app-brand-logo img {
+                width: 70px !important;
+                height: 70px !important;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .app-brand-logo img {
+                width: 60px !important;
+                height: 60px !important;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .app-brand-logo img {
+                width: 50px !important;
+                height: 50px !important;
+            }
+            .app-brand-text {
+                display: none;
+            }
+        }
+        
+        /* Ensure logo doesn't break layout */
+        .app-brand-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: nowrap;
+        }
+        
+        /* Menu adjustments for larger logo */
+        .layout-menu {
+            padding-top: 0.5rem;
+        }
+    </style>
+
+    <!-- Include the scripts partial (required ) -->
+    {% include "base/partials/scripts_includes.html" %}
+</head>
+
+<body>
+    {% block layout %}
+    {% endblock layout %}
+
+    {% include "base/partials/scripts.html" %}
+
+    <!--Vendors Javascript-->
+    {% block vendor_js %} {% endblock vendor_js %}
+    <!--Page Javascript-->
+    {% block page_js %} {% endblock page_js %}
+</body>
+</html>

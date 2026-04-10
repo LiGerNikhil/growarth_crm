@@ -1,0 +1,171 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Assign Phone Number - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold">
+        <i class="bx bx-phone-plus text-primary me-2"></i>Assign Phone Number
+      </h4>
+      <p class="text-muted mb-0">Assign Indian phone number to employee</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'accounts:phone_assignment_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bx bx-arrow-back me-1"></i>Back to Phone Assignments
+      </a>
+    </div>
+  </div>
+
+  <!-- Employee Info -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-light">
+      <h6 class="card-title mb-0">
+        <i class="bx bx-user text-info me-2"></i>Employee Information
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="d-flex align-items-center mb-3">
+            <div class="avatar avatar-lg bg-primary bg-opacity-10 rounded-circle me-3">
+              <span class="text-primary fw-bold fs-4">{{ employee.first_name.0|upper }}</span>
+            </div>
+            <div>
+              <h5 class="mb-0 fw-bold">{{ employee.get_full_name }}</h5>
+              <p class="text-muted mb-0">{{ employee.position }}</p>
+            </div>
+          </div>
+          <div class="mb-3">
+            <strong>Employee ID:</strong> {{ employee.employee_id|default:"-" }}<br>
+            <strong>Email:</strong> {{ employee.user.email }}<br>
+            <strong>Department:</strong> {{ employee.get_department_display }}<br>
+            <strong>Role:</strong> {{ employee.get_role_display }}
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="mb-3">
+            <strong>Current Phone Numbers:</strong>
+            {% if employee.phone_numbers.all %}
+              <div class="mt-2">
+                {% for phone in employee.phone_numbers.all %}
+                  <div class="d-flex justify-content-between align-items-center p-2 mb-2 border rounded">
+                    <div>
+                      <span class="badge bg-label-{{ phone.phone_type }} me-2">{{ phone.get_phone_type_display }}</span>
+                      <strong>{{ phone.phone_number }}</strong>
+                    </div>
+                    <div>
+                      {% if phone.is_active %}
+                        <span class="badge bg-success">Active</span>
+                      {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="text-muted">No phone numbers assigned yet.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assign Phone Form -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-light">
+      <h6 class="card-title mb-0">
+        <i class="bx bx-plus-circle text-success me-2"></i>Assign New Phone Number
+      </h6>
+    </div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label for="phone_number" class="form-label fw-semibold">
+              <i class="bx bx-phone me-1"></i>Phone Number *
+            </label>
+            <input type="tel" 
+                   class="form-control" 
+                   id="phone_number" 
+                   name="phone_number" 
+                   placeholder="Enter Indian phone number (e.g., +91 9876543210)"
+                   required>
+            <div class="form-text">Format: +91 XXXXX XXXXX or 0XXXX XXXXXX</div>
+          </div>
+          <div class="col-md-6">
+            <label for="phone_type" class="form-label fw-semibold">
+              <i class="bx bx-tag me-1"></i>Phone Type
+            </label>
+            <select class="form-select" id="phone_type" name="phone_type">
+              {% for value, label in phone_types %}
+                <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-12">
+            <label for="notes" class="form-label fw-semibold">
+              <i class="bx bx-note me-1"></i>Notes
+            </label>
+            <textarea class="form-control" 
+                      id="notes" 
+                      name="notes" 
+                      rows="3" 
+                      placeholder="Optional notes about this phone assignment..."></textarea>
+          </div>
+          <div class="col-12">
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary">
+                <i class="bx bx-check me-1"></i>Assign Phone Number
+              </button>
+              <a href="{% url 'accounts:phone_assignment_list' %}" class="btn btn-outline-secondary">
+                <i class="bx bx-x me-1"></i>Cancel
+              </a>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+<style>
+.bg-label-primary { background-color: #e7e7ff !important; color: #696cff !important; }
+.bg-label-secondary { background-color: #6c757d !important; color: #ffffff !important; }
+.bg-label-official { background-color: #fff4dd !important; color: #ffab00 !important; }
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+}
+
+.avatar-lg {
+  width: 3rem;
+  height: 3rem;
+  font-size: 1.25rem;
+}
+
+.bg-opacity-10 {
+  opacity: 0.1 !important;
+}
+
+.card {
+  border-radius: 0.5rem;
+}
+
+.card-header {
+  border-radius: 0.5rem 0.5rem 0 0 !important;
+}
+
+.border {
+  border: 1px solid #dee2e6 !important;
+}
+</style>

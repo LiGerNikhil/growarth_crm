@@ -1,0 +1,417 @@
+{% extends "base/layout.html" %}
+{% load static %}
+{% load lead_filters %}
+
+{% block title %}{{ target_employee.user.get_full_name }}'s Leads{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+  <div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Page Header -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card mb-4">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="card-title mb-0">
+              <i class="bx bx-user-voice me-2"></i>
+              {{ target_employee.user.get_full_name }}'s Leads
+            </h4>
+            <div class="d-flex gap-2">
+              <a href="{% url 'accounts:lead_assignment_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bx bx-arrow-back me-1"></i>Back to Dashboard
+              </a>
+              {% if current_employee.is_manager or current_employee.is_team_leader %}
+                <button class="btn btn-primary" onclick="openBulkReassignModal()">
+                  <i class="bx bx-transfer me-1"></i>Bulk Reassign
+                </button>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Employee Information & Statistics -->
+    <div class="row mb-4">
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="avatar me-3">
+                {% if target_employee.user.profile_image %}
+                  <img src="{{ target_employee.user.profile_image.url }}" alt="Profile" class="rounded-circle" width="60" height="60">
+                {% else %}
+                  <div class="avatar-initial rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                    {{ target_employee.user.first_name.0 }}{{ target_employee.user.last_name.0 }}
+                  </div>
+                {% endif %}
+              </div>
+              <div>
+                <h5 class="mb-1">{{ target_employee.user.get_full_name }}</h5>
+                <p class="mb-0 text-muted">{{ target_employee.get_role_display }}</p>
+                {% if target_employee.user.phone_numbers.first %}
+                  <small class="text-muted">{{ target_employee.user.phone_numbers.first.phone_number }}</small>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-8">
+        <div class="row">
+          <div class="col-md-3">
+            <div class="card bg-primary text-white">
+              <div class="card-body text-center">
+                <h3 class="mb-0">{{ total_leads }}</h3>
+                <p class="mb-0">Total Leads</p>
+              </div>
+            </div>
+          </div>
+          {% for status, count in status_counts.items %}
+            <div class="col-md-3">
+              <div class="card bg-{{ status|status_color }} text-white">
+                <div class="card-body text-center">
+                  <h3 class="mb-0">{{ count }}</h3>
+                  <p class="mb-0">
+  {% if status == 'not_interested' %}Not Interested
+  {% elif status == 'not_eligible' %}Not Eligible  
+  {% elif status == 'follow_up' %}Follow Up Required
+  {% elif status == 'file_login' %}File Login
+  {% elif status == 'amount_disbursed' %}Amount Disbursed
+  {% else %}{{ status|title }}{% endif %}
+</p>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body">
+            <form method="GET" class="row g-3">
+              <div class="col-md-3">
+                <label for="status" class="form-label">Filter by Status</label>
+                <select name="status" id="status" class="form-select">
+                  <option value="">All Statuses</option>
+                  <option value="new" {% if status_filter == 'new' %}selected{% endif %}>New</option>
+                  <option value="contacted" {% if status_filter == 'contacted' %}selected{% endif %}>Contacted</option>
+                  <option value="interested" {% if status_filter == 'interested' %}selected{% endif %}>Interested</option>
+                  <option value="not_interested" {% if status_filter == 'not_interested' %}selected{% endif %}>Not Interested</option>
+                  <option value="not_eligible" {% if status_filter == 'not_eligible' %}selected{% endif %}>Not Eligible</option>
+                  <option value="converted" {% if status_filter == 'converted' %}selected{% endif %}>Converted</option>
+                  <option value="follow_up" {% if status_filter == 'follow_up' %}selected{% endif %}>Follow Up Required</option>
+                  <option value="file_login" {% if status_filter == 'file_login' %}selected{% endif %}>File Login</option>
+                  <option value="amount_disbursed" {% if status_filter == 'amount_disbursed' %}selected{% endif %}>Amount Disbursed</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-flex gap-2">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="bx bx-filter me-1"></i>Filter
+                  </button>
+                  <a href="{% url 'accounts:employee_leads' target_employee.id %}" class="btn btn-outline-secondary">
+                    <i class="bx bx-x me-1"></i>Clear
+                  </a>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leads Table -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Assigned Leads</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>
+                      <input type="checkbox" id="selectAll" class="form-check-input">
+                    </th>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>Assigned At</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for lead in page_obj %}
+                    <tr>
+                      <td>
+                        <input type="checkbox" class="form-check-input lead-checkbox" value="{{ lead.id }}">
+                      </td>
+                      <td>{{ lead.id }}</td>
+                      <td>{{ lead.get_full_name|default:"-" }}</td>
+                      <td>{{ lead.get_phone_number|default:"-" }}</td>
+                      <td>
+                        <span class="badge bg-{{ lead.status|status_color }}">
+                          {{ lead.get_status_display }}
+                        </span>
+                      </td>
+                      <td>{{ lead.assigned_at|date:"Y-m-d H:i"|default:"-" }}</td>
+                      <td>{{ lead.created_at|date:"Y-m-d H:i" }}</td>
+                      <td>
+                        <div class="dropdown">
+                          <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="bx bx-dots-horizontal-rounded"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <li>
+                              <a class="dropdown-item" href="{% url 'accounts:lead_assignment_detail' lead.pk %}">
+                                <i class="bx bx-eye me-2"></i>View Details
+                              </a>
+                            </li>
+                            {% if current_employee.is_manager or current_employee.is_team_leader %}
+                              <li>
+                                <button class="dropdown-item" onclick="openSingleReassignModal({{ lead.id }}, '{{ lead.get_full_name|default:"Lead " }}{{ lead.id }}')">
+                                  <i class="bx bx-transfer me-2"></i>Reassign
+                                </button>
+                              </li>
+                            {% endif %}
+                          </ul>
+                        </div>
+                      </td>
+                    </tr>
+                  {% empty %}
+                    <tr>
+                      <td colspan="8" class="text-center text-muted">No leads found.</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+              <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                  {% if page_obj.has_previous %}
+                    <li class="page-item">
+                      <a class="page-link" href="?page=1{% if status_filter %}&status={{ status_filter }}{% endif %}">First</a>
+                    </li>
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">Previous</a>
+                    </li>
+                  {% endif %}
+
+                  {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                      <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                      </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                      <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+                      </li>
+                    {% endif %}
+                  {% endfor %}
+
+                  {% if page_obj.has_next %}
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if status_filter %}&status={{ status_filter }}{% endif %}">Last</a>
+                    </li>
+                  {% endif %}
+                </ul>
+              </nav>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Single Reassign Modal -->
+<div class="modal fade" id="singleReassignModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Reassign Lead</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="singleReassignForm" method="POST" action="">
+        {% csrf_token %}
+        <div class="modal-body">
+          <p>Reassign <strong id="singleLeadName"></strong> to:</p>
+          <select name="assigned_to" class="form-select" required>
+            <option value="">Select Employee</option>
+            <!-- Team members will be populated by JavaScript -->
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Reassign</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Reassign Modal -->
+<div class="modal fade" id="bulkReassignModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Bulk Reassign Leads</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="bulkReassignForm" method="POST" action="">
+        {% csrf_token %}
+        <div class="modal-body">
+          <p>Reassign <strong id="selectedCount">0</strong> selected leads to:</p>
+          <select name="assigned_to" class="form-select" required>
+            <option value="">Select Employee</option>
+            <!-- Team members will be populated by JavaScript -->
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Reassign All</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Team members data (this would normally come from backend)
+const teamMembers = [
+  {% if current_employee.is_admin or current_employee.is_superadmin %}
+    {% for member in team_members %}
+      {
+          id: {{ member.id }},
+          name: "{{ member.user.get_full_name|escapejs }}"
+      },
+    {% endfor %}
+  {% elif current_employee.is_manager %}
+    {% for member in team_members %}
+      {
+          id: {{ member.id }},
+          name: "{{ member.user.get_full_name|escapejs }}"
+      },
+    {% endfor %}
+  {% elif current_employee.is_team_leader %}
+    {% for member in team_members %}
+      {
+          id: {{ member.id }},
+          name: "{{ member.user.get_full_name|escapejs }}"
+      },
+    {% endfor %}
+  {% endif %}
+];
+
+// Populate team member dropdowns
+function populateTeamMemberDropdowns() {
+  const dropdowns = document.querySelectorAll('select[name="assigned_to"]');
+  dropdowns.forEach(dropdown => {
+    // Clear existing options except the first one
+    while (dropdown.children.length > 1) {
+      dropdown.removeChild(dropdown.lastChild);
+    }
+    
+    // Add team members
+    teamMembers.forEach(member => {
+      const option = document.createElement('option');
+      option.value = member.id;
+      option.textContent = member.name;
+      dropdown.appendChild(option);
+    });
+  });
+}
+
+// Select all functionality
+document.getElementById('selectAll').addEventListener('change', function() {
+  const checkboxes = document.querySelectorAll('.lead-checkbox');
+  checkboxes.forEach(checkbox => {
+    checkbox.checked = this.checked;
+  });
+  updateSelectedCount();
+});
+
+// Update selected count
+function updateSelectedCount() {
+  const checkedBoxes = document.querySelectorAll('.lead-checkbox:checked');
+  document.getElementById('selectedCount').textContent = checkedBoxes.length;
+}
+
+// Individual checkbox change
+document.querySelectorAll('.lead-checkbox').forEach(checkbox => {
+  checkbox.addEventListener('change', updateSelectedCount);
+});
+
+// Single reassign modal
+function openSingleReassignModal(leadId, leadName) {
+  document.getElementById('singleLeadName').textContent = leadName;
+  document.getElementById('singleReassignForm').action = `/accounts/lead-assignment/${leadId}/reassign/`;
+  populateTeamMemberDropdowns();
+  new bootstrap.Modal(document.getElementById('singleReassignModal')).show();
+}
+
+// Bulk reassign modal
+function openBulkReassignModal() {
+  const checkedBoxes = document.querySelectorAll('.lead-checkbox:checked');
+  if (checkedBoxes.length === 0) {
+    alert('Please select at least one lead to reassign.');
+    return;
+  }
+  
+  document.getElementById('selectedCount').textContent = checkedBoxes.length;
+  populateTeamMemberDropdowns();
+  new bootstrap.Modal(document.getElementById('bulkReassignModal')).show();
+}
+
+// Handle form submissions
+function handleReassignForm(formId, modalId) {
+  const form = document.getElementById(formId);
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    fetch(this.action, {
+      method: 'POST',
+      body: new FormData(this),
+      headers: {
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        bootstrap.Modal.getInstance(document.getElementById(modalId)).hide();
+        location.reload();
+      } else {
+        alert(data.message);
+      }
+    })
+    .catch(error => {
+      alert('An error occurred. Please try again.');
+    });
+  });
+}
+
+// Initialize form handlers
+handleReassignForm('singleReassignForm', 'singleReassignModal');
+handleReassignForm('bulkReassignForm', 'bulkReassignModal');
+</script>
+{% endblock %}

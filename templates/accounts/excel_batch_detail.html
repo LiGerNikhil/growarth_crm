@@ -1,0 +1,356 @@
+{% extends "base/layout.html" %}
+{% load excel_filters %}
+
+{% block title %}{{ batch.batch_name }} - Batch Details{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <!-- Batch Header -->
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+          <a href="{% url 'accounts:excel_batch_list' %}" class="btn btn-outline-secondary me-3">
+            <i class="bx bx-arrow-left"></i>
+          </a>
+          <div>
+            <h5 class="card-title mb-0">{{ batch.batch_name }}</h5>
+            <small class="text-muted">Created by {{ batch.created_by.get_full_name }} on {{ batch.created_at|date:"M d, Y g:i A" }}</small>
+          </div>
+        </div>
+        <div class="d-flex gap-2">
+          {% if batch.status == 'completed' %}
+            <a href="{{ batch.excel_file.url }}" download class="btn btn-outline-success">
+              <i class="bx bx-download me-1"></i>Download File
+            </a>
+          {% endif %}
+          <a href="{% url 'accounts:delete_excel_batch' batch.pk %}" class="btn btn-outline-danger">
+            <i class="bx bx-trash me-1"></i>Delete
+          </a>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-8">
+            <!-- Progress Overview -->
+            <div class="mb-4">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0">Processing Progress</h6>
+                <span class="badge bg-light text-dark">{{ batch.progress_percentage }}%</span>
+              </div>
+              <div class="progress" style="height: 10px;">
+                <div class="progress-bar" 
+                     style="width: {{ batch.progress_percentage }}%; 
+                            background-color: {% if batch.status == 'completed' %}#71dd37{% elif batch.status == 'failed' %}#ff3e1d{% elif batch.status == 'processing' %}#696cff{% else %}#ffab00{% endif %};">
+                </div>
+              </div>
+            </div>
+
+            <!-- Status Information -->
+            <div class="row">
+              <div class="col-md-3">
+                <div class="text-center">
+                  <h4 class="text-primary mb-1">{{ batch.total_rows }}</h4>
+                  <small class="text-muted">Total Rows</small>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="text-center">
+                  <h4 class="text-success mb-1">{{ batch.processed_rows }}</h4>
+                  <small class="text-muted">Processed</small>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="text-center">
+                  <h4 class="text-danger mb-1">{{ batch.failed_rows }}</h4>
+                  <small class="text-muted">Failed</small>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="text-center">
+                  <h4 class="text-info mb-1">{{ status_counts.pending }}</h4>
+                  <small class="text-muted">Pending</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-4">
+            <!-- Batch Actions -->
+            {% if batch.status in 'pending processing failed' %}
+              <form method="post" class="border rounded p-3">
+                {% csrf_token %}
+                <h6 class="mb-3">Batch Actions</h6>
+                {{ form.action }}
+                <div class="d-grid gap-2 mt-3">
+                  <button type="submit" class="btn btn-primary">
+                    {% if form.action.value == 'process' %}
+                      <i class="bx bx-play me-2"></i>Process All Rows
+                    {% elif form.action.value == 'retry_failed' %}
+                      <i class="bx bx-refresh me-2"></i>Retry Failed Rows
+                    {% elif form.action.value == 'skip_errors' %}
+                      <i class="bx bx-skip-next me-2"></i>Skip Errors & Process
+                    {% else %}
+                      <i class="bx bx-x me-2"></i>Cancel Batch
+                    {% endif %}
+                  </button>
+                </div>
+              </form>
+            {% else %}
+              <div class="border rounded p-3 text-center">
+                {% if batch.status == 'completed' %}
+                  <i class="bx bx-check-circle text-success fs-1 mb-2"></i>
+                  <h6 class="text-success">Batch Completed</h6>
+                  <small class="text-muted">All rows have been processed successfully.</small>
+                {% elif batch.status == 'cancelled' %}
+                  <i class="bx bx-x-circle text-secondary fs-1 mb-2"></i>
+                  <h6 class="text-secondary">Batch Cancelled</h6>
+                  <small class="text-muted">This batch was cancelled.</small>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        {% if batch.error_message %}
+          <div class="alert alert-danger mt-3">
+            <h6 class="alert-heading">
+              <i class="bx bx-error-circle me-2"></i>Error Message
+            </h6>
+            <pre class="mb-0">{{ batch.error_message }}</pre>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Sample Data Preview -->
+    {% if sample_rows %}
+      <div class="card mb-4">
+        <div class="card-header">
+          <h6 class="mb-0">
+            <i class="bx bx-table me-2"></i>Excel Data Preview (First 5 rows)
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered">
+              <thead class="table-light">
+                <tr>
+                  <th>Row #</th>
+                  {% for key in sample_rows.0|get_keys %}
+                    <th>{{ key }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in sample_rows %}
+                  <tr>
+                    <td>{{ row.row_number }}</td>
+                    {% for key in row|get_keys %}
+                      <td>{{ row|lookup:key }}</td>
+                    {% endfor %}
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="mt-2">
+            <small class="text-muted">
+              <i class="bx bx-info-circle me-1"></i>
+              Showing all columns from your Excel file. Empty cells are displayed as "-".
+            </small>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Batch Rows -->
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+          <i class="bx bx-list-ul me-2"></i>Batch Rows
+        </h6>
+        <div class="d-flex gap-2 align-items-center">
+          <form method="get" class="d-flex gap-2">
+            <select name="row_status" class="form-select form-select-sm" onchange="this.form.submit()">
+              <option value="">All Rows</option>
+              <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+              <option value="processed" {% if status_filter == 'processed' %}selected{% endif %}>Processed</option>
+              <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>Failed</option>
+              <option value="skipped" {% if status_filter == 'skipped' %}selected{% endif %}>Skipped</option>
+            </select>
+            {% if status_filter %}
+              <a href="{% url 'accounts:excel_batch_detail' batch.pk %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bx bx-x"></i> Clear
+              </a>
+            {% endif %}
+          </form>
+        </div>
+      </div>
+      <div class="card-body">
+        {% if page_obj %}
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th>Row #</th>
+                  <th>Status</th>
+                  <th>Employee Created</th>
+                  <th>Error Message</th>
+                  <th>Processed At</th>
+                  <!-- Show all Excel columns -->
+                  {% for key in page_obj.0|get_keys %}
+                    <th>{{ key }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in page_obj %}
+                  <tr>
+                    <td>
+                      <span class="badge bg-light text-dark">{{ row.row_number }}</span>
+                    </td>
+                    <td>
+                      {% if row.status == 'pending' %}
+                        <span class="badge bg-label-warning">Pending</span>
+                      {% elif row.status == 'processed' %}
+                        <span class="badge bg-label-success">Processed</span>
+                      {% elif row.status == 'failed' %}
+                        <span class="badge bg-label-danger">Failed</span>
+                      {% elif row.status == 'skipped' %}
+                        <span class="badge bg-label-secondary">Skipped</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if row.employee_created %}
+                        <a href="{% url 'accounts:staff_detail' row.employee_created.pk %}" class="text-decoration-none">
+                          {{ row.employee_created.full_name }}
+                        </a>
+                      {% else %}
+                        <span class="text-muted">-</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if row.error_message %}
+                        <small class="text-danger" title="{{ row.error_message }}">
+                          {{ row.error_message|truncatechars:50 }}
+                        </small>
+                      {% else %}
+                        <span class="text-muted">-</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if row.processed_at %}
+                        <small class="text-muted">{{ row.processed_at|date:"M d, Y g:i A" }}</small>
+                      {% else %}
+                        <span class="text-muted">-</span>
+                      {% endif %}
+                    </td>
+                    <!-- Show all Excel data -->
+                    {% for key in row|get_keys %}
+                      <td>
+                        <span class="text-muted">{{ row|lookup:key }}</span>
+                      </td>
+                    {% endfor %}
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          {% if page_obj.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+              <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if status_filter %}&row_status={{ status_filter }}{% endif %}">
+                      <i class="bx bx-chevron-left"></i>
+                    </a>
+                  </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                  {% if page_obj.number == num %}
+                    <li class="page-item active">
+                      <span class="page-link">{{ num }}</span>
+                    </li>
+                  {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ num }}{% if status_filter %}&row_status={{ status_filter }}{% endif %}">{{ num }}</a>
+                    </li>
+                  {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if status_filter %}&row_status={{ status_filter }}{% endif %}">
+                      <i class="bx bx-chevron-right"></i>
+                    </a>
+                  </li>
+                {% endif %}
+              </ul>
+            </nav>
+          {% endif %}
+        {% else %}
+          <div class="text-center py-4">
+            <i class="bx bx-table fs-1 text-muted mb-3"></i>
+            <h6 class="mb-2">No Rows Found</h6>
+            <p class="text-muted">
+              {% if status_filter %}
+                No rows found with the selected status.
+              {% else %}
+                No rows found in this batch.
+              {% endif %}
+            </p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.progress {
+  background-color: #f0f0f0;
+}
+
+.progress-bar {
+  transition: width 0.3s ease;
+}
+
+.badge {
+  font-weight: 500;
+}
+
+.bg-label-primary {
+  background-color: #e7e7ff !important;
+  color: #696cff !important;
+}
+
+.bg-label-secondary {
+  background-color: #f5f5f9 !important;
+  color: #82868b !important;
+}
+
+.bg-label-success {
+  background-color: #e8fadf !important;
+  color: #71dd37 !important;
+}
+
+.bg-label-warning {
+  background-color: #fff4de !important;
+  color: #ffab00 !important;
+}
+
+.bg-label-danger {
+  background-color: #ffdede !important;
+  color: #ff3e1d !important;
+}
+
+.bg-label-info {
+  background-color: #d7f5ff !important;
+  color: #03c3ec !important;
+}
+</style>
+{% endblock %}

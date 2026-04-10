@@ -1,0 +1,204 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Account Settings{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Account Settings</h5>
+        <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary">
+          <i class="bx bx-arrow-back me-1"></i>Back to Profile
+        </a>
+      </div>
+      <div class="card-body">
+        <!-- Settings Navigation -->
+        <div class="row">
+          <div class="col-md-3">
+            <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+              <button class="nav-link active" id="v-pills-profile-tab" data-bs-toggle="pill" data-bs-target="#v-pills-profile" type="button" role="tab" aria-controls="v-pills-profile" aria-selected="true">
+                <i class="bx bx-user me-2"></i>Profile Settings
+              </button>
+              <!-- <button class="nav-link" id="v-pills-password-tab" data-bs-toggle="pill" data-bs-target="#v-pills-password" type="button" role="tab" aria-controls="v-pills-password" aria-selected="false">
+                <i class="bx bx-lock me-2"></i>Change Password
+              </button> -->
+              <button class="nav-link" id="v-pills-notifications-tab" data-bs-toggle="pill" data-bs-target="#v-pills-notifications" type="button" role="tab" aria-controls="v-pills-notifications" aria-selected="false">
+                <i class="bx bx-bell me-2"></i>Notifications
+              </button>
+              <button class="nav-link" id="v-pills-security-tab" data-bs-toggle="pill" data-bs-target="#v-pills-security" type="button" role="tab" aria-controls="v-pills-security" aria-selected="false">
+                <i class="bx bx-shield me-2"></i>Security
+              </button>
+            </div>
+          </div>
+          <div class="col-md-9">
+            <div class="tab-content" id="v-pills-tabContent">
+              <!-- Profile Settings Tab -->
+              <div class="tab-pane fade show active" id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab">
+                <h6 class="mb-4">Profile Information</h6>
+                <form method="post" action="#">
+                  {% csrf_token %}
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label class="form-label">First Name</label>
+                      <input type="text" class="form-control" value="{{ request.user.first_name }}" readonly>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Last Name</label>
+                      <input type="text" class="form-control" value="{{ request.user.last_name }}" readonly>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Email Address</label>
+                      <input type="email" class="form-control" value="{{ request.user.email }}" readonly>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Username</label>
+                      <input type="text" class="form-control" value="{{ request.user.username }}" readonly>
+                    </div>
+                    <div class="col-12">
+                      <div class="alert alert-info">
+                        <i class="bx bx-info-circle me-2"></i>
+                        To update your profile information, please contact your HR department.
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Password Change Tab -->
+              <div class="tab-pane fade" id="v-pills-password" role="tabpanel" aria-labelledby="v-pills-password-tab">
+                <h6 class="mb-4">Change Password</h6>
+                <form method="post" action="{% url 'accounts:password_change' %}">
+                  {% csrf_token %}
+                  <div class="row g-3">
+                    <div class="col-12">
+                      <label class="form-label">Current Password</label>
+                      <input type="password" class="form-control" name="old_password" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">New Password</label>
+                      <input type="password" class="form-control" name="new_password1" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Confirm New Password</label>
+                      <input type="password" class="form-control" name="new_password2" required>
+                    </div>
+                    <div class="col-12">
+                      <div class="form-text">
+                        Password must be at least 8 characters long and contain both letters and numbers.
+                      </div>
+                    </div>
+                    <div class="col-12">
+                      <button type="submit" class="btn btn-primary">
+                        <i class="bx bx-lock me-1"></i>Change Password
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Notifications Tab -->
+              <div class="tab-pane fade" id="v-pills-notifications" role="tabpanel" aria-labelledby="v-pills-notifications-tab">
+                <h6 class="mb-4">Notification Preferences</h6>
+                <form method="post" action="#">
+                  {% csrf_token %}
+                  <div class="row g-3">
+                    <div class="col-12">
+                      <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                        <label class="form-check-label" for="emailNotifications">
+                          Email Notifications
+                        </label>
+                        <div class="form-text">Receive email notifications for important updates</div>
+                      </div>
+                    </div>
+                    <div class="col-12">
+                      <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="taskReminders" checked>
+                        <label class="form-check-label" for="taskReminders">
+                          Task Reminders
+                        </label>
+                        <div class="form-text">Get reminded about upcoming deadlines</div>
+                      </div>
+                    </div>
+                    <div class="col-12">
+                      <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="systemUpdates" checked>
+                        <label class="form-check-label" for="systemUpdates">
+                          System Updates
+                        </label>
+                        <div class="form-text">Receive notifications about system maintenance and updates</div>
+                      </div>
+                    </div>
+                    <div class="col-12">
+                      <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="hrAnnouncements" checked>
+                        <label class="form-check-label" for="hrAnnouncements">
+                          HR Announcements
+                        </label>
+                        <div class="form-text">Stay updated with company news and announcements</div>
+                      </div>
+                    </div>
+                    <div class="col-12">
+                      <button type="submit" class="btn btn-primary">
+                        <i class="bx bx-save me-1"></i>Save Preferences
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Security Tab -->
+              <div class="tab-pane fade" id="v-pills-security" role="tabpanel" aria-labelledby="v-pills-security-tab">
+                <h6 class="mb-4">Security Settings</h6>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="card">
+                      <div class="card-body">
+                        <h6 class="card-title">Last Login</h6>
+                        <p class="mb-1"><strong>Date:</strong> {{ request.user.last_login|date:"M d, Y H:i"|default:"Never" }}</p>
+                        <p class="mb-1"><strong>IP Address:</strong> {{ request.META.REMOTE_ADDR|default:"Unknown" }}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="card">
+                      <div class="card-body">
+                        <h6 class="card-title">Account Status</h6>
+                        <p class="mb-1"><strong>Status:</strong> 
+                          {% if request.user.is_active %}
+                            <span class="badge bg-label-success">Active</span>
+                          {% else %}
+                            <span class="badge bg-label-danger">Inactive</span>
+                          {% endif %}
+                        </p>
+                        <p class="mb-1"><strong>Staff Access:</strong> 
+                          {% if request.user.is_staff %}
+                            <span class="badge bg-label-info">Enabled</span>
+                          {% else %}
+                            <span class="badge bg-label-secondary">Disabled</span>
+                          {% endif %}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="row mt-4">
+                  <div class="col-12">
+                    <div class="alert alert-warning">
+                      <i class="bx bx-shield me-2"></i>
+                      <strong>Security Notice:</strong> If you suspect unauthorized access to your account, please contact your IT department immediately.
+                      <strong>Email:</strong> tech.helpdesk@growarthcapita.com
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

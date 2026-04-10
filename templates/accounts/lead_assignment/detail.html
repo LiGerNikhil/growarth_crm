@@ -1,0 +1,296 @@
+{% extends "base/layout.html" %}
+{% load static %}
+{% load lead_filters %}
+
+{% block title %}Lead Details - {{ lead.get_full_name|default:lead.id }}{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+  <div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Page Header -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card mb-4">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="card-title mb-0">
+              <i class="bx bx-user-voice me-2"></i>
+              Lead Details - {{ lead.get_full_name|default:"Lead" }} #{{ lead.id }}
+            </h4>
+            <div class="d-flex gap-2">
+              <a href="{% url 'accounts:lead_assignment_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bx bx-arrow-back me-1"></i>Back to Dashboard
+              </a>
+              {% if employee.is_manager or employee.is_team_leader %}
+                <button class="btn btn-primary" onclick="openReassignModal()">
+                  <i class="bx bx-transfer me-1"></i>Reassign Lead
+                </button>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Lead Information -->
+      <div class="col-md-6">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">
+              <i class="bx bx-user me-2"></i>Lead Information
+            </h5>
+          </div>
+          <div class="card-body">
+            <table class="table table-borderless">
+              <tr>
+                <td><strong>Lead ID:</strong></td>
+                <td>{{ lead.id }}</td>
+              </tr>
+              <tr>
+                <td><strong>Name:</strong></td>
+                <td>{{ lead.get_full_name|default:"-" }}</td>
+              </tr>
+              <tr>
+                <td><strong>Phone:</strong></td>
+                <td>{{ lead.get_phone_number|default:"-" }}</td>
+              </tr>
+              <tr>
+                <td><strong>Email:</strong></td>
+                <td>{{ lead.get_email|default:"-" }}</td>
+              </tr>
+              <tr>
+                <td><strong>Status:</strong></td>
+                <td>
+                  <span class="badge bg-{{ lead.status|status_color }}">
+                    {{ lead.get_status_display }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Source:</strong></td>
+                <td>{{ lead.source|default:"-" }}</td>
+              </tr>
+              <tr>
+                <td><strong>Created At:</strong></td>
+                <td>{{ lead.created_at|date:"Y-m-d H:i" }}</td>
+              </tr>
+              <tr>
+                <td><strong>Last Contacted:</strong></td>
+                <td>{{ lead.last_contacted|date:"Y-m-d H:i"|default:"Never" }}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Assignment Information -->
+      <div class="col-md-6">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">
+              <i class="bx bx-user-check me-2"></i>Assignment Information
+            </h5>
+          </div>
+          <div class="card-body">
+            <table class="table table-borderless">
+              <tr>
+                <td><strong>Assigned To:</strong></td>
+                <td>
+                  {% if lead.assigned_to %}
+                    {{ lead.assigned_to.user.get_full_name }}
+                    {% if lead.assigned_to.user.phone_numbers.first %}
+                      <br><small class="text-muted">{{ lead.assigned_to.user.phone_numbers.first.phone_number }}</small>
+                    {% endif %}
+                  {% else %}
+                    <span class="text-muted">Unassigned</span>
+                  {% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Assigned At:</strong></td>
+                <td>{{ lead.assigned_at|date:"Y-m-d H:i"|default:"-" }}</td>
+              </tr>
+              <tr>
+                <td><strong>Assigned By:</strong></td>
+                <td>
+                  {% if lead.assigned_by %}
+                    {{ lead.assigned_by.user.get_full_name }}
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Updated By:</strong></td>
+                <td>
+                  {% if lead.updated_by %}
+                    {{ lead.updated_by.user.get_full_name }}
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Updated At:</strong></td>
+                <td>{{ lead.updated_at|date:"Y-m-d H:i" }}</td>
+              </tr>
+            </table>
+
+            {% if lead.assigned_to and employee.is_manager or employee.is_team_leader %}
+              <div class="mt-3">
+                <a href="{% url 'accounts:employee_leads' lead.assigned_to.id %}" class="btn btn-sm btn-outline-primary">
+                  <i class="bx bx-user me-1"></i>View {{ lead.assigned_to.user.first_name }}'s All Leads
+                </a>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional Information -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">
+              <i class="bx bx-file me-2"></i>Additional Information
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <h6>Notes:</h6>
+                <p>{{ lead.notes|default:"No notes available."|linebreaks }}</p>
+              </div>
+              <div class="col-md-6">
+                <h6>Lead Data:</h6>
+                {% if lead.get_data %}
+                  <table class="table table-sm">
+                    {% for key, value in lead.get_data.items %}
+                      <tr>
+                        <td><strong>{{ key|title }}:</strong></td>
+                        <td>{{ value|default:"-" }}</td>
+                      </tr>
+                    {% endfor %}
+                  </table>
+                {% else %}
+                  <p class="text-muted">No additional data available.</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activity Logs -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">
+              <i class="bx bx-history me-2"></i>Activity History
+            </h5>
+          </div>
+          <div class="card-body">
+            {% if activity_logs %}
+              <div class="table-responsive">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Date & Time</th>
+                      <th>Action</th>
+                      <th>Performed By</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for log in activity_logs %}
+                      <tr>
+                        <td>{{ log.created_at|date:"Y-m-d H:i" }}</td>
+                        <td>
+                          <span class="badge bg-{{ log.action|action_color }}">
+                            {{ log.get_action_display }}
+                          </span>
+                        </td>
+                        <td>{{ log.employee.user.get_full_name }}</td>
+                        <td>{{ log.description }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <p class="text-muted text-center">No activity logs found for this lead.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reassign Lead Modal -->
+<div class="modal fade" id="reassignModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Reassign Lead</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="reassignForm" method="POST" action="{% url 'accounts:reassign_lead' lead.id %}">
+        {% csrf_token %}
+        <div class="modal-body">
+          <p>Reassign <strong>{{ lead.get_full_name|default:"Lead" }} #{{ lead.id }}</strong> to:</p>
+          <select name="assigned_to" class="form-select" required>
+            <option value="">Select Employee</option>
+            {% for member in team_members %}
+              <option value="{{ member.id }}" {% if lead.assigned_to and lead.assigned_to.id == member.id %}selected{% endif %}>
+                {{ member.user.get_full_name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Reassign</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openReassignModal() {
+  new bootstrap.Modal(document.getElementById('reassignModal')).show();
+}
+
+document.getElementById('reassignForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  fetch(this.action, {
+    method: 'POST',
+    body: new FormData(this),
+    headers: {
+      'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      bootstrap.Modal.getInstance(document.getElementById('reassignModal')).hide();
+      location.reload();
+    } else {
+      alert(data.message);
+    }
+  })
+  .catch(error => {
+    alert('An error occurred. Please try again.');
+  });
+});
+</script>
+{% endblock %}

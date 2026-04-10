@@ -1,0 +1,164 @@
+{% extends 'base/layout.html' %}
+{% load static %}
+
+{% block title %}Create Support Ticket{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title mb-0">
+            <i class="bx bx-plus-circle me-2"></i>Create Support Ticket
+          </h4>
+        </div>
+        
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Subject -->
+            <div class="mb-3">
+              <label for="{{ form.subject.id_for_label }}" class="form-label">
+                {{ form.subject.label }} <span class="text-danger">*</span>
+              </label>
+              {{ form.subject }}
+              {% if form.subject.errors %}
+                <div class="text-danger small">
+                  {% for error in form.subject.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            
+            <!-- Category -->
+            <div class="mb-3">
+              <label for="{{ form.category.id_for_label }}" class="form-label">
+                {{ form.category.label }} <span class="text-danger">*</span>
+              </label>
+              {{ form.category }}
+              {% if form.category.errors %}
+                <div class="text-danger small">
+                  {% for error in form.category.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            
+            <!-- Priority -->
+            <div class="mb-3">
+              <label for="{{ form.priority.id_for_label }}" class="form-label">
+                {{ form.priority.label }} <span class="text-danger">*</span>
+              </label>
+              {{ form.priority }}
+              {% if form.priority.errors %}
+                <div class="text-danger small">
+                  {% for error in form.priority.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+              
+              <!-- Priority Help Text -->
+              <small class="form-text text-muted">
+                <i class="bx bx-info-circle"></i>
+                <strong>High:</strong> Critical issues affecting multiple users<br>
+                <strong>Medium:</strong> Issues affecting individual productivity<br>
+                <strong>Low:</strong> General inquiries or minor issues
+              </small>
+            </div>
+            
+            <!-- Description -->
+            <div class="mb-3">
+              <label for="{{ form.description.id_for_label }}" class="form-label">
+                {{ form.description.label }} <span class="text-danger">*</span>
+              </label>
+              {{ form.description }}
+              {% if form.description.errors %}
+                <div class="text-danger small">
+                  {% for error in form.description.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+              
+              <!-- Description Help Text -->
+              <small class="form-text text-muted">
+                <i class="bx bx-info-circle"></i>
+                Please provide as much detail as possible including:
+                <ul class="mb-0">
+                  <li>Steps to reproduce the issue</li>
+                  <li>Any error messages you're seeing</li>
+                  <li>What you expected to happen</li>
+                  <li>What actually happened</li>
+                </ul>
+              </small>
+            </div>
+            
+            <!-- Attachment -->
+            <div class="mb-4">
+              <label for="{{ form.attachment.id_for_label }}" class="form-label">
+                {{ form.attachment.label }}
+              </label>
+              {{ form.attachment }}
+              {% if form.attachment.errors %}
+                <div class="text-danger small">
+                  {% for error in form.attachment.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+              
+              <!-- Attachment Help Text -->
+              <small class="form-text text-muted">
+                <i class="bx bx-info-circle"></i>
+                Optional: Upload screenshots, logs, or other relevant files (Max: 10MB)
+              </small>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary">
+                <i class="bx bx-send me-1"></i>Create Ticket
+              </button>
+              <a href="{% url 'accounts:ticket_list' %}" class="btn btn-outline-secondary">
+                <i class="bx bx-arrow-back me-1"></i>Cancel
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.card {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.form-label {
+  font-weight: 600;
+  color: #495057;
+}
+
+.text-danger {
+  color: #dc3545 !important;
+}
+
+.form-text {
+  font-size: 0.875rem;
+}
+
+ul {
+  padding-left: 20px;
+}
+
+ul li {
+  margin-bottom: 5px;
+}
+</style>
+{% endblock %}

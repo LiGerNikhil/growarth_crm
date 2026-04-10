@@ -1,0 +1,179 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Debug Import{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Debug Import - Test Google Sheets Data</h5>
+      </div>
+      <div class="card-body">
+        
+        <!-- Messages Display -->
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <!-- Current Status -->
+        <div class="alert alert-info">
+          <h6><i class="bx bx-info-circle me-2"></i>Current Status</h6>
+          <p><strong>Total Google Sheets leads:</strong> {{ google_sheets_leads }}</p>
+          <p><strong>Loan leads from Google Sheets:</strong> {{ loan_google_sheets_leads }}</p>
+          <p><strong>Quote leads from Google Sheets:</strong> {{ quote_google_sheets_leads }}</p>
+        </div>
+
+        <!-- Debug Forms -->
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card border-warning">
+              <div class="card-header bg-warning text-white">
+                <h6 class="card-title mb-0">Debug Loan Import</h6>
+              </div>
+              <div class="card-body">
+                <form method="post" action="{% url 'crm:debug_import' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="type" value="loan">
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Name *</label>
+                    <input type="text" name="name" class="form-control" value="Debug Loan User" required>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Email *</label>
+                    <input type="email" name="email" class="form-control" value="debug.loan@example.com" required>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Phone</label>
+                    <input type="tel" name="phone" class="form-control" value="+1234567890">
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Loan Type</label>
+                    <select name="loan_type" class="form-select">
+                      <option value="personal_loan" selected>Personal Loan</option>
+                      <option value="home_loan">Home Loan</option>
+                      <option value="business_loan">Business Loan</option>
+                    </select>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Loan Amount</label>
+                    <input type="number" name="loan_amount" class="form-control" value="50000">
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Message</label>
+                    <textarea name="message" class="form-control" rows="2">Debug loan import test</textarea>
+                  </div>
+                  
+                  <button type="submit" class="btn btn-warning w-100">
+                    <i class="bx bx-test-tube me-1"></i>Test Loan Import
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="card border-info">
+              <div class="card-header bg-info text-white">
+                <h6 class="card-title mb-0">Debug Quote Import</h6>
+              </div>
+              <div class="card-body">
+                <form method="post" action="{% url 'crm:debug_import' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="type" value="quote">
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Name *</label>
+                    <input type="text" name="name" class="form-control" value="Debug Quote User" required>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Email *</label>
+                    <input type="email" name="email" class="form-control" value="debug.quote@example.com" required>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Phone</label>
+                    <input type="tel" name="phone" class="form-control" value="+1234567891">
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Message/Requirements</label>
+                    <textarea name="message" class="form-control" rows="4">Debug quote import test - need quote for services</textarea>
+                  </div>
+                  
+                  <button type="submit" class="btn btn-info w-100">
+                    <i class="bx bx-test-tube me-1"></i>Test Quote Import
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error Diagnosis -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h6 class="card-title mb-0">Error Diagnosis</h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <h6>Common Issues:</h6>
+                <ul>
+                  <li>Missing required fields (Name, Email)</li>
+                  <li>Invalid email format</li>
+                  <li>Invalid loan amount format</li>
+                  <li>Database connection issues</li>
+                  <li>CSRF token missing</li>
+                </ul>
+              </div>
+              <div class="col-md-6">
+                <h6>Solutions:</h6>
+                <ul>
+                  <li>Fill all required fields</li>
+                  <li>Use valid email addresses</li>
+                  <li>Use numbers for loan amounts</li>
+                  <li>Check server logs for errors</li>
+                  <li>Ensure form has CSRF token</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="row mt-4">
+          <div class="col-md-4">
+            <a href="{% url 'crm:simple_import' %}" class="btn btn-primary w-100">
+              <i class="bx bx-arrow-left me-1"></i>Back to Simple Import
+            </a>
+          </div>
+          <div class="col-md-4">
+            <a href="{% url 'crm:loan_leads' %}" class="btn btn-warning w-100">
+              <i class="bx bx-dollar me-1"></i>View Loan Leads
+            </a>
+          </div>
+          <div class="col-md-4">
+            <a href="{% url 'crm:quote_leads' %}" class="btn btn-info w-100">
+              <i class="bx bx-file me-1"></i>View Quote Leads
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,277 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Google Sheets Settings{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">Google Sheets Integration Settings</h5>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-info">
+          <i class="bx bx-info-circle me-2"></i>
+          Manage your Google Sheets integration settings for loan and quote forms.
+        </div>
+
+        <!-- Integration Cards -->
+        <div class="row">
+          {% for integration in integrations %}
+          <div class="col-md-6 mb-4">
+            <div class="card h-100">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">{{ integration.name }}</h6>
+                <span class="badge bg-label-{{ integration.is_active|yesno:'success,secondary' }}">
+                  {{ integration.is_active|yesno:"Active,Inactive" }}
+                </span>
+              </div>
+              <div class="card-body">
+                <div class="mb-3">
+                  <label class="form-label">Integration Type</label>
+                  <p class="form-control-plaintext">{{ integration.get_integration_type_display }}</p>
+                </div>
+                
+                <div class="mb-3">
+                  <label class="form-label">Google Sheets Web App URL</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" value="{{ integration.script_url }}" readonly>
+                    <button class="btn btn-outline-secondary" onclick="copyToClipboard('{{ integration.script_url }}')">
+                      <i class="bx bx-copy"></i>
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="mb-3">
+                  <label class="form-label">Webhook Endpoint</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" value="{{ integration.webhook_url }}" readonly>
+                    <button class="btn btn-outline-secondary" onclick="copyToClipboard('{{ integration.webhook_url }}')">
+                      <i class="bx bx-copy"></i>
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label">Total Records</label>
+                      <p class="form-control-plaintext">{{ integration.total_records }}</p>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label">Last Sync</label>
+                      <p class="form-control-plaintext">
+                        {% if integration.last_sync %}
+                          {{ integration.last_sync|date:"M d, Y H:i" }}
+                        {% else %}
+                          Never
+                        {% endif %}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-footer">
+                <div class="d-flex justify-content-between">
+                  <small class="text-muted">Created: {{ integration.created_at|date:"M d, Y" }}</small>
+                  <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-primary" onclick="testIntegration('{{ integration.integration_type }}')">
+                      <i class="bx bx-test-tube me-1"></i>Test
+                    </button>
+                    <button class="btn btn-sm btn-outline-success" onclick="syncIntegration('{{ integration.integration_type }}')">
+                      <i class="bx bx-sync me-1"></i>Sync
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Form Data Examples -->
+        <div class="row mt-4">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h6 class="card-title mb-0">Loan Form Data Structure</h6>
+              </div>
+              <div class="card-body">
+                <pre class="bg-light p-3 rounded"><code>{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "phone": "+1234567890",
+  "loanType": "personal_loan",
+  "loanAmount": "50000",
+  "employment": "employed",
+  "monthlyIncome": "5000",
+  "message": "Looking for a personal loan",
+  "consent": true,
+  "timestamp": "2024-01-30T12:00:00Z"
+}</code></pre>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">
+                <h6 class="card-title mb-0">Quote Form Data Structure</h6>
+              </div>
+              <div class="card-body">
+                <pre class="bg-light p-3 rounded"><code>{
+  "name": "Jane Smith",
+  "email": "jane@example.com",
+  "mobile": "+1234567890",
+  "message": "Need a quote for services",
+  "consent": true,
+  "timestamp": "2024-01-30T12:00:00Z"
+}</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- JavaScript Integration Examples -->
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h6 class="card-title mb-0">JavaScript Integration Examples</h6>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <h6>Loan Form Integration</h6>
+                    <pre class="bg-light p-3 rounded"><code>// Google Sheets Web App URL
+const scriptURL = "https://script.google.com/macros/s/AKfycby-pJuT6CjTbSViGQd3qgOYzKQe-KPH0IQJ9UZCrujWCLXnnUeqWqz6sXkHOQ28tbiz-A/exec";
+
+// Form submission
+fetch(scriptURL, {
+  method: 'POST',
+  body: JSON.stringify(formData),
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
+.then(response => response.json())
+.then(data => {
+  // Also send to local CRM
+  fetch('/crm/webhook/loan-lead/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken')
+    },
+    body: JSON.stringify(formData)
+  });
+});</code></pre>
+                  </div>
+                  
+                  <div class="col-md-6">
+                    <h6>Quote Form Integration</h6>
+                    <pre class="bg-light p-3 rounded"><code>// Google Sheets Web App URL
+const scriptURL = "https://script.google.com/macros/s/AKfycby-pJuT6CjTbSViGQd3qgOYzKQe-KPH0IQJ9UZCrujWCLXnnUeqWqz6sXkHOQ28tbiz-A/exec";
+
+// Form submission
+fetch(scriptURL, {
+  method: 'POST',
+  body: JSON.stringify(formData),
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
+.then(response => response.json())
+.then(data => {
+  // Also send to local CRM
+  fetch('/crm/webhook/quote-lead/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken')
+    },
+    body: JSON.stringify(formData)
+  });
+});</code></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(function() {
+    alert('URL copied to clipboard!');
+  });
+}
+
+function testIntegration(type) {
+  const testData = type === 'loan' ? {
+    name: 'Test User',
+    email: 'test@example.com',
+    phone: '+1234567890',
+    loanType: 'personal_loan',
+    loanAmount: '10000',
+    employment: 'employed',
+    monthlyIncome: '5000',
+    message: 'Test loan application',
+    consent: true
+  } : {
+    name: 'Test User',
+    email: 'test@example.com',
+    mobile: '+1234567890',
+    message: 'Test quote request',
+    consent: true
+  };
+
+  const webhookUrl = type === 'loan' ? '/crm/webhook/loan-lead/' : '/crm/webhook/quote-lead/';
+  
+  fetch(webhookUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken')
+    },
+    body: JSON.stringify(testData)
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert('Test successful! Lead created with ID: ' + data.lead_id);
+    } else {
+      alert('Test failed: ' + data.error);
+    }
+  })
+  .catch(error => {
+    alert('Test error: ' + error);
+  });
+}
+
+function syncIntegration(type) {
+  alert('Sync functionality will be implemented to pull existing data from Google Sheets');
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,1110 @@
+{% extends "base/layout.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            padding: 10px 0;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        .form-wrapper {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 20px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .form-header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .form-header p {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .form-body {
+            padding: 20px 30px;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+
+        .form-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .form-body::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+
+        .form-body::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .form-body::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        @media (max-width: 768px) {
+            .form-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .form-body {
+                padding: 15px;
+            }
+            
+            .form-section {
+                padding: 15px;
+            }
+            
+            .row-custom {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .form-control, .form-select {
+                font-size: 0.9rem;
+                padding: 10px 14px;
+                min-height: 44px;
+            }
+            
+            .form-label {
+                font-size: 0.85rem;
+            }
+            
+            .section-title {
+                font-size: 1.1rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .main-container {
+                padding: 10px;
+            }
+            
+            .form-header {
+                padding: 15px 20px;
+            }
+            
+            .form-header h1 {
+                font-size: 1.3rem;
+            }
+            
+            .form-body {
+                padding: 12px;
+            }
+            
+            .form-section {
+                padding: 12px;
+                margin-bottom: 20px;
+            }
+            
+            .form-control, .form-select {
+                font-size: 0.85rem;
+                padding: 8px 12px;
+                min-height: 40px;
+                border-radius: 8px;
+            }
+            
+            .form-label {
+                font-size: 0.8rem;
+                margin-bottom: 4px;
+            }
+            
+            .btn-primary-custom, .btn-secondary-custom {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            
+            .section-title {
+                font-size: 1rem;
+            }
+            
+            .section-subtitle {
+                font-size: 0.8rem;
+                margin-bottom: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .form-header h1 {
+                font-size: 1.2rem;
+            }
+            
+            .form-control, .form-select {
+                padding: 6px 10px;
+                min-height: 36px;
+            }
+            
+            .icon-input-wrapper i {
+                right: 10px;
+                font-size: 0.9rem;
+            }
+            
+            .icon-input-wrapper .form-control {
+                padding-right: 35px;
+            }
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title i {
+            color: #4f46e5;
+            font-size: 1.2rem;
+        }
+
+        .section-subtitle {
+            color: #6b7280;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .form-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .form-section:hover {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.875rem;
+        }
+
+        .form-label i {
+            color: #4f46e5;
+            font-size: 0.9rem;
+        }
+
+        .row-custom {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 18px;
+        }
+
+        .form-control, .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            background: white;
+            min-height: 48px;
+            line-height: 1.4;
+        }
+
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .form-control:hover, .form-select:hover {
+            border-color: #d1d5db;
+        }
+
+        .required-star {
+            color: #ef4444;
+            margin-left: 4px;
+        }
+
+        .field-hint {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        .error-message {
+            color: #ef4444;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 10px;
+            background: #fef2f2;
+            border-radius: 6px;
+            border-left: 3px solid #ef4444;
+        }
+
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary-custom::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-primary-custom:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-secondary-custom {
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+        }
+
+        .btn-secondary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(107, 114, 128, 0.4);
+            background: #4b5563;
+        }
+
+        .alert-custom {
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 15px;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-danger-custom {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
+        }
+
+        .row-custom {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .progress-bar-custom {
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .icon-input-wrapper {
+            position: relative;
+        }
+
+        .icon-input-wrapper i {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #4f46e5;
+            pointer-events: none;
+        }
+
+        .icon-input-wrapper .form-control {
+            padding-right: 40px;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #4f46e5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .btn-primary-custom.loading .loading-spinner {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="form-wrapper">
+            <!-- Header -->
+            <div class="form-header">
+                <h1><i class="fas fa-user-plus me-3"></i>{{ title }}</h1>
+                <p>Complete the form below to {% if 'Create' in title %}add a new{% else %}update the{% endif %} team member</p>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-bar-custom">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+
+            <!-- Form Body -->
+            <div class="form-body">
+                <form method="post" enctype="multipart/form-data" id="employeeForm">
+                    {% csrf_token %}
+                    
+                    <!-- Form Errors -->
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger-custom">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <div>
+                                {% for error in form.non_field_errors %}
+                                    <p class="mb-0">{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Basic Information Section -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="fas fa-user"></i>
+                            Basic Information
+                        </div>
+                        <div class="section-subtitle">Let's start with the essential details</div>
+                        
+                        <div class="row-custom">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-user"></i>
+                                    First Name
+                                    <span class="required-star">*</span>
+                                </label>
+                                <div class="icon-input-wrapper">
+                                    {{ form.first_name }}
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                {% if form.first_name.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.first_name.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-user"></i>
+                                    Last Name
+                                    <span class="required-star">*</span>
+                                </label>
+                                <div class="icon-input-wrapper">
+                                    {{ form.last_name }}
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                {% if form.last_name.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.last_name.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-envelope"></i>
+                                    Email Address
+                                    <span class="required-star">*</span>
+                                </label>
+                                <div class="icon-input-wrapper">
+                                    {{ form.email }}
+                                    <i class="fas fa-envelope"></i>
+                                </div>
+                                {% if form.email.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.email.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-phone"></i>
+                                    Phone Number
+                                </label>
+                                <div class="icon-input-wrapper">
+                                    {{ form.phone }}
+                                    <i class="fas fa-phone"></i>
+                                </div>
+                                {% if form.phone.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.phone.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Job Details Section -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="fas fa-briefcase"></i>
+                            Job Details
+                        </div>
+                        <div class="section-subtitle">Professional information and role</div>
+                        
+                        <div class="row-custom">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-briefcase"></i>
+                                    Employee Type
+                                </label>
+                                {{ form.employee_type }}
+                                {% if form.employee_type.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.employee_type.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-building"></i>
+                                    Department
+                                </label>
+                                {{ form.department }}
+                                {% if form.department.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.department.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-briefcase"></i>
+                                    Position
+                                </label>
+                                <div class="icon-input-wrapper">
+                                    {{ form.position }}
+                                    <i class="fas fa-briefcase"></i>
+                                </div>
+                                {% if form.position.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.position.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-user-tie"></i>
+                                    Role
+                                    <span class="required-star">*</span>
+                                </label>
+                                {{ form.role }}
+                                {% if form.role.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.role.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-user-check"></i>
+                                    Reports To
+                                </label>
+                                {{ form.reports_to }}
+                                {% if form.reports_to.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.reports_to.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <div class="field-hint">Select the manager or team leader this person reports to</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-users"></i>
+                                    Team Leader
+                                </label>
+                                {{ form.team_leader }}
+                                {% if form.team_leader.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.team_leader.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <div class="field-hint">Assign this employee to a team leader (optional)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Employment Details Section -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="fas fa-calendar-alt"></i>
+                            Employment Details
+                        </div>
+                        <div class="section-subtitle">Important dates and employment status</div>
+                        
+                        <div class="row-custom">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-calendar"></i>
+                                    Hire Date
+                                    <span class="required-star">*</span>
+                                </label>
+                                {{ form.hire_date }}
+                                {% if form.hire_date.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.hire_date.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-calendar-check"></i>
+                                    Start Date
+                                    <span class="required-star">*</span>
+                                </label>
+                                {{ form.start_date }}
+                                {% if form.start_date.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.start_date.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-calendar-times"></i>
+                                    Probation End Date
+                                </label>
+                                {{ form.probation_end_date }}
+                                {% if form.probation_end_date.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.probation_end_date.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-dollar-sign"></i>
+                                    Base Salary
+                                </label>
+                                <div class="icon-input-wrapper">
+                                    {{ form.salary }}
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                                {% if form.salary.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.salary.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-percentage"></i>
+                                    Bonus Percentage
+                                </label>
+                                <div class="icon-input-wrapper">
+                                    {{ form.bonus_percentage }}
+                                    <i class="fas fa-percentage"></i>
+                                </div>
+                                {% if form.bonus_percentage.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.bonus_percentage.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-toggle-on"></i>
+                                    Employment Status
+                                </label>
+                                {{ form.employment_status }}
+                                {% if form.employment_status.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.employment_status.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Personal Information Section -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="fas fa-user"></i>
+                            Personal Information
+                        </div>
+                        <div class="section-subtitle">Personal details and address</div>
+                        
+                        <div class="row-custom">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-birthday-cake"></i>
+                                    Date of Birth
+                                </label>
+                                {{ form.date_of_birth }}
+                                {% if form.date_of_birth.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.date_of_birth.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label class="form-label">
+                                    <i class="fas fa-home"></i>
+                                    Address
+                                </label>
+                                {{ form.address }}
+                                {% if form.address.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.address.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-city"></i>
+                                    City
+                                </label>
+                                <div class="icon-input-wrapper">
+                                    {{ form.city }}
+                                    <i class="fas fa-city"></i>
+                                </div>
+                                {% if form.city.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.city.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-map-marked-alt"></i>
+                                    State
+                                </label>
+                                <div class="icon-input-wrapper">
+                                    {{ form.state }}
+                                    <i class="fas fa-map-marked-alt"></i>
+                                </div>
+                                {% if form.state.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.state.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-mail-bulk"></i>
+                                    Postal Code
+                                </label>
+                                <div class="icon-input-wrapper">
+                                    {{ form.postal_code }}
+                                    <i class="fas fa-mail-bulk"></i>
+                                </div>
+                                {% if form.postal_code.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.postal_code.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-globe"></i>
+                                    Country
+                                </label>
+                                <div class="icon-input-wrapper">
+                                    {{ form.country }}
+                                    <i class="fas fa-globe"></i>
+                                </div>
+                                {% if form.country.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.country.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Emergency Contact Section -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="fas fa-phone-alt"></i>
+                            Emergency Contact
+                        </div>
+                        <div class="section-subtitle">Emergency contact information</div>
+                        
+                        <div class="row-custom">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-user"></i>
+                                    Contact Name
+                                </label>
+                                <div class="icon-input-wrapper">
+                                    {{ form.emergency_contact_name }}
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                {% if form.emergency_contact_name.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.emergency_contact_name.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-phone"></i>
+                                    Contact Phone
+                                </label>
+                                <div class="icon-input-wrapper">
+                                    {{ form.emergency_contact_phone }}
+                                    <i class="fas fa-phone"></i>
+                                </div>
+                                {% if form.emergency_contact_phone.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.emergency_contact_phone.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-user-friends"></i>
+                                    Relationship
+                                </label>
+                                <div class="icon-input-wrapper">
+                                    {{ form.emergency_contact_relationship }}
+                                    <i class="fas fa-user-friends"></i>
+                                </div>
+                                {% if form.emergency_contact_relationship.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.emergency_contact_relationship.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Information (for new staff) -->
+                    {% if 'Create' in title %}
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="fas fa-lock"></i>
+                            Account Information
+                        </div>
+                        <div class="section-subtitle">Set up login credentials</div>
+                        
+                        <div class="row-custom">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-lock"></i>
+                                    Password
+                                    <span class="required-star">*</span>
+                                </label>
+                                <div class="icon-input-wrapper">
+                                    {{ form.password }}
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                                {% if form.password.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.password.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <div class="field-hint">{{ form.password.help_text }}</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-lock"></i>
+                                    Confirm Password
+                                    <span class="required-star">*</span>
+                                </label>
+                                <div class="icon-input-wrapper">
+                                    {{ form.confirm_password }}
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                                {% if form.confirm_password.errors %}
+                                    <div class="error-message">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.confirm_password.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Submit Buttons -->
+                    <div style="display: flex; gap: 12px; justify-content: center; margin-top: 25px;">
+                        <button type="submit" class="btn-primary-custom" id="submitBtn">
+                            <i class="fas fa-save me-2"></i>
+                            {% if 'Create' in title %}Create Employee{% else %}Update Employee{% endif %}
+                            <span class="loading-spinner"></span>
+                        </button>
+                        <a href="{% url 'accounts:staff_management' %}" class="btn-secondary-custom">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Form validation and interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('employeeForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const progressBar = document.getElementById('progressBar');
+            
+            // Progress bar animation
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 10;
+                if (progress > 100) progress = 100;
+                progressBar.style.width = progress + '%';
+                if (progress >= 100) clearInterval(progressInterval);
+            }, 50);
+            
+            // Form field animations
+            const formFields = document.querySelectorAll('.form-control, .form-select');
+            formFields.forEach(field => {
+                field.addEventListener('focus', function() {
+                    this.parentElement.style.transform = 'scale(1.01)';
+                });
+                
+                field.addEventListener('blur', function() {
+                    this.parentElement.style.transform = 'scale(1)';
+                });
+                
+                // Add input validation
+                field.addEventListener('input', function() {
+                    if (this.value.length > 0) {
+                        this.style.borderColor = '#10b981';
+                    } else {
+                        this.style.borderColor = '#e5e7eb';
+                    }
+                });
+            });
+            
+            // Form submission
+            form.addEventListener('submit', function(e) {
+                // Don't prevent default - let Django handle the form submission
+                // Just show loading state
+                submitBtn.classList.add('loading');
+                submitBtn.disabled = true;
+                
+                // The form will now submit normally to Django
+                // Django will handle the validation and redirect
+            });
+            
+            // Notification system
+            function showNotification(type, message) {
+                const notification = document.createElement('div');
+                notification.className = `alert alert-${type}-custom`;
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    z-index: 9999;
+                    min-width: 300px;
+                    animation: slideIn 0.3s ease;
+                `;
+                notification.innerHTML = `
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
+                    <span>${message}</span>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => {
+                        document.body.removeChild(notification);
+                    }, 300);
+                }, 3000);
+            }
+            
+            // Add CSS animations
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Smooth scroll for form sections
+            const sections = document.querySelectorAll('.form-section');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            });
+            
+            sections.forEach(section => {
+                section.style.opacity = '0';
+                section.style.transform = 'translateY(10px)';
+                section.style.transition = 'all 0.3s ease';
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>
+{% endblock %}

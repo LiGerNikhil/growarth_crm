@@ -1,0 +1,357 @@
+{% extends "base/layout.html" %}
+
+{% block title %}User Activity Logs - Admin{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+          <h5 class="card-title mb-0">
+            <i class="bx bx-history me-2"></i>User Activity Logs
+          </h5>
+          <p class="text-muted mb-0 mt-1">
+            Track user login/logout times and session duration (IST)
+          </p>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="{% url 'accounts:login_statistics_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bx bx-chart-bar me-1"></i>Login Statistics
+          </a>
+          <a href="{% url 'accounts:hr_dashboard' %}" class="btn btn-outline-primary">
+            <i class="bx bx-home me-1"></i>HR Dashboard
+          </a>
+        </div>
+      </div>
+      <div class="card-body">
+        <!-- Filters Section -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <form method="GET" class="row g-3">
+              <div class="col-md-3">
+                <label for="user-filter" class="form-label">
+                  <i class="bx bx-user me-1"></i>Filter by User
+                </label>
+                <input type="text" 
+                       class="form-control" 
+                       id="user-filter" 
+                       name="user" 
+                       placeholder="Username..."
+                       value="{{ user_filter }}">
+              </div>
+              <div class="col-md-3">
+                <label for="date-filter" class="form-label">
+                  <i class="bx bx-calendar me-1"></i>Filter by Date
+                </label>
+                <input type="date" 
+                       class="form-control" 
+                       id="date-filter" 
+                       name="date" 
+                       value="{{ date_filter }}">
+              </div>
+              <div class="col-md-3">
+                <label for="status-filter" class="form-label">
+                  <i class="bx bx-filter me-1"></i>Filter by Status
+                </label>
+                <select class="form-select" id="status-filter" name="status">
+                  <option value="">All Sessions</option>
+                  <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active Only</option>
+                  <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed Only</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-flex gap-2">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="bx bx-search me-1"></i>Filter
+                  </button>
+                  <a href="{% url 'accounts:user_activity_logs' %}" class="btn btn-outline-secondary">
+                    <i class="bx bx-x me-1"></i>Clear
+                  </a>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+          <div class="col-md-4">
+            <div class="card border-primary">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="avatar avatar-sm bg-label-primary rounded-circle me-3">
+                    <i class="bx bx-history fs-4"></i>
+                  </div>
+                  <div>
+                    <h6 class="card-title mb-0">Total Logs</h6>
+                    <p class="card-text text-primary fw-bold mb-0">{{ total_logs }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card border-success">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="avatar avatar-sm bg-label-success rounded-circle me-3">
+                    <i class="bx bx-user-check fs-4"></i>
+                  </div>
+                  <div>
+                    <h6 class="card-title mb-0">Active Sessions</h6>
+                    <p class="card-text text-success fw-bold mb-0">{{ active_sessions_count }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card border-info">
+              <div class="card-body">
+                <div class="d-flex align-items-center">
+                  <div class="avatar avatar-sm bg-label-info rounded-circle me-3">
+                    <i class="bx bx-time-five fs-4"></i>
+                  </div>
+                  <div>
+                    <h6 class="card-title mb-0">Time Zone</h6>
+                    <p class="card-text text-info fw-bold mb-0">IST (UTC+5:30)</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity Logs Table -->
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>User</th>
+                <th>Login Time (IST)</th>
+                <th>Logout Time (IST)</th>
+                <th>Session Duration</th>
+                <th>IP Address</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for log in page_obj %}
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="avatar avatar-sm bg-label-primary rounded-circle me-2">
+                        <span>{{ log.user.username.0|upper }}</span>
+                      </div>
+                      <div>
+                        <div class="fw-medium">{{ log.user.username }}</div>
+                        <div class="text-muted small">{{ log.user.email }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div>
+                      <div>{{ log.get_login_time_ist }}</div>
+                      <small class="text-muted">{{ log.login_time|date:"M d, Y" }}</small>
+                    </div>
+                  </td>
+                  <td>
+                    {% if log.logout_time %}
+                      <div>
+                        <div>{{ log.get_logout_time_ist }}</div>
+                        <small class="text-muted">{{ log.logout_time|date:"M d, Y" }}</small>
+                      </div>
+                    {% else %}
+                      <span class="badge bg-warning">Still Active</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if log.session_duration %}
+                      <span class="badge bg-label-info">{{ log.get_session_duration_display }}</span>
+                    {% else %}
+                      <span class="text-muted">-</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <code class="text-muted small">{{ log.ip_address|default:"-" }}</code>
+                  </td>
+                  <td>
+                    {% if log.is_active_session %}
+                      <span class="badge bg-success">Active</span>
+                    {% else %}
+                      <span class="badge bg-secondary">Completed</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="dropdown">
+                      <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bx bx-dots-horizontal-rounded"></i>
+                      </button>
+                      <ul class="dropdown-menu">
+                        <li>
+                          <a class="dropdown-item" href="#" onclick="showDetails({{ log.pk }})">
+                            <i class="bx bx-info-circle me-1"></i>View Details
+                          </a>
+                        </li>
+                        {% if log.is_active_session %}
+                          <li>
+                            <a class="dropdown-item text-warning" href="#" onclick="forceLogout({{ log.pk }})">
+                              <i class="bx bx-log-out me-1"></i>Force Logout
+                            </a>
+                          </li>
+                        {% endif %}
+                      </ul>
+                    </div>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="7" class="text-center text-muted py-4">
+                    <i class="bx bx-history fs-1 mb-2 d-block"></i>
+                    <h6>No activity logs found</h6>
+                    <p class="mb-0">
+                      {% if user_filter or date_filter or status_filter %}
+                        Try adjusting your filters to see more results.
+                      {% else %}
+                        User activity will appear here when users log in and out.
+                      {% endif %}
+                    </p>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+          <div class="d-flex justify-content-between align-items-center mt-4">
+            <div class="text-muted">
+              Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }} logs
+            </div>
+            <nav>
+              <ul class="pagination mb-0">
+                {% if page_obj.has_previous %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page=1{% if user_filter %}&user={{ user_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                      <i class="bx bx-chevrons-left"></i>
+                    </a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                      <i class="bx bx-chevron-left"></i>
+                    </a>
+                  </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                  {% if page_obj.number == num %}
+                    <li class="page-item active">
+                      <span class="page-link">{{ num }}</span>
+                    </li>
+                  {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ num }}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+                    </li>
+                  {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                      <i class="bx bx-chevron-right"></i>
+                    </a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                      <i class="bx bx-chevrons-right"></i>
+                    </a>
+                  </li>
+                {% endif %}
+              </ul>
+            </nav>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Details Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="detailsModalLabel">
+          <i class="bx bx-info-circle me-2"></i>Activity Log Details
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="detailsModalBody">
+        <!-- Details will be loaded here -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+}
+
+.avatar-sm {
+  width: 2rem;
+  height: 2rem;
+  font-size: 0.875rem;
+}
+
+.bg-label-primary {
+  background-color: #e7e7ff !important;
+  color: #696cff !important;
+}
+
+.bg-label-success {
+  background-color: #e8fadf7 !important;
+  color: #71dd37 !important;
+}
+
+.bg-label-info {
+  background-color: #d7f5fc !important;
+  color: #03c3ec !important;
+}
+</style>
+
+<script>
+function showDetails(logId) {
+    // This would typically fetch details via AJAX
+    // For now, showing a simple message
+    document.getElementById('detailsModalBody').innerHTML = `
+        <div class="text-center py-3">
+            <i class="bx bx-info-circle fs-1 text-primary mb-3"></i>
+            <h6>Activity Log Details</h6>
+            <p class="text-muted">Detailed information for log ID: ${logId}</p>
+            <p class="text-muted">This feature would show extended user agent and session details.</p>
+        </div>
+    `;
+    
+    const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
+    modal.show();
+}
+
+function forceLogout(logId) {
+    if (confirm('Are you sure you want to force logout this user?')) {
+        // This would typically make an AJAX call to force logout
+        alert('Force logout functionality would be implemented here.');
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,317 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Teams - Organizational Hierarchy{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Organizational Hierarchy</h5>
+        <div class="d-flex gap-2">
+          <a href="{% url 'accounts:staff_management' %}" class="btn btn-outline-secondary">
+            <i class="bx bx-user me-1"></i>All Employees
+          </a>
+          {% if request.user.employee.is_superadmin %}
+          <a href="{% url 'accounts:staff_create' %}" class="btn btn-primary">
+            <i class="bx bx-plus me-1"></i>Add Employee
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="card-body">
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+          <div class="col-md-4">
+            <div class="card bg-primary text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ total_managers }}</h4>
+                    <p class="mb-0">Managers</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-primary">
+                      <i class="bx bx-user-voice fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card bg-success text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ total_team_leaders }}</h4>
+                    <p class="mb-0">Team Leaders</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-success">
+                      <i class="bx bx-user fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card bg-info text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ total_employees }}</h4>
+                    <p class="mb-0">Team Members</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-info">
+                      <i class="bx bx-group fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hierarchy Display -->
+        {% for manager_data in hierarchy_data %}
+        <div class="hierarchy-section mb-5">
+          <!-- Manager Card -->
+          <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+              <div class="d-flex align-items-center">
+                <div class="avatar bg-white text-primary rounded-circle p-2 me-3">
+                  <i class="bx bx-user-voice fs-4"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <h6 class="mb-0">
+                    {% if request.user.employee.is_superadmin or request.user.employee.is_admin %}
+                    <a href="{% url 'accounts:staff_detail' manager_data.manager.pk %}" class="employee-name-link">
+                      {{ manager_data.manager.full_name }}
+                    </a>
+                    {% else %}
+                    {{ manager_data.manager.full_name }}
+                    {% endif %}
+                  </h6>
+                  <small class="opacity-75">Manager • {{ manager_data.manager.position }}</small>
+                </div>
+                <div class="text-end">
+                  <span class="badge bg-white text-primary">{{ manager_data.total_team_members }} Total Members</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Team Leaders -->
+            {% if manager_data.team_leaders %}
+            <div class="card-body">
+              {% for team_leader_data in manager_data.team_leaders %}
+              <div class="team-leader-section mb-4">
+                <div class="card border-info">
+                  <div class="card-header bg-info text-white">
+                    <div class="d-flex align-items-center">
+                      <div class="avatar bg-white text-info rounded-circle p-2 me-3">
+                        <i class="bx bx-user fs-3"></i>
+                      </div>
+                      <div class="flex-grow-1">
+                        <h6 class="mb-0">
+                          {% if request.user.employee.is_superadmin or request.user.employee.is_admin %}
+                          <a href="{% url 'accounts:staff_detail' team_leader_data.team_leader.pk %}" class="employee-name-link">
+                            {{ team_leader_data.team_leader.full_name }}
+                          </a>
+                          {% else %}
+                          {{ team_leader_data.team_leader.full_name }}
+                          {% endif %}
+                        </h6>
+                        <small class="opacity-75">Team Leader • {{ team_leader_data.team_leader.position }}</small>
+                      </div>
+                      <div class="text-end">
+                        <span class="badge bg-white text-info">{{ team_leader_data.member_count }} Members</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Team Members -->
+                  {% if team_leader_data.team_members %}
+                  <div class="card-body">
+                    <div class="table-responsive">
+                      <table class="table table-sm">
+                        <thead>
+                          <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Position</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for employee in team_leader_data.team_members %}
+                          <tr>
+                            <td>
+                              <div class="d-flex align-items-center">
+                                <div class="avatar avatar-sm bg-label-secondary rounded-circle me-2">
+                                  <span>{{ employee.first_name.0 }}{{ employee.last_name.0 }}</span>
+                                </div>
+                                <div>
+                                  <div class="fw-medium">
+                                    {% if request.user.employee.is_superadmin or request.user.employee.is_admin %}
+                                    <a href="{% url 'accounts:staff_detail' employee.pk %}" class="employee-name-link table-link">
+                                      {{ employee.full_name }}
+                                    </a>
+                                    {% else %}
+                                    {{ employee.full_name }}
+                                    {% endif %}
+                                  </div>
+                                  <small class="text-muted">{{ employee.employee_id }}</small>
+                                </div>
+                              </div>
+                            </td>
+                            <td>{{ employee.email }}</td>
+                            <td>{{ employee.position }}</td>
+                            <td>
+                              {% if employee.employment_status == 'active' %}
+                                <span class="badge bg-label-success">Active</span>
+                              {% elif employee.employment_status == 'onboarding' %}
+                                <span class="badge bg-label-warning">Onboarding</span>
+                              {% else %}
+                                <span class="badge bg-label-secondary">Inactive</span>
+                              {% endif %}
+                            </td>
+                            <td>
+                              <div class="dropdown">
+                                <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                  <i class="bx bx-dots-horizontal-rounded"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                  <li>
+                                    <a class="dropdown-item" href="{% url 'accounts:staff_detail' employee.pk %}">
+                                      <i class="bx bx-user me-2"></i>View Details
+                                    </a>
+                                  </li>
+                                  {% if request.user.employee.is_superadmin %}
+                                  <li>
+                                    <a class="dropdown-item" href="{% url 'accounts:staff_update' employee.pk %}">
+                                      <i class="bx bx-edit me-2"></i>Edit
+                                    </a>
+                                  </li>
+                                  {% endif %}
+                                </ul>
+                              </div>
+                            </td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  {% else %}
+                  <div class="text-center py-3">
+                    <i class="bx bx-user-x fs-1 text-muted mb-2"></i>
+                    <p class="text-muted">No team members assigned yet</p>
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <div class="card-body">
+              <div class="text-center py-3">
+                <i class="bx bx-user-x fs-1 text-muted mb-2"></i>
+                <p class="text-muted">No team leaders assigned to this manager</p>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+
+        {% if not hierarchy_data %}
+        <div class="text-center py-5">
+          <i class="bx bx-pyramid fs-1 text-muted mb-3"></i>
+          <h6 class="mb-2">No Teams Found</h4>
+          <p class="text-muted">
+            {% if request.user.employee.is_superadmin %}
+            Start by creating managers and assigning team leaders to build your organizational hierarchy.
+            {% else %}
+            No team structure has been set up yet. Contact your administrator.
+            {% endif %}
+          </p>
+          {% if request.user.employee.is_superadmin %}
+          <a href="{% url 'accounts:staff_create' %}" class="btn btn-primary">
+            <i class="bx bx-plus me-1"></i>Create First Employee
+          </a>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.hierarchy-section {
+  border-left: 3px solid #696cff;
+  padding-left: 1rem;
+}
+
+.team-leader-section {
+  border-left: 2px solid #71dd37;
+  margin-left: 2rem;
+  padding-left: 1rem;
+}
+
+/* Clickable employee names styling */
+.employee-name-link {
+  color: inherit !important;
+  text-decoration: none !important;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.employee-name-link:hover {
+  color: #fff !important;
+  text-decoration: underline !important;
+  text-decoration-color: rgba(255, 255, 255, 0.7) !important;
+  text-underline-offset: 4px;
+}
+
+.employee-name-link.table-link:hover {
+  color: #696cff !important;
+  text-decoration: underline !important;
+  text-decoration-color: #696cff !important;
+}
+
+.employee-name-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.7);
+  transition: width 0.3s ease;
+}
+
+.employee-name-link:hover::after {
+  width: 100%;
+}
+
+.employee-name-link.table-link::after {
+  background: #696cff;
+}
+
+/* Avatar hover effect */
+.avatar:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+
+/* Card hover effect */
+.card-header .d-flex:hover .avatar {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
+</style>
+{% endblock %}

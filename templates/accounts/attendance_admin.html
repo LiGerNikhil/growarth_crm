@@ -1,0 +1,337 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Attendance Administration{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- Page Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0">
+            <i class="bx bx-user-check me-2"></i>Attendance Administration
+          </h5>
+          <div class="d-flex gap-2">
+            <a href="{% url 'accounts:login_statistics_dashboard' %}" class="btn btn-outline-primary btn-sm">
+              <i class="bx bx-arrow-back me-1"></i>Back to Dashboard
+            </a>
+            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#exportModal">
+              <i class="bx bx-download me-1"></i>Export
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+      <div class="card border-left-primary">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Records</div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_records }}</div>
+            </div>
+            <div class="col-auto">
+              <i class="bx bx-file fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 mb-3">
+      <div class="card border-left-success">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Present</div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ present_count }}</div>
+            </div>
+            <div class="col-auto">
+              <i class="bx bx-check-circle fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 mb-3">
+      <div class="card border-left-warning">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Late</div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ late_count }}</div>
+            </div>
+            <div class="col-auto">
+              <i class="bx bx-time fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 mb-3">
+      <div class="card border-left-danger">
+        <div class="card-body">
+          <div class="row no-gutters align-items-center">
+            <div class="col mr-2">
+              <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Absent</div>
+              <div class="h5 mb-0 font-weight-bold text-gray-800">{{ absent_count }}</div>
+            </div>
+            <div class="col-auto">
+              <i class="bx bx-x fa-2x text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h6 class="card-title mb-0">
+            <i class="bx bx-filter me-2"></i>Filters
+          </h6>
+        </div>
+        <div class="card-body">
+          <form method="get" class="row g-3">
+            <div class="col-md-3">
+              <input type="text" name="employee" class="form-control" placeholder="Employee name"
+                     value="{{ employee_filter }}">
+            </div>
+            <div class="col-md-2">
+              <select name="status" class="form-control">
+                <option value="">All Status</option>
+                <option value="present" {% if status_filter == 'present' %}selected{% endif %}>Present</option>
+                <option value="late" {% if status_filter == 'late' %}selected{% endif %}>Late</option>
+                <option value="absent" {% if status_filter == 'absent' %}selected{% endif %}>Absent</option>
+                <option value="early_leave" {% if status_filter == 'early_leave' %}selected{% endif %}>Early Leave</option>
+                <option value="half_day" {% if status_filter == 'half_day' %}selected{% endif %}>Half Day</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+            </div>
+            <div class="col-md-2">
+              <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+            </div>
+            <div class="col-md-3">
+              <button type="submit" class="btn btn-primary me-2">
+                <i class="bx bx-search me-1"></i>Filter
+              </button>
+              <a href="{% url 'accounts:attendance_admin' %}" class="btn btn-outline-secondary">
+                <i class="bx bx-reset me-1"></i>Clear
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Attendance Records -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h6 class="card-title mb-0">
+            <i class="bx bx-list-ul me-2"></i>Attendance Records
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Employee</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Start Time</th>
+                  <th>End Time</th>
+                  <th>Total Hours</th>
+                  <th>Overtime</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for attendance in page_obj %}
+                  <tr>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="avatar avatar-sm bg-light rounded-circle me-2">
+                          <i class="bx bx-user text-muted"></i>
+                        </div>
+                        <div>
+                          <div class="fw-semibold">{{ attendance.employee.get_full_name }}</div>
+                          <small class="text-muted">{{ attendance.employee.employee_id }}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{{ attendance.date|date:"M d, Y" }}</td>
+                    <td>
+                      <span class="badge bg-{% if attendance.status == 'present' %}success{% elif attendance.status == 'late' %}warning{% elif attendance.status == 'absent' %}danger{% else %}secondary{% endif %}">
+                        {{ attendance.get_status_display }}
+                      </span>
+                    </td>
+                    <td>{% if attendance.start_time %}{{ attendance.start_time|date:"H:i" }}{% else %}-{% endif %}</td>
+                    <td>{% if attendance.end_time %}{{ attendance.end_time|date:"H:i" }}{% else %}-{% endif %}</td>
+                    <td>{{ attendance.total_hours }}</td>
+                    <td>{{ attendance.overtime_hours }}</td>
+                    <td>
+                      <a href="{% url 'accounts:employee_attendance_stats' attendance.employee.id %}" class="btn btn-sm btn-outline-primary">
+                        <i class="bx bx-show me-1"></i>View
+                      </a>
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td colspan="8" class="text-center text-muted py-4">
+                      <i class="bx bx-calendar-x fs-3 mb-3"></i>
+                      <div>No attendance records found.</div>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          {% if page_obj.has_other_pages %}
+            <div class="d-flex justify-content-center mt-4">
+              <nav aria-label="Page navigation">
+                <ul class="pagination">
+                  {% if page_obj.has_previous %}
+                    <li class="page-item">
+                      <a class="page-link" href="?{% if employee_filter %}employee={{ employee_filter }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}page=1">
+                        <i class="bx bx-chevrons-left"></i>
+                      </a>
+                    </li>
+                    <li class="page-item">
+                      <a class="page-link" href="?{% if employee_filter %}employee={{ employee_filter }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}page={{ page_obj.previous_page_number }}">
+                        <i class="bx bx-chevron-left"></i>
+                      </a>
+                    </li>
+                  {% endif %}
+
+                  {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                      <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                      </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                      <li class="page-item">
+                        <a class="page-link" href="?{% if employee_filter %}employee={{ employee_filter }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}page={{ num }}">{{ num }}</a>
+                      </li>
+                    {% endif %}
+                  {% endfor %}
+
+                  {% if page_obj.has_next %}
+                    <li class="page-item">
+                      <a class="page-link" href="?{% if employee_filter %}employee={{ employee_filter }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}page={{ page_obj.next_page_number }}">
+                        <i class="bx bx-chevron-right"></i>
+                      </a>
+                    </li>
+                    <li class="page-item">
+                      <a class="page-link" href="?{% if employee_filter %}employee={{ employee_filter }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}{% if date_from %}date_from={{ date_from }}&{% endif %}{% if date_to %}date_to={{ date_to }}&{% endif %}page={{ page_obj.paginator.num_pages }}">
+                        <i class="bx bx-chevrons-right"></i>
+                      </a>
+                    </li>
+                  {% endif %}
+                </ul>
+              </nav>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Violations -->
+  {% if recent_violations %}
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card border-left-danger">
+          <div class="card-header">
+            <h6 class="card-title mb-0">
+              <i class="bx bx-error-circle me-2"></i>Recent Violations (Unresolved)
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Employee</th>
+                    <th>Violation Type</th>
+                    <th>Time</th>
+                    <th>Description</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for violation in recent_violations %}
+                    <tr>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <div class="avatar avatar-sm bg-light rounded-circle me-2">
+                            <i class="bx bx-user text-muted"></i>
+                          </div>
+                          <div>
+                            <div class="fw-semibold">{{ violation.employee.get_full_name }}</div>
+                            <small class="text-muted">{{ violation.employee.employee_id }}</small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="badge bg-danger">{{ violation.get_violation_type_display }}</span>
+                      </td>
+                      <td>{{ violation.violation_time|date:"M d, H:i" }}</td>
+                      <td>{{ violation.description|truncatechars:50 }}</td>
+                      <td>
+                        <a href="{% url 'accounts:resolve_violation' violation.pk %}" class="btn btn-sm btn-warning">
+                          <i class="bx bx-check me-1"></i>Resolve
+                        </a>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Export Attendance Data</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Export attendance records to Excel format.</p>
+        <div class="d-flex gap-2">
+          <a href="#" class="btn btn-success">
+            <i class="bx bx-download me-1"></i>Export All Records
+          </a>
+          <a href="#" class="btn btn-outline-success">
+            <i class="bx bx-download me-1"></i>Export Filtered Records
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

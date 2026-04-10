@@ -1,0 +1,407 @@
+{% extends "base/layout.html" %}
+{% load static %}
+{% load lead_filters %}
+
+{% block title %}Lead Assignment Management{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+  <div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Page Header -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h4 class="card-title">
+              <i class="bx bx-user-voice me-2"></i>
+              Lead Assignment Management
+            </h4>
+            <div class="card-actions">
+              {% if employee.is_manager or employee.is_team_leader %}
+                <!-- <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#bulkAssignModal">
+                  <i class="bx bx-user-plus me-1"></i>Bulk Assign Leads
+                </a> -->
+              {% endif %}
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+              <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <h3 class="mb-0">{{ total_leads }}</h3>
+                        <p class="mb-0">Total Leads</p>
+                      </div>
+                      <i class="bx bx-user-voice" style="font-size: 2rem;"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-success text-white">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <h3 class="mb-0">{{ assigned_leads }}</h3>
+                        <p class="mb-0">Assigned Leads</p>
+                      </div>
+                      <i class="bx bx-user-check" style="font-size: 2rem;"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <h3 class="mb-0">{{ unassigned_leads }}</h3>
+                        <p class="mb-0">Unassigned Leads</p>
+                      </div>
+                      <i class="bx bx-user-x" style="font-size: 2rem;"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-info text-white">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <h3 class="mb-0">{{ team_members|length }}</h3>
+                        <p class="mb-0">Team Members</p>
+                      </div>
+                      <i class="bx bx-group" style="font-size: 2rem;"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Filters -->
+            <form method="GET" class="row g-3 mb-4">
+              <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <select name="status" id="status" class="form-select">
+                  <option value="">All Statuses</option>
+                  <option value="new" {% if status_filter == 'new' %}selected{% endif %}>New</option>
+                  <option value="contacted" {% if status_filter == 'contacted' %}selected{% endif %}>Contacted</option>
+                  <option value="interested" {% if status_filter == 'interested' %}selected{% endif %}>Interested</option>
+                  <option value="not_interested" {% if status_filter == 'not_interested' %}selected{% endif %}>Not Interested</option>
+                  <option value="not_eligible" {% if status_filter == 'not_eligible' %}selected{% endif %}>Not Eligible</option>
+                  <option value="converted" {% if status_filter == 'converted' %}selected{% endif %}>Converted</option>
+                  <option value="follow_up" {% if status_filter == 'follow_up' %}selected{% endif %}>Follow Up Required</option>
+                  <option value="file_login" {% if status_filter == 'file_login' %}selected{% endif %}>File Login</option>
+                  <option value="amount_disbursed" {% if status_filter == 'amount_disbursed' %}selected{% endif %}>Amount Disbursed</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label for="assigned_to" class="form-label">Assigned To</label>
+                <select name="assigned_to" id="assigned_to" class="form-select">
+                  <option value="">All Employees</option>
+                  {% for member in team_members %}
+                    <option value="{{ member.id }}" {% if assigned_to_filter == member.id|stringformat:"s" %}selected{% endif %}>
+                      {{ member.user.get_full_name }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-flex gap-2">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="bx bx-filter me-1"></i>Filter
+                  </button>
+                  <a href="{% url 'accounts:lead_assignment_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="bx bx-x me-1"></i>Clear
+                  </a>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leads Table -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">Leads</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>Assigned To</th>
+                    <th>Assigned At</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for lead in page_obj %}
+                    <tr>
+                      <td>{{ lead.id }}</td>
+                      <td>{{ lead.get_full_name|default:"-" }}</td>
+                      <td>{{ lead.get_phone_number|default:"-" }}</td>
+                      <td>
+                        <span class="badge bg-{{ lead.status|status_color }}">
+                          {{ lead.get_status_display }}
+                        </span>
+                      </td>
+                      <td>
+                        {% if lead.assigned_to %}
+                          {{ lead.assigned_to.user.get_full_name }}
+                        {% else %}
+                          <span class="text-muted">Unassigned</span>
+                        {% endif %}
+                      </td>
+                      <td>{{ lead.assigned_at|date:"Y-m-d H:i"|default:"-" }}</td>
+                      <td>{{ lead.created_at|date:"Y-m-d H:i" }}</td>
+                      <td>
+                        <div class="dropdown">
+                          <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="bx bx-dots-horizontal-rounded"></i>
+                          </button>
+                          <ul class="dropdown-menu">
+                            <li>
+                              <a class="dropdown-item" href="{% url 'accounts:lead_assignment_detail' lead.pk %}">
+                                <i class="bx bx-eye me-2"></i>View Details
+                              </a>
+                            </li>
+                            {% if lead.assigned_to %}
+                              <li>
+                                <a class="dropdown-item" href="{% url 'accounts:employee_leads' lead.assigned_to.id %}">
+                                  <i class="bx bx-user me-2"></i>View {{ lead.assigned_to.user.first_name }}'s Leads
+                                </a>
+                              </li>
+                            {% endif %}
+                            {% if employee.is_manager or employee.is_team_leader %}
+                              <!-- <li>
+                                <button class="dropdown-item" onclick="openReassignModal({{ lead.id }}, '{{ lead.get_full_name|default:"Lead " }}{{ lead.id }}')">
+                                  <i class="bx bx-transfer me-2"></i>Reassign
+                                </button>
+                              </li>
+                              <li>
+                                <button class="dropdown-item" onclick="openUpdateLeadModal({{ lead.id }}, '{{ lead.get_full_name|default:"Lead " }}{{ lead.id }}', '{{ lead.status }}', '{{ lead.notes|escapejs }}')">
+                                  <i class="bx bx-edit me-2"></i>Update
+                                </button>
+                              </li> -->
+                            {% endif %}
+                            <li>
+                                <a class="dropdown-item" href="{% url 'accounts:lead_activity_logs' lead.pk %}">
+                                  <i class="bx bx-history me-2"></i>Activity Log
+                                </a>
+                              </li>
+                          </ul>
+                        </div>
+                      </td>
+                    </tr>
+                  {% empty %}
+                    <tr>
+                      <td colspan="7" class="text-center text-muted">No leads found.</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+              <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                  {% if page_obj.has_previous %}
+                    <li class="page-item">
+                      <a class="page-link" href="?page=1{% if status_filter %}&status={{ status_filter }}{% endif %}{% if assigned_to_filter %}&assigned_to={{ assigned_to_filter }}{% endif %}">First</a>
+                    </li>
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if assigned_to_filter %}&assigned_to={{ assigned_to_filter }}{% endif %}">Previous</a>
+                    </li>
+                  {% endif %}
+
+                  {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                      <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                      </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                      <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if assigned_to_filter %}&assigned_to={{ assigned_to_filter }}{% endif %}">{{ num }}</a>
+                      </li>
+                    {% endif %}
+                  {% endfor %}
+
+                  {% if page_obj.has_next %}
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if assigned_to_filter %}&assigned_to={{ assigned_to_filter }}{% endif %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if assigned_to_filter %}&assigned_to={{ assigned_to_filter }}{% endif %}">Last</a>
+                    </li>
+                  {% endif %}
+                </ul>
+              </nav>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reassign Lead Modal -->
+<div class="modal fade" id="reassignModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Reassign Lead</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="reassignForm" method="POST" action="">
+        {% csrf_token %}
+        <div class="modal-body">
+          <p>Reassign <strong id="leadName"></strong> to:</p>
+          <select name="assigned_to" class="form-select mb-3" required>
+            <option value="">Select Employee</option>
+            {% for member in team_members %}
+              <option value="{{ member.id }}">{{ member.user.get_full_name }}</option>
+            {% endfor %}
+          </select>
+          <div class="mb-3">
+            <label for="reassignment_notes" class="form-label">Reassignment Notes (Optional)</label>
+            <textarea name="reassignment_notes" id="reassignment_notes" class="form-control" rows="3" 
+                      placeholder="Add notes about this reassignment..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Reassign</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Update Lead Modal -->
+<div class="modal fade" id="updateLeadModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Update Lead</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="updateLeadForm" method="POST" action="">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6">
+              <label for="update_status" class="form-label">Status</label>
+              <select name="status" id="update_status" class="form-select mb-3">
+                <option value="new">New</option>
+                <option value="contacted">Contacted</option>
+                <option value="interested">Interested</option>
+                <option value="not_interested">Not Interested</option>
+                <option value="not_eligible">Not Eligible</option>
+                <option value="converted">Converted</option>
+                <option value="follow_up">Follow Up Required</option>
+                <option value="file_login">File Login</option>
+                <option value="amount_disbursed">Amount Disbursed</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="update_reason" class="form-label">Update Reason</label>
+              <input type="text" name="update_reason" id="update_reason" class="form-control mb-3" 
+                     placeholder="Reason for update...">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="update_notes" class="form-label">Notes</label>
+            <textarea name="notes" id="update_notes" class="form-control" rows="4" 
+                      placeholder="Update lead notes..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update Lead</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openReassignModal(leadId, leadName) {
+  document.getElementById('leadName').textContent = leadName;
+  document.getElementById('reassignForm').action = `/accounts/lead-assignment/${leadId}/reassign/`;
+  new bootstrap.Modal(document.getElementById('reassignModal')).show();
+}
+
+function openUpdateLeadModal(leadId, leadName, currentStatus, currentNotes) {
+  document.getElementById('updateLeadForm').action = `/accounts/lead-assignment/${leadId}/update/`;
+  document.getElementById('update_status').value = currentStatus;
+  document.getElementById('update_notes').value = currentNotes;
+  new bootstrap.Modal(document.getElementById('updateLeadModal')).show();
+}
+
+document.getElementById('reassignForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  fetch(this.action, {
+    method: 'POST',
+    body: new FormData(this),
+    headers: {
+      'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      bootstrap.Modal.getInstance(document.getElementById('reassignModal')).hide();
+      location.reload();
+    } else {
+      alert(data.message);
+    }
+  })
+  .catch(error => {
+    alert('An error occurred. Please try again.');
+  });
+});
+
+document.getElementById('updateLeadForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  fetch(this.action, {
+    method: 'POST',
+    body: new FormData(this),
+    headers: {
+      'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      bootstrap.Modal.getInstance(document.getElementById('updateLeadModal')).hide();
+      location.reload();
+    } else {
+      alert(data.message);
+    }
+  })
+  .catch(error => {
+    alert('An error occurred. Please try again.');
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,246 @@
+{% extends "base/layout.html" %}
+{% load static %}
+{% load lead_filters %}
+
+{% block title %}Candidates List{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+  <div class="container-xxl flex-grow-1 container-p-y">
+    <!-- Page Header -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+            <h4 class="card-title mb-0">
+              <i class="bx bx-group me-2"></i>
+              Candidates Database
+            </h4>
+            <div class="d-flex gap-2 flex-wrap">
+              <a href="{% url 'accounts:add_candidate' %}" class="btn btn-primary">
+                <i class="bx bx-user-plus me-1"></i>Add Candidate
+              </a>
+              <a href="{% url 'accounts:interview_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bx bx-arrow-back me-1"></i>Back to Dashboard
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">
+              <i class="bx bx-filter me-2"></i>
+              Filters
+            </h5>
+          </div>
+          <div class="card-body">
+            <form method="GET" class="row g-3">
+              <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                  <option value="">All Status</option>
+                  <option value="applied" {% if status_filter == 'applied' %}selected{% endif %}>Applied</option>
+                  <option value="screening" {% if status_filter == 'screening' %}selected{% endif %}>Screening</option>
+                  <option value="interview_scheduled" {% if status_filter == 'interview_scheduled' %}selected{% endif %}>Interview Scheduled</option>
+                  <option value="interviewed" {% if status_filter == 'interviewed' %}selected{% endif %}>Interviewed</option>
+                  <option value="shortlisted" {% if status_filter == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
+                  <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+                  <option value="hired" {% if status_filter == 'hired' %}selected{% endif %}>Hired</option>
+                  <option value="withdrawn" {% if status_filter == 'withdrawn' %}selected{% endif %}>Withdrawn</option>
+                </select>
+              </div>
+              
+              <div class="col-md-3">
+                <label class="form-label">Department</label>
+                <select name="department" class="form-select">
+                  <option value="">All Departments</option>
+                  <option value="sales" {% if dept_filter == 'sales' %}selected{% endif %}>Sales</option>
+                  <option value="marketing" {% if dept_filter == 'marketing' %}selected{% endif %}>Marketing</option>
+                  <option value="engineering" {% if dept_filter == 'engineering' %}selected{% endif %}>Engineering</option>
+                  <option value="hr" {% if dept_filter == 'hr' %}selected{% endif %}>Human Resources</option>
+                  <option value="finance" {% if dept_filter == 'finance' %}selected{% endif %}>Finance</option>
+                  <option value="operations" {% if dept_filter == 'operations' %}selected{% endif %}>Operations</option>
+                  <option value="support" {% if dept_filter == 'support' %}selected{% endif %}>Customer Support</option>
+                  <option value="admin" {% if dept_filter == 'admin' %}selected{% endif %}>Administration</option>
+                </select>
+              </div>
+              
+              <div class="col-md-4">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" class="form-control" placeholder="Search by name, email, position, skills..." value="{{ search_query }}">
+              </div>
+              
+              <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-flex gap-2">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="bx bx-search me-1"></i>Search
+                  </button>
+                  <a href="{% url 'accounts:candidate_list' %}" class="btn btn-outline-secondary">
+                    <i class="bx bx-x me-1"></i>Clear
+                  </a>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Candidates Table -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">
+              <i class="bx bx-user me-2"></i>
+              Candidates ({{ page_obj.paginator.count }} total)
+            </h5>
+          </div>
+          <div class="card-body">
+            {% if page_obj %}
+              <div class="table-responsive">
+                <table class="table table-hover table-striped">
+                  <thead class="table-dark">
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Phone</th>
+                      <th>Position Applied</th>
+                      <th>Department</th>
+                      <th>Experience</th>
+                      <th>Status</th>
+                      <th>Applied Date</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for candidate in page_obj %}
+                      <tr>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                              <strong>{{ candidate.full_name }}</strong>
+                              {% if candidate.resume %}
+                                <a href="{{ candidate.resume.url }}" target="_blank" class="ms-2 text-primary">
+                                  <i class="bx bx-file"></i>
+                                </a>
+                              {% endif %}
+                            </div>
+                          </div>
+                        </td>
+                        <td>{{ candidate.email }}</td>
+                        <td>{{ candidate.phone|default:"-" }}</td>
+                        <td>{{ candidate.position_applied }}</td>
+                        <td>
+                          {% if candidate.department %}
+                            <span class="badge bg-secondary">{{ candidate.get_department_display }}</span>
+                          {% else %}
+                            -
+                          {% endif %}
+                        </td>
+                        <td>
+                          <span class="badge bg-info">{{ candidate.get_experience_display }}</span>
+                        </td>
+                        <td>
+                          <span class="badge bg-{{ candidate.status|status_color }}">
+                            {{ candidate.get_status_display }}
+                          </span>
+                        </td>
+                        <td>{{ candidate.created_at|date:"Y-m-d" }}</td>
+                        <td>
+                          <div class="dropdown">
+                            <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                              <i class="bx bx-dots-horizontal-rounded"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                              <li>
+                                <a class="dropdown-item" href="{% url 'accounts:edit_candidate' candidate.pk %}">
+                                  <i class="bx bx-edit me-2"></i>Edit Candidate
+                                </a>
+                              </li>
+                              <li>
+                                <a class="dropdown-item" href="{% url 'accounts:schedule_interview_for_candidate' candidate.pk %}">
+                                  <i class="bx bx-calendar-plus me-2"></i>Schedule Interview
+                                </a>
+                              </li>
+                              {% if candidate.resume %}
+                                <li>
+                                  <a class="dropdown-item" href="{{ candidate.resume.url }}" target="_blank">
+                                    <i class="bx bx-download me-2"></i>Download Resume
+                                  </a>
+                                </li>
+                              {% endif %}
+                              {% if candidate.linkedin_profile %}
+                                <li>
+                                  <a class="dropdown-item" href="{{ candidate.linkedin_profile }}" target="_blank">
+                                    <i class="bx bx-link me-2"></i>LinkedIn Profile
+                                  </a>
+                                </li>
+                              {% endif %}
+                            </ul>
+                          </div>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Pagination -->
+              {% if page_obj.has_other_pages %}
+                <nav aria-label="Page navigation" class="mt-3">
+                  <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                      <li class="page-item">
+                        <a class="page-link" href="?page=1{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">First</a>
+                      </li>
+                      <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Previous</a>
+                      </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                      <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                      <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Next</a>
+                      </li>
+                      <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Last</a>
+                      </li>
+                    {% endif %}
+                  </ul>
+                </nav>
+              {% endif %}
+            {% else %}
+              <div class="text-center py-5">
+                <i class="bx bx-user-x" style="font-size: 3rem; color: #6c757d;"></i>
+                <h5 class="mt-3">No Candidates Found</h5>
+                <p class="text-muted">
+                  {% if search_query or status_filter or dept_filter %}
+                    No candidates found matching your search criteria. Try adjusting your filters.
+                  {% else %}
+                    No candidates have been added yet. Start by adding your first candidate.
+                  {% endif %}
+                </p>
+                <a href="{% url 'accounts:add_candidate' %}" class="btn btn-primary">
+                  <i class="bx bx-user-plus me-1"></i>Add First Candidate
+                </a>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

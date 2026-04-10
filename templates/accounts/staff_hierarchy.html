@@ -1,0 +1,244 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Staff Hierarchy{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Organization Hierarchy</h5>
+        <a href="{% url 'accounts:staff_management' %}" class="btn btn-outline-secondary">
+          <i class="bx bx-arrow-back me-1"></i>Back to Staff
+        </a>
+      </div>
+      <div class="card-body">
+        <!-- Hierarchy Overview -->
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="card bg-warning text-white">
+              <div class="card-body text-center">
+                <i class="bx bx-crown fs-1 mb-2"></i>
+                <h4 class="mb-0">{{ managers.count }}</h4>
+                <p class="mb-0">Managers</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-primary text-white">
+              <div class="card-body text-center">
+                <i class="bx bx-user-voice fs-1 mb-2"></i>
+                <h4 class="mb-0">{{ team_leaders.count }}</h4>
+                <p class="mb-0">Team Leaders</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-success text-white">
+              <div class="card-body text-center">
+                <i class="bx bx-user fs-1 mb-2"></i>
+                <h4 class="mb-0">{{ employees.count }}</h4>
+                <p class="mb-0">Employees</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-info text-white">
+              <div class="card-body text-center">
+                <i class="bx bx-sitemap fs-1 mb-2"></i>
+                <h4 class="mb-0">{{ total_staff }}</h4>
+                <p class="mb-0">Total Staff</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hierarchy Structure -->
+        {% if current_role == 'superadmin' or current_role == 'admin' %}
+        <!-- Managers Section -->
+        <div class="mb-4">
+          <h6 class="mb-3">
+            <i class="bx bx-crown text-warning me-2"></i>Managers
+          </h6>
+          <div class="row">
+            {% for manager in managers %}
+            <div class="col-md-6 mb-3">
+              <div class="card border-warning">
+                <div class="card-body">
+                  <div class="d-flex align-items-center mb-3">
+                    <div class="avatar avatar-sm me-2">
+                      <div class="avatar-initial rounded-circle bg-warning text-white">
+                        {{ manager.first_name.0 }}
+                      </div>
+                    </div>
+                    <div class="flex-grow-1">
+                      <h6 class="mb-0">{{ manager.full_name }}</h6>
+                      <small class="text-muted">{{ manager.position }} | {{ manager.get_department_display }}</small>
+                    </div>
+                    <span class="badge bg-label-warning">Manager</span>
+                  </div>
+                  
+                  <!-- Team Leaders under this Manager -->
+                  <div class="team-leaders-section">
+                    <h6 class="text-muted mb-2">Team Leaders:</h6>
+                    {% for tl in team_leaders %}
+                      {% if tl.reports_to.id == manager.id %}
+                        <div class="d-flex align-items-center mb-2 p-2 bg-light rounded">
+                          <div class="avatar avatar-xs me-2">
+                            <div class="avatar-initial rounded-circle bg-primary text-white">
+                              {{ tl.first_name.0 }}
+                            </div>
+                          </div>
+                          <div class="flex-grow-1">
+                            <div class="fw-medium">{{ tl.full_name }}</div>
+                            <small class="text-muted">{{ tl.position }}</small>
+                          </div>
+                          <span class="badge bg-label-primary">TL</span>
+                        </div>
+                        
+                        <!-- Employees under this Team Leader -->
+                        {% for emp in employees %}
+                          {% if emp.reports_to.id == tl.id %}
+                            <div class="d-flex align-items-center mb-2 ms-4 p-2 bg-lighter rounded">
+                              <div class="avatar avatar-xs me-2">
+                                <div class="avatar-initial rounded-circle bg-success text-white">
+                                  {{ emp.first_name.0 }}
+                                </div>
+                              </div>
+                              <div class="flex-grow-1">
+                                <div class="fw-medium">{{ emp.full_name }}</div>
+                                <small class="text-muted">{{ emp.position }}</small>
+                              </div>
+                              <span class="badge bg-label-success">Emp</span>
+                            </div>
+                          {% endif %}
+                        {% endfor %}
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+              <div class="alert alert-warning">
+                <i class="bx bx-info-circle me-2"></i>No managers found in the system.
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% elif current_role == 'manager' %}
+        <!-- Manager View - Only their team -->
+        <div class="mb-4">
+          <h6 class="mb-3">
+            <i class="bx bx-crown text-warning me-2"></i>Your Team
+          </h6>
+          {% for manager in managers %}
+          <div class="card border-warning">
+            <div class="card-body">
+              <div class="d-flex align-items-center mb-3">
+                <div class="avatar avatar-sm me-2">
+                  <div class="avatar-initial rounded-circle bg-warning text-white">
+                    {{ manager.first_name.0 }}
+                  </div>
+                </div>
+                <div class="flex-grow-1">
+                  <h6 class="mb-0">{{ manager.full_name }}</h6>
+                  <small class="text-muted">{{ manager.position }} | {{ manager.get_department_display }}</small>
+                </div>
+                <span class="badge bg-label-warning">You</span>
+              </div>
+              
+              <!-- Your Team Leaders -->
+              <div class="team-leaders-section">
+                <h6 class="text-muted mb-2">Your Team Leaders:</h6>
+                {% for tl in team_leaders %}
+                  <div class="d-flex align-items-center mb-2 p-2 bg-light rounded">
+                    <div class="avatar avatar-xs me-2">
+                      <div class="avatar-initial rounded-circle bg-primary text-white">
+                        {{ tl.first_name.0 }}
+                      </div>
+                    </div>
+                    <div class="flex-grow-1">
+                      <div class="fw-medium">{{ tl.full_name }}</div>
+                      <small class="text-muted">{{ tl.position }}</small>
+                    </div>
+                    <span class="badge bg-label-primary">TL</span>
+                  </div>
+                  
+                  <!-- Employees under this Team Leader -->
+                  {% for emp in employees %}
+                    {% if emp.reports_to == tl %}
+                      <div class="d-flex align-items-center mb-2 ms-4 p-2 bg-lighter rounded">
+                        <div class="avatar avatar-xs me-2">
+                          <div class="avatar-initial rounded-circle bg-success text-white">
+                            {{ emp.first_name.0 }}
+                          </div>
+                        </div>
+                        <div class="flex-grow-1">
+                          <div class="fw-medium">{{ emp.full_name }}</div>
+                          <small class="text-muted">{{ emp.position }}</small>
+                        </div>
+                        <span class="badge bg-label-success">Emp</span>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% elif current_role == 'team_leader' %}
+        <!-- Team Leader View - Only their team members -->
+        <div class="mb-4">
+          <h6 class="mb-3">
+            <i class="bx bx-user-voice text-primary me-2"></i>Your Team Members
+          </h6>
+          <div class="row">
+            {% for emp in employees %}
+            <div class="col-md-4 mb-3">
+              <div class="card border-success">
+                <div class="card-body">
+                  <div class="d-flex align-items-center">
+                    <div class="avatar avatar-sm me-2">
+                      <div class="avatar-initial rounded-circle bg-success text-white">
+                        {{ emp.first_name.0 }}
+                      </div>
+                    </div>
+                    <div class="flex-grow-1">
+                      <h6 class="mb-0">{{ emp.full_name }}</h6>
+                      <small class="text-muted">{{ emp.position }}</small>
+                    </div>
+                    <span class="badge bg-label-success">Employee</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+              <div class="alert alert-info">
+                <i class="bx bx-info-circle me-2"></i>You don't have any team members assigned yet.
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% else %}
+        <!-- Employee View - Limited access -->
+        <div class="alert alert-info">
+          <i class="bx bx-info-circle me-2"></i>As an employee, you can only view your own profile information.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.bg-lighter {
+  background-color: #f8f9fa !important;
+}
+</style>
+{% endblock %}

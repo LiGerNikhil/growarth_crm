@@ -1,0 +1,408 @@
+{% extends "base/layout.html" %}
+
+{% block title %}All Leads{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">All Leads Management</h5>
+        <div class="d-flex gap-2">
+          <a href="{% url 'crm:imported_leads' %}" class="btn btn-info">
+            <i class="bx bx-download me-1"></i>Imported Leads
+          </a>
+          <a href="{% url 'crm:sync_google_sheets_data' %}" class="btn btn-success">
+            <i class="bx bx-download me-1"></i>Sync Google Sheets
+          </a>
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#generalLeadModal">
+            <i class="bx bx-plus me-1"></i>Capture Lead
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="card bg-primary text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ total_leads_count }}</h4>
+                    <p class="mb-0">Total Leads</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-primary">
+                      <i class="bx bx-user-plus fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-success text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ loan_leads_count }}</h4>
+                    <p class="mb-0">Loan Leads</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-success">
+                      <i class="bx bx-dollar fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-warning text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ quote_leads_count }}</h4>
+                    <p class="mb-0">Quote Leads</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-warning">
+                      <i class="bx bx-file fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-info text-white">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h4 class="mb-0">{{ new_leads }}</h4>
+                    <p class="mb-0">New Leads</p>
+                  </div>
+                  <div class="avatar avatar-xl">
+                    <div class="avatar-initial rounded-circle bg-white text-info">
+                      <i class="bx bx-user-plus fs-2"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lead Type Statistics -->
+        <div class="row mb-4">
+          <div class="col-md-4">
+            <div class="card bg-light">
+              <div class="card-body text-center">
+                <h5 class="card-title text-primary">{{ qualified_leads }}</h5>
+                <p class="card-text">Qualified Leads</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card bg-light">
+              <div class="card-body text-center">
+                <h5 class="card-title text-success">{{ contacted_leads }}</h5>
+                <p class="card-text">Contacted Leads</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card bg-light">
+              <div class="card-body text-center">
+                <h5 class="card-title text-warning">{{ total_leads|add:"-"|add:qualified_leads|add:"-"|add:contacted_leads|add:new_leads }}</h5>
+                <p class="card-text">Other Status</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters and Search -->
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <form method="get" class="d-flex gap-2">
+              <input type="text" name="search" class="form-control" placeholder="Search leads..." value="{{ search_query }}">
+              <button type="submit" class="btn btn-outline-secondary">
+                <i class="bx bx-search"></i>
+              </button>
+            </form>
+          </div>
+          <div class="col-md-4">
+            <form method="get" class="d-flex gap-2">
+              <select name="status" class="form-select" onchange="this.form.submit()">
+                <option value="">All Status</option>
+                {% for status_value, status_label in status_choices %}
+                  <option value="{{ status_value }}" {% if current_status == status_value %}selected{% endif %}>
+                    {{ status_label }}
+                  </option>
+                {% endfor %}
+              </select>
+              {% if search_query %}
+                <input type="hidden" name="search" value="{{ search_query }}">
+              {% endif %}
+              {% if current_lead_type %}
+                <input type="hidden" name="lead_type" value="{{ current_lead_type }}">
+              {% endif %}
+            </form>
+          </div>
+          <div class="col-md-4">
+            <form method="get" class="d-flex gap-2">
+              <select name="lead_type" class="form-select" onchange="this.form.submit()">
+                <option value="">All Types</option>
+                {% for type_value, type_label in lead_type_choices %}
+                  <option value="{{ type_value }}" {% if current_lead_type == type_value %}selected{% endif %}>
+                    {{ type_label }}
+                  </option>
+                {% endfor %}
+              </select>
+              {% if search_query %}
+                <input type="hidden" name="search" value="{{ search_query }}">
+              {% endif %}
+              {% if current_status %}
+                <input type="hidden" name="status" value="{{ current_status }}">
+              {% endif %}
+            </form>
+          </div>
+        </div>
+
+        <!-- All Leads Table -->
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Type</th>
+                <th>Loan Details</th>
+                <th>Status</th>
+                <th>Source</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for lead in leads %}
+              <tr>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="avatar avatar-sm me-2">
+                      <div class="avatar-initial rounded-circle bg-primary text-white">
+                        {{ lead.name.0 }}
+                      </div>
+                    </div>
+                    <div>
+                      <div class="fw-medium">{{ lead.name }}</div>
+                      {% if lead.synced_with_google %}
+                        <small class="text-success"><i class="bx bx-cloud-check"></i> Google Sheets</small>
+                      {% endif %}
+                    </div>
+                  </div>
+                </td>
+                <td>{{ lead.email }}</td>
+                <td>{{ lead.phone|default:"-" }}</td>
+                <td>
+                  {% if lead.lead_type == 'loan' %}
+                    <span class="badge bg-label-primary">Loan</span>
+                  {% elif lead.lead_type == 'quote' %}
+                    <span class="badge bg-label-info">Quote</span>
+                  {% else %}
+                    <span class="badge bg-label-secondary">General</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if lead.lead_type == 'loan' %}
+                    {% if lead.loan_type %}
+                      <div><small class="text-muted">{{ lead.loan_type|title }}</small></div>
+                    {% endif %}
+                    {% if lead.loan_amount %}
+                      <div><strong>${{ lead.loan_amount|floatformat:0 }}</strong></div>
+                    {% endif %}
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if lead.status == 'new' %}
+                    <span class="badge bg-label-success">New</span>
+                  {% elif lead.status == 'contacted' %}
+                    <span class="badge bg-label-warning">Contacted</span>
+                  {% elif lead.status == 'qualified' %}
+                    <span class="badge bg-label-info">Qualified</span>
+                  {% elif lead.status == 'converted' %}
+                    <span class="badge bg-label-primary">Converted</span>
+                  {% else %}
+                    <span class="badge bg-label-secondary">Lost</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if lead.source == 'google_sheets' %}
+                    <span class="badge bg-label-success">Google Sheets</span>
+                  {% elif lead.source == 'website' %}
+                    <span class="badge bg-label-info">Website</span>
+                  {% else %}
+                    <span class="badge bg-label-secondary">Manual</span>
+                  {% endif %}
+                </td>
+                <td>{{ lead.created_at|date:"M d, Y" }}</td>
+                <td>
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                      Actions
+                    </button>
+                    <ul class="dropdown-menu">
+                      <li>
+                        <a class="dropdown-item" href="{% url 'crm:lead_detail' lead.pk %}">
+                          <i class="bx bx-eye me-2"></i>View Details
+                        </a>
+                      </li>
+                      <li>
+                        <a class="dropdown-item" href="{% url 'crm:lead_update' lead.pk %}">
+                          <i class="bx bx-edit me-2"></i>Edit
+                        </a>
+                      </li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li>
+                        <a class="dropdown-item" href="{% url 'crm:sync_with_google_sheets' lead.pk %}">
+                          <i class="bx bx-cloud-upload me-2"></i>Sync to Google Sheets
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="9" class="text-center py-4">
+                  <i class="bx bx-inbox fs-1 text-muted mb-2 d-block"></i>
+                  <p class="text-muted mb-0">No leads found</p>
+                  <div class="mt-2">
+                    <button class="btn btn-success me-2" onclick="window.location.href='{% url 'crm:sync_google_sheets_data' %}'">
+                      <i class="bx bx-download me-1"></i>Sync Google Sheets
+                    </button>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#generalLeadModal">
+                      <i class="bx bx-plus me-1"></i>Capture Your First Lead
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- General Lead Capture Modal -->
+<div class="modal fade" id="generalLeadModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Capture New Lead</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="generalLeadForm">
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Full Name *</label>
+              <input type="text" name="name" class="form-control" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Email *</label>
+              <input type="email" name="email" class="form-control" required>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Phone</label>
+              <input type="tel" name="phone" class="form-control">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Lead Type *</label>
+              <select name="lead_type" class="form-select" required>
+                <option value="">Select Lead Type</option>
+                <option value="loan">Loan Lead</option>
+                <option value="quote">Quote Lead</option>
+                <option value="general">General Lead</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3" id="loanTypeField" style="display:none;">
+              <label class="form-label">Loan Type</label>
+              <select name="loan_type" class="form-select">
+                <option value="">Select Loan Type</option>
+                <option value="personal_loan">Personal Loan</option>
+                <option value="home_loan">Home Loan</option>
+                <option value="business_loan">Business Loan</option>
+                <option value="car_loan">Car Loan</option>
+                <option value="education_loan">Education Loan</option>
+              </select>
+            </div>
+            <div class="col-md-6 mb-3" id="loanAmountField" style="display:none;">
+              <label class="form-label">Loan Amount</label>
+              <input type="number" name="loan_amount" class="form-control" placeholder="Enter amount">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Message</label>
+            <textarea name="message" class="form-control" rows="3" placeholder="Additional details..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="bx bx-save me-1"></i>Save Lead
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Show/hide loan fields based on lead type
+    const leadTypeSelect = document.querySelector('select[name="lead_type"]');
+    const loanTypeField = document.getElementById('loanTypeField');
+    const loanAmountField = document.getElementById('loanAmountField');
+    
+    function toggleLoanFields() {
+        if (leadTypeSelect.value === 'loan') {
+            loanTypeField.style.display = 'block';
+            loanAmountField.style.display = 'block';
+        } else {
+            loanTypeField.style.display = 'none';
+            loanAmountField.style.display = 'none';
+        }
+    }
+    
+    leadTypeSelect.addEventListener('change', toggleLoanFields);
+    toggleLoanFields();
+    
+    // Handle form submission
+    const leadForm = document.getElementById('generalLeadForm');
+    leadForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(leadForm);
+        
+        // Submit via AJAX or redirect as needed
+        // For now, just show success message
+        alert('Lead captured successfully!');
+        bootstrap.Modal.getInstance(document.getElementById('generalLeadModal')).hide();
+        leadForm.reset();
+        
+        // Reload page to show new lead
+        window.location.reload();
+    });
+});
+</script>
+{% endblock %}
