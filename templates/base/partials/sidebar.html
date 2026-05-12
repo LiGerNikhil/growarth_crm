@@ -274,7 +274,7 @@
     </li>
 
     <li class="menu-item {% if 'user-activity-logs' in request.path %}active{% endif %}">
-      {% if user.employee.is_superadmin or user.employee.is_admin %}
+      {% if user.employee.is_superadmin or user.employee.is_admin or user.employee.is_manager %}
         <a href="{% url 'accounts:user_activity_logs' %}" class="menu-link">
           <i class="menu-icon icon-base bx bx-history"></i>
           <div class="text-truncate">Activity Logs</div>
@@ -283,7 +283,7 @@
     </li>
 
     <li class="menu-item {% if 'employee-performance' in request.path %}active{% endif %}">
-      {% if user.employee.is_superadmin or user.employee.is_admin %}
+      {% if user.employee.is_superadmin or user.employee.is_admin or user.employee.is_manager %}
         <a href="{% url 'accounts:employee_performance_dashboard' %}" class="menu-link">
           <i class="menu-icon icon-base bx bx-chart-line"></i>
           <div class="text-truncate">Performance</div>
@@ -358,14 +358,16 @@
     </li>
     
     
+    {% if not user.employee.is_manager %}
     <li class="menu-item {% if 'my-forwarded-leads' in request.path %}active{% endif %}">
       <a href="{% url 'accounts:my_forwarded_leads' %}" class="menu-link">
         <i class="menu-icon icon-base bx bx-send"></i>
         <div class="text-truncate">📋 My Forwarded Leads</div>
       </a>
     </li>
+    {% endif %}
     
-    {% if user.employee.is_superadmin or user.employee.is_admin %}
+    {% if user.employee.is_superadmin or user.employee.is_admin or user.employee.is_manager %}
       <li class="menu-item {% if 'attendance-admin' in request.path %}active{% endif %}">
         <a href="{% url 'accounts:attendance_admin' %}" class="menu-link">
           <i class="menu-icon icon-base bx bx-user-check"></i>
@@ -381,7 +383,7 @@
     {% endif %}
 
     <li class="menu-item {% if 'excel-upload' in request.path or 'excel-batches' in request.path %}active{% endif %}">
-      {% if user.employee.is_superadmin or user.employee.is_admin %}
+      {% if user.employee.is_superadmin or user.employee.is_admin or user.employee.is_manager %}
         <a href="{% url 'accounts:excel_upload' %}" class="menu-link">
           <i class="menu-icon icon-base bx bx-upload"></i>
           <div class="text-truncate">Upload Data</div>
@@ -389,19 +391,29 @@
       {% endif %}
     </li>
 
+    <!-- Lead Assignment for Admins and Team Leaders -->
+    <li class="menu-item {% if 'lead-assignment' in request.path %}active{% endif %}">
+      {% if user.employee.is_team_leader or user.employee.is_superadmin or user.employee.is_admin %}
+        <a href="{% url 'accounts:lead_assignment_dashboard' %}" class="menu-link">
+          <i class="menu-icon icon-base bx bx-user-voice"></i>
+          <div class="text-truncate">Lead Assignment</div>
+        </a>
+      {% endif %}
+    </li>
+
     <li class="menu-item {% if 'leads' in request.path %}active{% endif %}">
-      {% if user.employee.is_superadmin or user.employee.is_admin %}
+      {% if user.employee.is_superadmin or user.employee.is_admin or user.employee.is_manager %}
         <a href="{% url 'accounts:lead_list' %}" class="menu-link">
           <i class="menu-icon icon-base bx bx-user-voice"></i>
-          <div class="text-truncate">Leads</div>
+          <div class="text-truncate">All Leads</div>
         </a>
       {% elif not user.employee.is_hr %}
         <!-- My Leads moved to Management section -->
       {% endif %}
     </li>
 
-    <!-- Lead Forwarding for Admins -->
-    {% if user.employee.is_superadmin or user.employee.is_admin %}
+    <!-- Lead Forwarding for Admins and Managers -->
+    {% if user.employee.is_superadmin or user.employee.is_admin or user.employee.is_manager %}
     <li class="menu-item {% if 'lead-forward-dashboard' in request.path %}active{% endif %}">
       <a href="{% url 'accounts:lead_forward_dashboard' %}" class="menu-link">
         <i class="menu-icon icon-base bx bx-send"></i>

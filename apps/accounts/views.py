@@ -557,7 +557,7 @@ def lead_forward_dashboard(request):
     """
     Dashboard for admins to forward Google Sheets leads to employees
     """
-    if not request.user.employee.is_admin and not request.user.employee.is_superadmin:
+    if not request.user.employee.is_admin and not request.user.employee.is_superadmin and not request.user.employee.is_manager:
         messages.error(request, 'You do not have permission to access this page.')
         return redirect('core:dashboard')
     
@@ -3083,7 +3083,7 @@ def export_login_statistics_excel(request):
 
     # Check permissions
 
-    if not (request.user.employee.is_admin or request.user.employee.is_superadmin):
+    if not (request.user.employee.is_admin or request.user.employee.is_superadmin or request.user.employee.is_manager):
 
         messages.error(request, 'You do not have permission to export login statistics.')
 
@@ -3353,7 +3353,7 @@ def excel_upload(request):
 
         current_employee = request.user.employee
 
-        if not (current_employee.is_superadmin or current_employee.is_admin):
+        if not (current_employee.is_superadmin or current_employee.is_admin or current_employee.is_manager):
 
             messages.error(request, 'You do not have permission to upload Excel files.')
 
@@ -3561,7 +3561,7 @@ def excel_batch_list(request):
 
         current_employee = request.user.employee
 
-        if not (current_employee.is_superadmin or current_employee.is_admin):
+        if not (current_employee.is_superadmin or current_employee.is_admin or current_employee.is_manager):
 
             messages.error(request, 'You do not have permission to view Excel batches.')
 
@@ -3629,7 +3629,7 @@ def excel_batch_detail(request, pk):
 
         current_employee = request.user.employee
 
-        if not (current_employee.is_superadmin or current_employee.is_admin):
+        if not (current_employee.is_superadmin or current_employee.is_admin or current_employee.is_manager):
 
             messages.error(request, 'You do not have permission to view Excel batches.')
 
@@ -4051,7 +4051,7 @@ def lead_list(request):
 
         # Filter leads based on user role
 
-        if current_employee.is_superadmin or current_employee.is_admin:
+        if current_employee.is_superadmin or current_employee.is_admin or current_employee.is_manager:
 
             leads = Lead.objects.all()
 
@@ -4176,8 +4176,8 @@ def lead_detail(request, pk):
         
 
         # Check permissions
-        if current_employee.is_superadmin or current_employee.is_admin:
-            # Admins can view any lead
+        if current_employee.is_superadmin or current_employee.is_admin or current_employee.is_manager:
+            # Admins and managers can view any lead
             pass
         elif current_employee.is_team_leader:
             # Team leaders can view leads assigned to their team members
@@ -4382,8 +4382,8 @@ def assign_leads(request):
     try:
         current_employee = request.user.employee
         
-        # Only admins can assign leads
-        if not (current_employee.is_superadmin or current_employee.is_admin):
+        # Only admins and managers can assign leads
+        if not (current_employee.is_superadmin or current_employee.is_admin or current_employee.is_manager):
             messages.error(request, 'You do not have permission to assign leads.')
             return redirect('accounts:lead_list')
         
@@ -4786,7 +4786,7 @@ def api_employee_leads(request, employee_id):
 
     """API endpoint to get leads for a specific employee"""
 
-    if not (request.user.employee.is_superadmin or request.user.employee.is_admin or request.user.employee.is_hr):
+    if not (request.user.employee.is_superadmin or request.user.employee.is_admin or request.user.employee.is_manager or request.user.employee.is_hr):
 
         return JsonResponse({'error': 'Permission denied'}, status=403)
 
@@ -4848,7 +4848,7 @@ def unassign_leads(request):
 
     """Unassign leads from employees"""
 
-    if not (request.user.employee.is_superadmin or request.user.employee.is_admin or request.user.employee.is_hr):
+    if not (request.user.employee.is_superadmin or request.user.employee.is_admin or request.user.employee.is_manager or request.user.employee.is_hr):
 
         messages.error(request, 'You do not have permission to unassign leads.')
 
@@ -4893,23 +4893,48 @@ def unassign_leads(request):
     # GET request - show unassign interface
 
     datasource_filter = request.GET.get('datasource', '')
+    current_employee = request.user.employee
 
     if datasource_filter:
-        employees = Employee.objects.filter(
-            role__in=['employee', 'team_leader'], 
-            employment_status='active'
-        ).filter(lead__assigned_to__isnull=False, lead__source=datasource_filter).distinct()
+        if current_employee.is_superadmin or current_employee.is_admin or current_employee.is_manager:
+            # Admins and managers can see all employees with leads from any source
+            employees = Employee.objects.filter(
+                role__in=['employee', 'team_leader'], 
+                employment_status='active'
+            ).filter(assigned_leads__assigned_to__isnull=False, assigned_leads__source=datasource_filter).distinct()
+        else:
+            # Team leaders can only see themselves
+            employees = Employee.objects.filter(
+                id=current_employee.id,
+                employment_status='active'
+            ).filter(assigned_leads__assigned_to__isnull=False, assigned_leads__source=datasource_filter).distinct()
     else:
-        employees = Employee.objects.filter(
-            role__in=['employee', 'team_leader'], 
-            employment_status='active'
-        )
+        if current_employee.is_superadmin or current_employee.is_admin or current_employee.is_manager:
+            # Admins and managers can see all employees
+            employees = Employee.objects.filter(
+                role__in=['employee', 'team_leader'], 
+                employment_status='active'
+            )
+        else:
+            # Team leaders can only see themselves
+            employees = Employee.objects.filter(
+                id=current_employee.id,
+                employment_status='active'
+            )
 
-    # Get unique datasources for filter dropdown
-    datasources = Lead.objects.filter(
-        assigned_to__isnull=False,
-        source__isnull=False
-    ).exclude(source='').values_list('source', flat=True).distinct().order_by('source')
+    # Get unique datasources for filter dropdown - based on user role
+    if current_employee.is_superadmin or current_employee.is_admin or current_employee.is_manager:
+        datasources = Lead.objects.filter(
+            assigned_to__isnull=False,
+            source__isnull=False
+        ).exclude(source='').values_list('source', flat=True).distinct().order_by('source')
+    else:
+        # Team leaders can only see their own datasources
+        datasources = Lead.objects.filter(
+            assigned_to=current_employee,
+            assigned_to__isnull=False,
+            source__isnull=False
+        ).exclude(source='').values_list('source', flat=True).distinct().order_by('source')
 
     context = {
         'employees': employees,
@@ -4929,7 +4954,7 @@ def delete_leads(request):
 
     """Delete leads permanently"""
 
-    if not (request.user.employee.is_superadmin or request.user.employee.is_admin or request.user.employee.is_hr):
+    if not (request.user.employee.is_superadmin or request.user.employee.is_admin or request.user.employee.is_manager or request.user.employee.is_hr):
 
         messages.error(request, 'You do not have permission to delete leads.')
 
@@ -5065,7 +5090,7 @@ def delete_excel_batch(request, pk):
 
         current_employee = request.user.employee
 
-        if not (current_employee.is_superadmin or current_employee.is_admin):
+        if not (current_employee.is_superadmin or current_employee.is_admin or current_employee.is_manager):
 
             messages.error(request, 'You do not have permission to delete Excel batches.')
 
@@ -5131,9 +5156,9 @@ def user_activity_logs(request):
 
     """View for displaying user activity logs with Indian Standard Time"""
 
-    # Check permissions - only admin/superadmin can access
+    # Check permissions - only admin/superadmin/manager can access
 
-    if not (request.user.employee.is_admin or request.user.employee.is_superadmin):
+    if not (request.user.employee.is_admin or request.user.employee.is_superadmin or request.user.employee.is_manager):
 
         messages.error(request, 'You do not have permission to access user activity logs.')
 
@@ -5237,9 +5262,9 @@ def employee_performance_dashboard(request):
 
     """Dashboard for tracking employee performance and lead interactions"""
 
-    # Check permissions - only admin/superadmin can access
+    # Check permissions - only admin/superadmin/manager can access
 
-    if not (request.user.employee.is_admin or request.user.employee.is_superadmin):
+    if not (request.user.employee.is_admin or request.user.employee.is_superadmin or request.user.employee.is_manager):
 
         messages.error(request, 'You do not have permission to access performance dashboard.')
 
@@ -6519,7 +6544,7 @@ def manager_details(request, manager_name):
 
     # Check permissions - only admin/superadmin can access
 
-    if not (request.user.employee.is_admin or request.user.employee.is_superadmin):
+    if not (request.user.employee.is_admin or request.user.employee.is_superadmin or request.user.employee.is_manager):
 
         messages.error(request, 'You do not have permission to access manager details.')
 

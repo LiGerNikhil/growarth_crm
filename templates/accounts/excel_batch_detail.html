@@ -24,9 +24,11 @@
               <i class="bx bx-download me-1"></i>Download File
             </a>
           {% endif %}
-          <a href="{% url 'accounts:delete_excel_batch' batch.pk %}" class="btn btn-outline-danger">
-            <i class="bx bx-trash me-1"></i>Delete
-          </a>
+          {% if user.employee.is_superadmin or user.employee.is_admin or user.employee.is_manager %}
+            <a href="{% url 'accounts:delete_excel_batch' batch.pk %}" class="btn btn-outline-danger">
+              <i class="bx bx-trash me-1"></i>Delete
+            </a>
+          {% endif %}
         </div>
       </div>
       <div class="card-body">
@@ -78,24 +80,33 @@
           <div class="col-md-4">
             <!-- Batch Actions -->
             {% if batch.status in 'pending processing failed' %}
-              <form method="post" class="border rounded p-3">
-                {% csrf_token %}
-                <h6 class="mb-3">Batch Actions</h6>
-                {{ form.action }}
-                <div class="d-grid gap-2 mt-3">
-                  <button type="submit" class="btn btn-primary">
-                    {% if form.action.value == 'process' %}
-                      <i class="bx bx-play me-2"></i>Process All Rows
-                    {% elif form.action.value == 'retry_failed' %}
-                      <i class="bx bx-refresh me-2"></i>Retry Failed Rows
-                    {% elif form.action.value == 'skip_errors' %}
-                      <i class="bx bx-skip-next me-2"></i>Skip Errors & Process
-                    {% else %}
-                      <i class="bx bx-x me-2"></i>Cancel Batch
-                    {% endif %}
-                  </button>
+              {% if user.employee.is_superadmin or user.employee.is_admin or user.employee.is_manager %}
+                <form method="post" class="border rounded p-3">
+                  {% csrf_token %}
+                  <h6 class="mb-3">Batch Actions</h6>
+                  {{ form.action }}
+                  <div class="d-grid gap-2 mt-3">
+                    <button type="submit" class="btn btn-primary">
+                      {% if form.action.value == 'process' %}
+                        <i class="bx bx-play me-2"></i>Process All Rows
+                      {% elif form.action.value == 'retry_failed' %}
+                        <i class="bx bx-refresh me-2"></i>Retry Failed Rows
+                      {% elif form.action.value == 'skip_errors' %}
+                        <i class="bx bx-skip-next me-2"></i>Skip Errors & Process
+                      {% else %}
+                        <i class="bx bx-x me-2"></i>Cancel Batch
+                      {% endif %}
+                    </button>
+                  </div>
+                </form>
+              {% else %}
+                <div class="border rounded p-3 text-center">
+                  <p class="text-muted mb-0">
+                    <i class="bx bx-lock-alt me-2"></i>
+                    You don't have permission to process batches.
+                  </p>
                 </div>
-              </form>
+              {% endif %}
             {% else %}
               <div class="border rounded p-3 text-center">
                 {% if batch.status == 'completed' %}

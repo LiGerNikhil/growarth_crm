@@ -69,6 +69,30 @@
         .layout-menu {
             padding-top: 0.5rem;
         }
+        
+        /* Sidebar scrolling fix */
+        .layout-menu .menu-inner {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            height: calc(100vh - 4rem) !important;
+        }
+
+        .layout-menu.menu-vertical {
+            overflow: hidden !important;
+        }
+
+        /* Ensure perfect scrollbar doesn't interfere */
+        .layout-menu .menu-inner.ps {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+        }
+
+        /* For mobile responsiveness */
+        @media (max-width: 1200px) {
+            .layout-menu .menu-inner {
+                height: calc(100vh - 4rem) !important;
+            }
+        }
     </style>
 
     <!-- Include the scripts partial (required ) -->

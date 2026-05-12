@@ -12,12 +12,100 @@
         <h5 class="card-title mb-0">
           <i class="bx bx-chart-line me-2"></i>MIS Dashboard - Manager View
         </h5>
-        <a href="{% url 'accounts:mis_export_excel' %}{{ request.GET.urlencode }}" class="btn btn-success">
-          <i class="bx bx-download me-1"></i>Export Excel
-        </a>
+        <div class="d-flex gap-2">
+          <a href="{% url 'accounts:excel_upload' %}" class="btn btn-primary">
+            <i class="bx bx-cloud-upload me-1"></i>Upload Data
+          </a>
+          <a href="{% url 'accounts:lead_assignment_dashboard' %}" class="btn btn-info">
+            <i class="bx bx-user-voice me-1"></i>Lead Assignment
+          </a>
+          <a href="{% url 'accounts:mis_export_excel' %}{{ request.GET.urlencode }}" class="btn btn-success">
+            <i class="bx bx-download me-1"></i>Export Excel
+          </a>
+        </div>
       </div>
       <div class="card-body">
         
+        <!-- Management Actions Cards -->
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <a href="{% url 'accounts:excel_upload' %}" class="text-decoration-none">
+              <div class="card bg-primary text-white h-100 hover-card">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <h6 class="card-title mb-0">Upload Data</h6>
+                      <p class="mb-0 small">Import Excel/CSV files</p>
+                    </div>
+                    <div class="avatar avatar-sm">
+                      <div class="avatar-initial rounded-circle bg-white text-primary">
+                        <i class="bx bx-cloud-upload"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="col-md-3">
+            <a href="{% url 'accounts:lead_list' %}" class="text-decoration-none">
+              <div class="card bg-secondary text-white h-100 hover-card">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <h6 class="card-title mb-0">All Leads</h6>
+                      <p class="mb-0 small">View and manage leads</p>
+                    </div>
+                    <div class="avatar avatar-sm">
+                      <div class="avatar-initial rounded-circle bg-white text-secondary">
+                        <i class="bx bx-list-ul"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="col-md-3">
+            <a href="{% url 'accounts:lead_assignment_dashboard' %}" class="text-decoration-none">
+              <div class="card bg-info text-white h-100 hover-card">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <h6 class="card-title mb-0">Lead Assignment</h6>
+                      <p class="mb-0 small">Manage lead distribution</p>
+                    </div>
+                    <div class="avatar avatar-sm">
+                      <div class="avatar-initial rounded-circle bg-white text-info">
+                        <i class="bx bx-user-voice"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="col-md-3">
+            <a href="{% url 'accounts:excel_batch_list' %}" class="text-decoration-none">
+              <div class="card bg-warning text-white h-100 hover-card">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <h6 class="card-title mb-0">Upload History</h6>
+                      <p class="mb-0 small">View batch records</p>
+                    </div>
+                    <div class="avatar avatar-sm">
+                      <div class="avatar-initial rounded-circle bg-white text-warning">
+                        <i class="bx bx-history"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+
         <!-- Grand Total Cards -->
         <div class="row mb-4">
           <div class="col-md-4">
@@ -247,4 +335,32 @@
     </div>
   </div>
 </div>
+
+<style>
+.hover-card {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.hover-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.hover-card .card-body {
+  transition: all 0.3s ease;
+}
+
+.hover-card:hover .card-body {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.text-decoration-none {
+  color: inherit;
+}
+
+.text-decoration-none:hover {
+  color: inherit;
+}
+</style>
 {% endblock %}

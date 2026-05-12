@@ -11,7 +11,7 @@
           <i class="bx bx-user-voice me-2"></i>Leads Management
         </h5>
         <div class="d-flex gap-2">
-          {% if user.employee.is_superadmin or user.employee.is_admin %}
+          {% if user.employee.is_superadmin or user.employee.is_admin or user.employee.is_manager %}
             <a href="{% url 'accounts:assign_leads' %}" class="btn btn-primary">
               <i class="bx bx-user-plus me-1"></i>Assign Leads
             </a>
@@ -30,7 +30,7 @@
       <div class="card-body">
         <!-- Statistics Cards -->
         <div class="row mb-4">
-          <div class="col-md-2">
+          <div class="col-6 col-md-2">
             <div class="card bg-primary text-white">
               <div class="card-body">
                 <div class="d-flex justify-content-between">
@@ -47,9 +47,9 @@
               </div>
             </div>
           </div>
-          <div class="col">
-            <a href="{% url 'accounts:leads_by_status' 'new' %}" class="text-decoration-none">
-              <div class="card bg-success text-white">
+          <div class="col-6 col-sm-4 col-md-2">
+            <div class="text-decoration-none" onclick="filterLeadsByStatus('new')" style="cursor: pointer;">
+              <div class="card bg-success text-white h-100">
                 <div class="card-body">
                   <div class="d-flex justify-content-between">
                     <div>
@@ -64,11 +64,11 @@
                   </div>
                 </div>
               </div>
-            </a>
+            </div>
           </div>
-          <div class="col">
-            <a href="{% url 'accounts:leads_by_status' 'contacted' %}" class="text-decoration-none">
-              <div class="card bg-info text-white">
+          <div class="col-6 col-sm-4 col-md-2">
+            <div class="text-decoration-none" onclick="filterLeadsByStatus('contacted')" style="cursor: pointer;">
+              <div class="card bg-info text-white h-100">
                 <div class="card-body">
                   <div class="d-flex justify-content-between">
                     <div>
@@ -81,11 +81,11 @@
                   </div>
                 </div>
               </div>
-            </a>
+            </div>
           </div>
-          <div class="col">
-            <a href="{% url 'accounts:leads_by_status' 'interested' %}" class="text-decoration-none">
-              <div class="card bg-warning text-white">
+          <div class="col-6 col-sm-4 col-md-2">
+            <div class="text-decoration-none" onclick="filterLeadsByStatus('interested')" style="cursor: pointer;">
+              <div class="card bg-warning text-white h-100">
                 <div class="card-body">
                   <div class="d-flex justify-content-between">
                     <div>
@@ -100,11 +100,11 @@
                   </div>
                 </div>
               </div>
-            </a>
+            </div>
           </div>
-          <div class="col">
-            <a href="{% url 'accounts:leads_by_status' 'not_interested' %}" class="text-decoration-none">
-              <div class="card bg-danger text-white">
+          <div class="col-6 col-sm-4 col-md-2">
+            <div class="text-decoration-none" onclick="filterLeadsByStatus('not_interested')" style="cursor: pointer;">
+              <div class="card bg-danger text-white h-100">
                 <div class="card-body">
                   <div class="d-flex justify-content-between">
                     <div>
@@ -117,11 +117,11 @@
                   </div>
                 </div>
               </div>
-            </a>
+            </div>
           </div>
-          <div class="col">
-            <a href="{% url 'accounts:leads_by_status' 'not_eligible' %}" class="text-decoration-none">
-              <div class="card bg-light">
+          <div class="col-6 col-sm-4 col-md-2">
+            <div class="text-decoration-none" onclick="filterLeadsByStatus('not_eligible')" style="cursor: pointer;">
+              <div class="card bg-light text-white h-100">
                 <div class="card-body">
                   <div class="d-flex justify-content-between">
                     <div>
@@ -134,11 +134,11 @@
                   </div>
                 </div>
               </div>
-            </a>
+            </div>
           </div>
-          <div class="col">
-            <a href="{% url 'accounts:leads_by_status' 'follow_up' %}" class="text-decoration-none">
-              <div class="card bg-info text-white">
+          <div class="col-6 col-sm-4 col-md-2">
+            <div class="text-decoration-none" onclick="filterLeadsByStatus('follow_up')" style="cursor: pointer;">
+              <div class="card bg-info text-white h-100">
                 <div class="card-body">
                   <div class="d-flex justify-content-between">
                     <div>
@@ -151,11 +151,11 @@
                   </div>
                 </div>
               </div>
-            </a>
+            </div>
           </div>
-          <div class="col">
-            <a href="{% url 'accounts:leads_by_status' 'converted' %}" class="text-decoration-none">
-              <div class="card bg-success text-white">
+          <div class="col-6 col-sm-4 col-md-2">
+            <div class="text-decoration-none" onclick="filterLeadsByStatus('converted')" style="cursor: pointer;">
+              <div class="card bg-success text-white h-100">
                 <div class="card-body">
                   <div class="d-flex justify-content-between">
                     <div>
@@ -170,11 +170,11 @@
                   </div>
                 </div>
               </div>
-            </a>
+            </div>
           </div>
-          <div class="col">
-            <a href="{% url 'accounts:leads_by_status' 'file_login' %}" class="text-decoration-none">
-              <div class="card bg-secondary text-white">
+          <div class="col-6 col-sm-4 col-md-2">
+            <div class="text-decoration-none" onclick="filterLeadsByStatus('file_login')" style="cursor: pointer;">
+              <div class="card bg-secondary text-white h-100">
                 <div class="card-body">
                   <div class="d-flex justify-content-between">
                     <div>
@@ -189,11 +189,11 @@
                   </div>
                 </div>
               </div>
-            </a>
+            </div>
           </div>
-          <div class="col">
-            <a href="{% url 'accounts:leads_by_status' 'amount_disbursed' %}" class="text-decoration-none">
-              <div class="card bg-warning text-white">
+          <div class="col-6 col-sm-4 col-md-2">
+            <div class="text-decoration-none" onclick="filterLeadsByStatus('amount_disbursed')" style="cursor: pointer;">
+              <div class="card bg-warning text-white h-100">
                 <div class="card-body">
                   <div class="d-flex justify-content-between">
                     <div>
@@ -208,29 +208,35 @@
                   </div>
                 </div>
               </div>
-            </a>
+            </div>
           </div>
         </div>
 
-        <!-- Filters and Search -->
+        <!-- Filters and Search - Always visible for dynamic filtering -->
         <div class="row mb-3">
-          <div class="col-md-8">
-            <form method="get" class="d-flex gap-2">
-              <input type="text" name="search" class="form-control" placeholder="Search leads..." value="{{ search_query }}">
-              <select name="status" class="form-select">
-                <option value="">All Status</option>
-                {% for status_value, status_label in lead_status_choices %}
-                  <option value="{{ status_value }}" {% if status_filter == status_value %}selected{% endif %}>{{ status_label }}</option>
-                {% endfor %}
-              </select>
-              <button type="submit" class="btn btn-outline-primary">
-                <i class="bx bx-search"></i> Search
-              </button>
-              {% if search_query or status_filter %}
-                <a href="{% url 'accounts:lead_list' %}" class="btn btn-outline-secondary">
-                  <i class="bx bx-x"></i> Clear
-                </a>
-              {% endif %}
+          <div class="col-12 col-lg-8">
+            <form method="get" class="d-flex flex-wrap gap-2 align-items-center" id="filterForm">
+              <div class="flex-grow-1 me-2">
+                <input type="text" name="search" class="form-control" placeholder="Search leads..." value="{{ search_query }}">
+              </div>
+              <div class="flex-shrink-0">
+                <select name="status" class="form-select" id="statusFilter">
+                  <option value="">All Status</option>
+                  {% for status_value, status_label in lead_status_choices %}
+                    <option value="{{ status_value }}" {% if status_filter == status_value %}selected{% endif %}>{{ status_label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="flex-shrink-0">
+                <button type="submit" class="btn btn-outline-primary">
+                  <i class="bx bx-search"></i> Search
+                </button>
+                {% if search_query or status_filter %}
+                  <a href="{% url 'accounts:lead_list' %}" class="btn btn-outline-secondary" onclick="clearAllFilters()">
+                    <i class="bx bx-x"></i> Clear
+                  </a>
+                {% endif %}
+              </div>
             </form>
           </div>
         </div>
@@ -485,5 +491,244 @@ a.text-decoration-none:hover {
   background-color: #d7f5ff !important;
   color: #03c3ec !important;
 }
+
+/* Responsive improvements for lead statistics cards */
+@media (max-width: 768px) {
+  .card.h-100 {
+    min-height: 120px;
+  }
+  
+  .avatar.avatar-xl {
+    width: 3rem;
+    height: 3rem;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .card.h-100 {
+    min-height: 100px;
+  }
+  
+  .avatar.avatar-xl {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  
+  .card-body {
+    padding: 0.75rem;
+  }
+  
+  .card h4 {
+    font-size: 1.1rem;
+  }
+  
+  .card p {
+    font-size: 0.85rem;
+  }
+}
+
+/* Responsive form improvements */
+@media (max-width: 768px) {
+  .d-flex.flex-wrap {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .flex-grow-1 {
+    width: 100%;
+  }
+  
+  .flex-shrink-0 {
+    width: 100%;
+  }
+}
+
+/* Fix card hover effects */
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+/* Ensure consistent spacing */
+.row.mb-4 > div[class*="col-"] {
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .row.mb-4 > div[class*="col-"] {
+    margin-bottom: 0.75rem;
+  }
+}
 </style>
+
+<script>
+// Store all leads data for filtering
+let allLeads = [];
+
+// Function to filter leads by status
+function filterLeadsByStatus(status) {
+  console.log('Filtering by status:', status); // Debug log
+  
+  // Update status filter dropdown
+  const statusFilter = document.getElementById('statusFilter');
+  if (statusFilter) {
+    statusFilter.value = status;
+    console.log('Status filter updated to:', status); // Debug log
+  }
+  
+  // Get search term and apply combined filtering
+  const searchInput = document.querySelector('input[name="search"]');
+  const searchTerm = searchInput ? searchInput.value : '';
+  console.log('Applying filter with search term:', searchTerm); // Debug log
+  
+  filterLeadsBySearch(searchTerm);
+}
+
+// Function to clear all filters
+function clearAllFilters() {
+  const statusFilter = document.getElementById('statusFilter');
+  const searchInput = document.querySelector('input[name="search"]');
+  
+  if (statusFilter) statusFilter.value = '';
+  if (searchInput) searchInput.value = '';
+  
+  // Show all leads
+  const leadRows = document.querySelectorAll('tbody tr');
+  leadRows.forEach(row => {
+    row.style.display = '';
+  });
+  
+  updateVisibleCount();
+}
+
+// Function to update visible count
+function updateVisibleCount() {
+  const leadRows = document.querySelectorAll('tbody tr');
+  let visibleCount = 0;
+  
+  leadRows.forEach(row => {
+    if (row.style.display !== 'none') {
+      visibleCount++;
+    }
+  });
+  
+  // Update total leads count if it exists
+  const totalLeadsElement = document.querySelector('.card h4');
+  if (totalLeadsElement && totalLeadsElement.textContent.includes('Total Leads')) {
+    totalLeadsElement.textContent = visibleCount;
+  }
+}
+
+// Function to filter leads by search term
+function filterLeadsBySearch(searchTerm) {
+  const leadRows = document.querySelectorAll('tbody tr');
+  const statusFilter = document.getElementById('statusFilter');
+  const selectedStatus = statusFilter ? statusFilter.value : '';
+  
+  leadRows.forEach(row => {
+    let showRow = true;
+    
+    // Status filtering
+    if (selectedStatus) {
+      const statusCell = row.querySelector('td:nth-child(6)'); // Status column
+      if (statusCell) {
+        const statusBadge = statusCell.querySelector('.badge');
+        if (statusBadge) {
+          const statusText = statusBadge.textContent.trim();
+          let statusMatch = false;
+          
+          switch(selectedStatus) {
+            case 'new':
+              statusMatch = statusText === 'New';
+              break;
+            case 'contacted':
+              statusMatch = statusText === 'Contacted';
+              break;
+            case 'interested':
+              statusMatch = statusText === 'Interested';
+              break;
+            case 'not_interested':
+              statusMatch = statusText === 'Not Interested';
+              break;
+            case 'not_eligible':
+              statusMatch = statusText === 'Not Eligible';
+              break;
+            case 'follow_up':
+              statusMatch = statusText === 'Follow Up';
+              break;
+            case 'converted':
+              statusMatch = statusText === 'Converted';
+              break;
+            case 'file_login':
+              statusMatch = statusText === 'File Login';
+              break;
+            case 'amount_disbursed':
+              statusMatch = statusText === 'Amount Disbursed';
+              break;
+            default:
+              statusMatch = true;
+          }
+          
+          showRow = statusMatch;
+        }
+      }
+    }
+    
+    // Search filtering
+    if (searchTerm && showRow) {
+      const nameCell = row.querySelector('td:nth-child(1)'); // Name column
+      const emailCell = row.querySelector('td:nth-child(2)'); // Email column
+      const phoneCell = row.querySelector('td:nth-child(3)'); // Phone column
+      const companyCell = row.querySelector('td:nth-child(4)'); // Company column
+      
+      const searchableText = [
+        nameCell ? nameCell.textContent.toLowerCase() : '',
+        emailCell ? emailCell.textContent.toLowerCase() : '',
+        phoneCell ? phoneCell.textContent.toLowerCase() : '',
+        companyCell ? companyCell.textContent.toLowerCase() : ''
+      ].join(' ');
+      
+      showRow = searchableText.includes(searchTerm.toLowerCase());
+    }
+    
+    row.style.display = showRow ? '' : 'none';
+  });
+  
+  updateVisibleCount();
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+  // Add real-time filtering for status dropdown
+  const statusFilter = document.getElementById('statusFilter');
+  if (statusFilter) {
+    statusFilter.addEventListener('change', function() {
+      const searchInput = document.querySelector('input[name="search"]');
+      const searchTerm = searchInput ? searchInput.value : '';
+      filterLeadsBySearch(searchTerm);
+    });
+  }
+  
+  // Add real-time filtering for search input
+  const searchInput = document.querySelector('input[name="search"]');
+  if (searchInput) {
+    let searchTimeout;
+    searchInput.addEventListener('input', function() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        const searchTerm = this.value;
+        filterLeadsBySearch(searchTerm);
+      }, 300); // Debounce search to avoid excessive filtering while typing
+    });
+  }
+  
+  // Stat cards already have onclick attributes that work directly
+  // No need for additional event listeners since onclick is already implemented
+});
+</script>
 {% endblock %}
