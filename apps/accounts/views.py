@@ -104,7 +104,7 @@ class ThreadLocalMiddleware:
 
 def login_view(request):
     """
-    Login view for user authentication with geolocation verification
+    Login view for user authentication
     """
     if request.user.is_authenticated:
         return redirect('core:dashboard')
@@ -113,137 +113,18 @@ def login_view(request):
         username = request.POST.get('email')
         password = request.POST.get('password')
         
-        # Get geolocation data from form
-        latitude = request.POST.get('latitude')
-        longitude = request.POST.get('longitude')
-        
-        # Get request metadata for logging
-        ip_address = get_client_ip(request)
-        user_agent = request.META.get('HTTP_USER_AGENT', '')
-        
         user = authenticate(request, username=username, password=password)
         
         if user is not None:
-            try:
-                # Check if user has employee profile
-                employee = user.employee
-                user_role = employee.role
-                
-                # Check if geolocation verification is required
-                if employee.requires_geolocation_check:
-                    # Validate coordinates are provided
-                    if not latitude or not longitude:
-                        error_msg = "Location access is required for login. Please enable location services."
-                        messages.error(request, error_msg)
-                        
-                        # Log the attempt
-                        GeolocationLoginAttempt.log_attempt(
-                            user=user,
-                            attempt_type='coordinates_missing',
-                            success=False,
-                            ip_address=ip_address,
-                            user_agent=user_agent,
-                            error_message=error_msg,
-                            user_role=user_role
-                        )
-                        return render(request, 'accounts/login.html')
-                    
-                    # Convert coordinates to float
-                    try:
-                        lat = float(latitude)
-                        lon = float(longitude)
-                    except (ValueError, TypeError):
-                        error_msg = "Invalid location data. Please try again."
-                        messages.error(request, error_msg)
-                        
-                        # Log the attempt
-                        GeolocationLoginAttempt.log_attempt(
-                            user=user,
-                            attempt_type='location_invalid',
-                            success=False,
-                            ip_address=ip_address,
-                            user_agent=user_agent,
-                            error_message=error_msg,
-                            user_role=user_role
-                        )
-                        return render(request, 'accounts/login.html')
-                    
-                    # Check if within office premises
-                    from .geolocation_util import is_within_office_premises, get_geolocation_error_message
-                    is_within, distance = is_within_office_premises(lat, lon)
-                    
-                    if not is_within:
-                        error_msg = get_geolocation_error_message(distance)
-                        messages.error(request, error_msg)
-                        
-                        # Log the blocked attempt
-                        GeolocationLoginAttempt.log_attempt(
-                            user=user,
-                            attempt_type='login_blocked',
-                            success=False,
-                            latitude=lat,
-                            longitude=lon,
-                            distance=distance,
-                            ip_address=ip_address,
-                            user_agent=user_agent,
-                            error_message=error_msg,
-                            user_role=user_role
-                        )
-                        return render(request, 'accounts/login.html')
-                
-                # User can login - log successful attempt
-                GeolocationLoginAttempt.log_attempt(
-                    user=user,
-                    attempt_type='login_success',
-                    success=True,
-                    latitude=float(latitude) if latitude else None,
-                    longitude=float(longitude) if longitude else None,
-                    ip_address=ip_address,
-                    user_agent=user_agent,
-                    bypass_allowed=employee.can_bypass_geolocation,
-                    user_role=user_role
-                )
-                
-                # Perform login
-                login(request, user)
-                messages.success(request, f'Welcome back, {user.username}! You have successfully logged in.')
-                
-                # Check for next parameter
-                next_url = request.GET.get('next')
-                if next_url:
-                    return redirect(next_url)
-                return redirect('core:dashboard')
-                
-            except Employee.DoesNotExist:
-                # User doesn't have employee profile, allow login but log it
-                GeolocationLoginAttempt.log_attempt(
-                    user=user,
-                    attempt_type='login_success',
-                    success=True,
-                    ip_address=ip_address,
-                    user_agent=user_agent,
-                    error_message="No employee profile found"
-                )
-                
-                login(request, user)
-                messages.success(request, f'Welcome back, {user.username}! You have successfully logged in.')
-                
-                next_url = request.GET.get('next')
-                if next_url:
-                    return redirect(next_url)
-                return redirect('core:dashboard')
-                
-        else:
-            # Invalid credentials - log the attempt
-            GeolocationLoginAttempt.log_attempt(
-                user=None,  # No user object since authentication failed
-                attempt_type='permission_denied',
-                success=False,
-                ip_address=ip_address,
-                user_agent=user_agent,
-                error_message="Invalid username or password"
-            )
+            login(request, user)
+            messages.success(request, f'Welcome back, {user.username}! You have successfully logged in.')
             
+            # Check for next parameter
+            next_url = request.GET.get('next')
+            if next_url:
+                return redirect(next_url)
+            return redirect('core:dashboard')
+        else:
             messages.error(request, 'Invalid username or password. Please try again.')
     
     return render(request, 'accounts/login.html')

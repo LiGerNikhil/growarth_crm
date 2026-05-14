@@ -194,9 +194,6 @@
 
           <form id="formAuthentication" class="mb-3" action="{% url 'accounts:login' %}" method="POST">
             {% csrf_token %}
-            <!-- Hidden fields for geolocation -->
-            <input type="hidden" id="latitude" name="latitude">
-            <input type="hidden" id="longitude" name="longitude">
             
             <div class="mb-3">
               <label for="email" class="form-label">Email or Username</label>
@@ -210,14 +207,6 @@
                 <span class="input-group-text cursor-pointer" onclick="togglePassword()">
                   <i class="bx bx-hide text-muted" id="toggleIcon"></i>
                 </span>
-              </div>
-            </div>
-
-            <!-- Location Status Indicator -->
-            <div class="mb-3">
-              <div class="d-flex align-items-center">
-                <i class="bx bx-map-pin text-muted me-2" id="locationIcon"></i>
-                <span class="small text-muted" id="locationStatus">Checking location access...</span>
               </div>
             </div>
 
@@ -263,73 +252,6 @@
   <script src="{% static 'vendor/js/bootstrap.js' %}"></script>
   
   <script>
-    // Geolocation functionality
-    let userLocation = null;
-    
-    function updateLocationStatus(status, isError = false) {
-      const statusElement = document.getElementById('locationStatus');
-      const iconElement = document.getElementById('locationIcon');
-      
-      statusElement.textContent = status;
-      
-      if (isError) {
-        statusElement.className = 'small text-danger';
-        iconElement.className = 'bx bx-map-pin text-danger me-2';
-      } else {
-        statusElement.className = 'small text-muted';
-        iconElement.className = 'bx bx-map-pin text-muted me-2';
-      }
-    }
-    
-    function getLocation() {
-      if (!navigator.geolocation) {
-        updateLocationStatus('Geolocation is not supported by this browser', true);
-        return;
-      }
-      
-      updateLocationStatus('Requesting location access...');
-      
-      navigator.geolocation.getCurrentPosition(
-        function(position) {
-          userLocation = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude
-          };
-          
-          // Update hidden form fields
-          document.getElementById('latitude').value = userLocation.latitude;
-          document.getElementById('longitude').value = userLocation.longitude;
-          
-          updateLocationStatus('Location access granted ✓');
-        },
-        function(error) {
-          let errorMessage = 'Location access denied';
-          
-          switch(error.code) {
-            case error.PERMISSION_DENIED:
-              errorMessage = 'Location access denied. Please enable location services.';
-              break;
-            case error.POSITION_UNAVAILABLE:
-              errorMessage = 'Location information is unavailable.';
-              break;
-            case error.TIMEOUT:
-              errorMessage = 'Location request timed out.';
-              break;
-            case error.UNKNOWN_ERROR:
-              errorMessage = 'An unknown error occurred.';
-              break;
-          }
-          
-          updateLocationStatus(errorMessage, true);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 300000 // 5 minutes
-        }
-      );
-    }
-    
     function togglePassword() {
       const passwordInput = document.getElementById('password');
       const toggleIcon = document.getElementById('toggleIcon');
@@ -346,15 +268,6 @@
     document.getElementById('formAuthentication').addEventListener('submit', function(e) {
       const loginBtn = document.getElementById('loginBtn');
       
-      // Check if we have location data
-      if (!userLocation) {
-        // Try to get location one more time
-        getLocation();
-        
-        // Show warning but allow submission (server will handle validation)
-        updateLocationStatus('Location may be required for login', true);
-      }
-      
       // Disable button to prevent multiple submissions
       loginBtn.disabled = true;
       loginBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin me-2"></i>Signing in...';
@@ -365,9 +278,6 @@
         loginBtn.innerHTML = 'Sign in';
       }, 10000);
     });
-    
-    // Get location on page load
-    getLocation();
     
     // Auto-hide error messages
     setTimeout(function() {
